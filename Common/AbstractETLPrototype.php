@@ -21,13 +21,20 @@ abstract class AbstractETLPrototype implements ETLStepInterface
     
     private $toObject = null;
     
-    public function __construct(MetaObjectInterface $fromObject, MetaObjectInterface $toObject, UxonObject $uxon)
+    private $name = null;
+    
+    private $disabled = null;
+    
+    public function __construct(string $name, MetaObjectInterface $toObject, MetaObjectInterface $fromObject = null, UxonObject $uxon = null)
     {
         $this->workbench = $fromObject->getWorkbench();
         $this->uxon = $uxon;
         $this->fromObject = $fromObject;
         $this->toObject = $toObject;
-        $this->importUxonObject($uxon);
+        $this->name = $name;
+        if ($uxon !== null) {
+            $this->importUxonObject($uxon);
+        }
     }
     
     /**
@@ -48,6 +55,16 @@ abstract class AbstractETLPrototype implements ETLStepInterface
     public function exportUxonObject()
     {
         return $this->uxon ?? new UxonObject();
+    }
+    
+    /**
+     * 
+     * {@inheritDoc}
+     * @see \axenox\ETL\Interfaces\ETLStepInterface::getName()
+     */
+    public function getName() : string
+    {
+        return $this->name;
     }
     
     /**
@@ -108,5 +125,35 @@ abstract class AbstractETLPrototype implements ETLStepInterface
     public function getToObject() : MetaObjectInterface
     {
         return $this->toObject;
+    }
+    
+    /**
+     * 
+     * {@inheritDoc}
+     * @see \axenox\ETL\Interfaces\ETLStepInterface::isDisabled()
+     */
+    public function isDisabled() : bool
+    {
+        return $this->disabled;
+    }
+    
+    /**
+     * 
+     * {@inheritDoc}
+     * @see \axenox\ETL\Interfaces\ETLStepInterface::setDisabled()
+     */
+    public function setDisabled(bool $value) : ETLStepInterface
+    {
+        $this->disabled = $value;
+        return $this;
+    }
+    
+    /**
+     * 
+     * @return string
+     */
+    public function __toString() : string
+    {
+        return $this->getName();
     }
 }

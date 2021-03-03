@@ -11,7 +11,13 @@ interface ETLStepInterface extends WorkbenchDependantInterface, iCanBeConvertedT
     
     public function getToObject() : MetaObjectInterface;
     
-    public function run(string $stepRunUid, string $previousStepRunUid = null) : \Generator;
+    public function run(string $stepRunUid, string $previousStepRunUid = null, string $incrementValue = null) : \Generator;
     
     public function validate() : \Generator;
+    
+    public function isDisabled() : bool;
+    
+    public function setDisabled(bool $value) : ETLStepInterface;
+    
+    public function getName() : string;
 }

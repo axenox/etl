@@ -15,10 +15,19 @@ use exface\Core\CommonLogic\UxonObject;
 use axenox\ETL\Interfaces\ETLStepInterface;
 use exface\Core\DataTypes\UUIDDataType;
 use exface\Core\Factories\MetaObjectFactory;
-use exface\Core\DataTypes\PhpFilePathDataType;
+use exface\Core\DataTypes\BooleanDataType;
+use exface\Core\Exceptions\RuntimeException;
+use axenox\ETL\Factories\ETLStepFactory;
+use exface\Core\DataTypes\DateTimeDataType;
+use exface\Core\Interfaces\DataSheets\DataSheetInterface;
+use exface\Core\Interfaces\Exceptions\ExceptionInterface;
+use exface\Core\Exceptions\InternalError;
+use exface\Core\Factories\UiPageFactory;
 
 class RunETL extends AbstractActionDeferred implements iCanBeCalledFromCLI
 {
+    private $stepsLoaded = [];
+    
     /**
      *
      * {@inheritDoc}
@@ -26,7 +35,7 @@ class RunETL extends AbstractActionDeferred implements iCanBeCalledFromCLI
      */
     protected function performImmediately(TaskInterface $task, DataTransactionInterface $transaction, ResultMessageStreamInterface $result) : array
     {
-        return [$this->getJobAliases($task)];
+        return [$this->getFlowAliases($task)];
     }
     
     /**
@@ -34,69 +43,203 @@ class RunETL extends AbstractActionDeferred implements iCanBeCalledFromCLI
      * {@inheritDoc}
      * @see \exface\Core\CommonLogic\AbstractActionDeferred::performDeferred()
      */
-    protected function performDeferred(array $jobs = []) : \Generator
+    protected function performDeferred(array $flows = []) : \Generator
     {
-        foreach ($jobs as $alias) {
-            yield from $this->runJob($alias);
+        foreach ($flows as $alias) {
+            yield from $this->runFlow($alias);
         }
     }
         
-    protected function runJob(string $alias) : \Generator
+    protected function runFlow(string $alias) : \Generator
     {
-        $jobRunUid = UUIDDataType::generateSqlOptimizedUuid();
+        $flowRunUid = UUIDDataType::generateSqlOptimizedUuid();
         
-        yield 'Running ETL job "' . $alias . '":';
+        yield 'Running ETL flow "' . $alias . '" (run-UID ' . $flowRunUid . ')' . PHP_EOL;
         
         $prevStepRunUid = null;
+        $indent = '  ';
         foreach ($this->getSteps($alias) as $step) {
-            $stepRunUid = UUIDDataType::generateSqlOptimizedUuid();
+            $logRow = $this->logRunStart($step, $flowRunUid)->getRow(0);
+            $stepRunUid = $logRow['UID'];
+            yield $indent . $step->getName() . ': ';
+            if ($step->isDisabled()) {
+                yield 'disabled' . PHP_EOL;
+            } else {
+                $log = '';
+                try {
+                    $generator = $step->run($stepRunUid, $prevStepRunUid);
+                    foreach ($generator as $msg) {
+                        $log .= $msg;
+                        yield $msg;
+                    }
+                    $this->logRunSuccess($logRow, $log, $generator->getReturn());
+                } catch (\Throwable $e) {
+                    yield PHP_EOL . PHP_EOL . 'ERROR: ' . $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine();
+                    if (! $e instanceof ExceptionInterface) {
+                        $e = new InternalError($e->getMessage(), null, $e);
+                    }
+                    $this->getWorkbench()->getLogger()->logException($e);
+                    try {
+                        $this->logRunError($logRow, $e, $log);
+                    } catch (\Throwable $e) {
+                        $this->getWorkbench()->getLogger()->logException($e);
+                        yield PHP_EOL . 'Could not save ETL run log: ' . $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine();
+                    }
+                    break;
+                }
+            }
             
-            
-            yield from $step->run($stepRunUid, $prevStepRunUid);
             $prevStepRunUid = $stepRunUid;
         }
     }
     
+    protected function logRunSuccess(array $row, string $output, string $endIncrementValue = null) : DataSheetInterface
+    {
+        $time = DateTimeDataType::now();
+        $ds = DataSheetFactory::createFromObjectIdOrAlias($this->getWorkbench(), 'axenox.ETL.run');
+        $row['end_time'] = $time;
+        $row['end_increment_value'] = $endIncrementValue;
+        $row['output'] = $output;
+        $ds->addRow($row);
+        $ds->dataUpdate();
+        return $ds;
+    }
+    
+    protected function logRunError(array $row, ExceptionInterface $exception, string $output = '') : DataSheetInterface
+    {
+        $time = DateTimeDataType::now();
+        $ds = DataSheetFactory::createFromObjectIdOrAlias($this->getWorkbench(), 'axenox.ETL.run');
+        $row['end_time'] = $time;
+        $row['output'] = $output;
+        $row['error_message'] = $exception->getMessage();
+        $row['error_log_id'] = $exception->getId();
+        try {
+            $widgetJson = $exception->createWidget(UiPageFactory::createEmpty($this->getWorkbench()))->exportUxonObject()->toJson();
+            $row['error_widget'] = $widgetJson;
+        } catch (\Throwable $e) {
+            // Forget the widget if rendering does not work
+            $this->getWorkbench()->getLogger()->logException($e);
+        }
+        $ds->addRow($row);
+        $ds->dataUpdate();
+        return $ds;
+    }
+    
+    protected function logRunStart(ETLStepInterface $step, string $flowRunUid) : DataSheetInterface
+    {
+        $time = DateTimeDataType::now();
+        $ds = DataSheetFactory::createFromObjectIdOrAlias($this->getWorkbench(), 'axenox.ETL.run');
+        $row = [
+            'step' => $this->getStepUid($step),
+            'flow_run_uid' => $flowRunUid,
+            'start_time' => $time
+        ];
+        if ($step->isDisabled()) {
+            $row['step_disabled_flag'] = 1;
+            $row['end_time'] = $time;
+        }
+        $ds->getColumns()->addFromSystemAttributes();
+        $ds->addRow($row);
+        $ds->dataCreate();
+        return $ds;
+    }
+    
+    protected function getStepUid(ETLStepInterface $step) : string
+    {
+        $uid = array_search($step, $this->stepsLoaded);
+        if (! $uid) {
+            throw new ActionRuntimeError($this, 'No UID found for ETL step "' . $step->__toString() . '": step not loaded/planned properly?');
+        }
+        return $uid;
+    }
+    
     /**
      * 
-     * @param string $jobAlias
+     * @param string $flowAlias
      * @throws ActionRuntimeError
      * @return ETLStepInterface[]
      */
-    protected function getSteps(string $jobAlias) : array
+    protected function getSteps(string $flowAlias) : array
     {
         $ds = DataSheetFactory::createFromObjectIdOrAlias($this->getWorkbench(), 'axenox.ETL.step');
-        $ds->getFilters()->addConditionFromString('job__alias', $jobAlias, ComparatorDataType::EQUALS);
-        $ds->getSorters()->addFromString('job_pos', SortingDirectionsDataType::ASC);
+        $ds->getFilters()->addConditionFromString('flow__alias', $flowAlias, ComparatorDataType::EQUALS);
+        $ds->getSorters()->addFromString('level', SortingDirectionsDataType::ASC);
         $ds->getColumns()->addMultiple([
-            'job__name',
-            'job__UID',
+            'required_for_step',
+            'UID',
+            'name',
             'etl_prototype_path',
             'etl_config_uxon',
             'from_object',
-            'to_object'
+            'to_object',
+            'disabled'
         ]);
         $ds->dataRead();
         
         if ($ds->isEmpty()) {
-            throw new ActionRuntimeError($this, 'ETL job "' . $jobAlias . '" not found!');
+            throw new ActionRuntimeError($this, 'ETL flow "' . $flowAlias . '" not found!');
         }
         
-        $steps = [];
-        $vendorPath = $this->getWorkbench()->filemanager()->getPathToVendorFolder();
+        /* Steps in original reading order with UIDs as keys. Planned steps are moved
+         * from this array to $stepsPlanned.
+         * @var $stepsToPlan \axenox\ETL\Interfaces\ETLStepInterface[] */
+        $stepsToPlan = [];
+        /* Steps in execution order with regular numeric keys starting with 0.
+         * @var $stepsPlanned \axenox\ETL\Interfaces\ETLStepInterface[] */
+        $stepsPlanned = [];
+        /* Array with object aliases as keys and subsets of $stepsToPlan still required 
+         * to populate each object as values. Once a step is planned it should be removed
+         * from each step-array here it was contained in.
+         * @var $stepsForObject \axenox\ETL\Interfaces\ETLStepInterface[][] */
+        $stepsForObject = [];
+        
         foreach ($ds->getRows() as $row) {
-            $fromObj = MetaObjectFactory::createFromString($this->getWorkbench(), $row['from_object']);
             $toObj = MetaObjectFactory::createFromString($this->getWorkbench(), $row['to_object']);
-            $prototypePath = $row['etl_prototype_path'];
-            $class = PhpFilePathDataType::findClassInFile($vendorPath . DIRECTORY_SEPARATOR . $prototypePath);
-            $steps[] = new $class($fromObj, $toObj, UxonObject::fromAnything($row['etl_config_uxon'] ?? []));
-            break;
+            if ($row['from_object']) {
+                $fromObj = MetaObjectFactory::createFromString($this->getWorkbench(), $row['from_object']);
+            } else {
+                $fromObj = $toObj;
+            }
+            
+            $step = ETLStepFactory::createFromFile(
+                $row['etl_prototype_path'], 
+                $row['name'], 
+                $toObj,
+                $fromObj,
+                UxonObject::fromAnything($row['etl_config_uxon'] ?? [])
+            );
+            $step->setDisabled(BooleanDataType::cast($row['disabled']));
+            $stepsToPlan[$row['UID']] = $step;
+            $stepsForObject[$toObj->getAliasWithNamespace()][$row['UID']] = $step;
         }
         
-        return $steps;
+        $this->stepsLoaded = $stepsToPlan;
+        
+        $stepsCnt = count($stepsToPlan);
+        for ($i = 0; $i < $stepsCnt; $i++) {
+            foreach ($stepsToPlan as $stepUid => $step) {
+                $stepsRequired = $step->getFromObject() ? ($stepsForObject[$step->getFromObject()->getAliasWithNamespace()] ?? []) : [];
+                if (! in_array($step, $stepsPlanned) && (empty($stepsRequired) || (count($stepsRequired) === 1 && $stepsRequired[$stepUid] === $step))) {
+                    $stepsPlanned[] = $step;
+                    foreach ($stepsForObject as $o => $reqs) {
+                        if (array_key_exists($stepUid, $reqs)) {
+                            unset($stepsForObject[$o][$stepUid]);
+                        }
+                    }
+                    unset($stepsToPlan[$stepUid]);
+                    break;
+                }
+            }
+        }
+        
+        if (count($stepsPlanned) !== $stepsCnt) {
+            throw new RuntimeException('Cannot determine execution order for ETL steps!');
+        }
+        
+        return $stepsPlanned;
     }
     
-    protected function getJobAliases(TaskInterface $task) : array
+    protected function getFlowAliases(TaskInterface $task) : array
     {
         return ['TEST_TRACKPROD'];
     }
@@ -106,7 +249,7 @@ class RunETL extends AbstractActionDeferred implements iCanBeCalledFromCLI
         return [
             (new ServiceParameter($this))
             ->setName('alias')
-            ->setDescription('Namespaced alias of the ETL job to run.')
+            ->setDescription('Namespaced alias of the ETL flow to run.')
         ];
     }
 

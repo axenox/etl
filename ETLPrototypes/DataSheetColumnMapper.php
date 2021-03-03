@@ -3,7 +3,6 @@ namespace axenox\ETL\ETLPrototypes;
 
 use exface\Core\Interfaces\Model\MetaObjectInterface;
 use exface\Core\CommonLogic\UxonObject;
-use axenox\ETL\Interfaces\Generator;
 use exface\Core\Interfaces\DataSheets\DataSheetInterface;
 use exface\Core\Factories\DataSheetFactory;
 use exface\Core\Interfaces\DataSheets\DataSheetMapperInterface;
@@ -25,7 +24,7 @@ class DataSheetColumnMapper extends AbstractETLPrototype
      * {@inheritDoc}
      * @see \axenox\ETL\Interfaces\ETLStepInterface::run()
      */
-    public function run(string $stepRunUid, string $previousStepRunUid = null) : \Generator
+    public function run(string $stepRunUid, string $previousStepRunUid = null, string $incrementValue = null) : \Generator
     {
         $fromSheet = $this->getFromDataSheet();
         $mapper = $this->getMapper();
@@ -38,7 +37,7 @@ class DataSheetColumnMapper extends AbstractETLPrototype
         $this->addDuplicatePreventingBehavior($this->getToObject());
         $cnt = $toSheet->dataCreate();
         
-        yield 'DataSheetColumnMapper: created/updated ' . $cnt . ' rows' . PHP_EOL;
+        yield 'Created/updated ' . $cnt . ' rows' . PHP_EOL;
     }
 
     public function validate(): \Generator

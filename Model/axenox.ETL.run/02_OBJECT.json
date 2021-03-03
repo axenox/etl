@@ -80,16 +80,16 @@
     ],
     "rows": [
         {
-            "CREATED_ON": "2021-02-26 16:49:47",
-            "MODIFIED_ON": "2021-02-26 16:51:58",
+            "CREATED_ON": "2021-03-02 10:36:45",
+            "MODIFIED_ON": "2021-03-02 10:41:03",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
             "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
-            "UID": "0x11eb850640bc6aac8506025041000001",
+            "UID": "0x11eb9db7cd967aec9db7025041000001",
             "READABLE_FLAG": "1",
             "WRITABLE_FLAG": "1",
             "COMMENTS": "",
             "DOCS": "",
-            "NAME": "ETL attribute mapping",
+            "NAME": "ETL run",
             "INHERIT_DATA_SOURCE_BASE_OBJECT": "1",
             "DATA_SOURCE": "0x32000000000000000000000000000000",
             "APP": "0x11ebbc50679eacdabc50025041000001",
@@ -97,8 +97,8 @@
             "PARENT_OBJECT": "",
             "DATA_ADDRESS_PROPS": null,
             "DEFAULT_EDITOR_UXON": null,
-            "ALIAS": "etl_step_attribute_mapping",
-            "DATA_ADDRESS": "etl_step_attribute_mapping"
+            "ALIAS": "run",
+            "DATA_ADDRESS": "etl_run"
         }
     ],
     "totals_rows": [],
