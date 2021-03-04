@@ -21,13 +21,15 @@ use axenox\ETL\Factories\ETLStepFactory;
 use exface\Core\DataTypes\DateTimeDataType;
 use exface\Core\Interfaces\DataSheets\DataSheetInterface;
 use exface\Core\Interfaces\Exceptions\ExceptionInterface;
-use exface\Core\Exceptions\InternalError;
 use exface\Core\Factories\UiPageFactory;
 use exface\Core\Interfaces\Exceptions\ActionExceptionInterface;
+use exface\Core\Exceptions\Actions\ActionInputMissingError;
 
-class RunETL extends AbstractActionDeferred implements iCanBeCalledFromCLI
+class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI
 {
     private $stepsLoaded = [];
+    
+    private $stepsPerFlowUid = [];
     
     /**
      *
@@ -131,6 +133,7 @@ class RunETL extends AbstractActionDeferred implements iCanBeCalledFromCLI
         $ds = DataSheetFactory::createFromObjectIdOrAlias($this->getWorkbench(), 'axenox.ETL.run');
         $row = [
             'step' => $this->getStepUid($step),
+            'flow' => $this->getFlowUid($step),
             'flow_run_uid' => $flowRunUid,
             'start_time' => $time,
             'timeout_seconds' => $step->getTimeout()
@@ -154,6 +157,19 @@ class RunETL extends AbstractActionDeferred implements iCanBeCalledFromCLI
         return $uid;
     }
     
+    protected function getFlowUid(ETLStepInterface $step) : string
+    {
+        foreach ($this->stepsPerFlowUid as $uid => $steps) {
+            if (! in_array($step, $steps)) {
+                $uid = null;
+            }
+        }
+        if (! $uid) {
+            throw new ActionRuntimeError($this, 'No flow found for ETL step "' . $step->__toString() . '": step not loaded/planned properly?');
+        }
+        return $uid;
+    }
+    
     /**
      * 
      * @param string $flowAlias
@@ -173,7 +189,8 @@ class RunETL extends AbstractActionDeferred implements iCanBeCalledFromCLI
             'etl_config_uxon',
             'from_object',
             'to_object',
-            'disabled'
+            'disabled',
+            'flow'
         ]);
         $ds->dataRead();
         
@@ -212,9 +229,11 @@ class RunETL extends AbstractActionDeferred implements iCanBeCalledFromCLI
             $step->setDisabled(BooleanDataType::cast($row['disabled']));
             $stepsToPlan[$row['UID']] = $step;
             $stepsForObject[$toObj->getAliasWithNamespace()][$row['UID']] = $step;
+            $flowUId = $row['flow'];
         }
         
         $this->stepsLoaded = $stepsToPlan;
+        $this->stepsPerFlowUid[$flowUId] = $stepsToPlan;
         
         $stepsCnt = count($stepsToPlan);
         for ($i = 0; $i < $stepsCnt; $i++) {
@@ -242,14 +261,22 @@ class RunETL extends AbstractActionDeferred implements iCanBeCalledFromCLI
     
     protected function getFlowAliases(TaskInterface $task) : array
     {
-        return ['TEST_TRACKPROD'];
+        if ($task->hasParameter('flow')) {
+            return explode(',', $task->getParameter('flow'));
+        } else {
+            $inputData = $this->getInputDataSheet($task);
+            if ($inputData->getMetaObject()->is('axenox.ETL.flow') && $col = $inputData->getColumns()->get('host')) {
+                return $col->getValues();
+            }
+        }
+        throw new ActionInputMissingError($this, 'No ETL flow to run: please provide `flow` parameter or input data based on the flow object (axenox.ETL.flow)!');
     }
     
     public function getCliArguments(): array
     {
         return [
             (new ServiceParameter($this))
-            ->setName('alias')
+            ->setName('flow')
             ->setDescription('Namespaced alias of the ETL flow to run.')
         ];
     }

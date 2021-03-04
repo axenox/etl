@@ -17,4 +17,4 @@ UNION ALL
 	FROM etl_step stl
 	WHERE stl.`type` = 'T' OR stl.`type` = 'L'
 	GROUP BY stl.flow_oid, stl.`type`, stl.to_object_oid
-)
+);
