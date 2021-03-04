@@ -11,7 +11,7 @@
     "created_by_user_selector": "0x31000000000000000000000000000000",
     "created_on": "2021-02-26 16:55:01",
     "modified_by_user_selector": "0x31000000000000000000000000000000",
-    "modified_on": "2021-03-04 12:51:05",
+    "modified_on": "2021-03-04 13:15:26",
     "contents": {
         "widget_type": "SplitHorizontal",
         "object_alias": "axenox.ETL.flow",
@@ -100,11 +100,15 @@
                                             }
                                         ],
                                         "row_grouper": {
-                                            "group_by_attribute_alias": "type"
+                                            "group_by_attribute_alias": "type",
+                                            "hide_caption": true
                                         },
                                         "columns": [
                                             {
-                                                "attribute_alias": "object__LABEL"
+                                                "attribute_alias": "object__NAME"
+                                            },
+                                            {
+                                                "attribute_alias": "object__ALIAS"
                                             },
                                             {
                                                 "attribute_alias": "object__DATA_SOURCE__LABEL"
@@ -138,6 +142,16 @@
                         "widget_type": "DataTable",
                         "object_alias": "axenox.ETL.run",
                         "filters": [
+                            {
+                                "attribute_alias": "start_time",
+                                "widget_type": "RangeFilter"
+                            },
+                            {
+                                "attribute_alias": "step"
+                            },
+                            {
+                                "attribute_alias": "status"
+                            },
                             {
                                 "attribute_alias": "step__flow",
                                 "hidden": true,

@@ -755,7 +755,7 @@
         },
         {
             "CREATED_ON": "2021-03-04 11:57:37",
-            "MODIFIED_ON": "2021-03-04 12:17:42",
+            "MODIFIED_ON": "2021-03-04 13:18:57",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
             "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
             "UID": "0x11eb99756ed81eda9975025041000001",
@@ -779,7 +779,8 @@
                     "RUNNING": "yellow",
                     "ERROR": "orangered",
                     "TIMEOUT": "orangered",
-                    "INVALIDATED": "gray"
+                    "INVALIDATED": "gray",
+                    "DISABLED": "lightgray"
                 }
             },
             "COMMENTS": "",
@@ -788,8 +789,8 @@
             "TYPE": "D",
             "COPYABLEFLAG": "0",
             "ALIAS": "status",
-            "DATATYPE": "0x30000000000000000000000000000000",
-            "DATA_ADDRESS": "(CASE\n  WHEN [#error_flag#] = 1 THEN 'ERROR'\n  WHEN [#invalidated_flag#] = 1 THEN 'INVALIDATED'\n  WHEN [#end_time#] IS NOT NULL THEN 'SUCCESS'\n  WHEN DATE_ADD([#start_time#], INTERVAL [#timeout_seconds#] SECOND) < NOW() THEN 'TIMEOUT'\n  ELSE 'RUNNING'\nEND)",
+            "DATATYPE": "0x11e7c3960c3586c38001e4b318306b9a",
+            "DATA_ADDRESS": "(CASE\n  WHEN [#error_flag#] = 1 THEN 'ERROR'\n  WHEN [#invalidated_flag#] = 1 THEN 'INVALIDATED'\n  WHEN [#step_disabled_flag#] = 1 THEN 'DISABLED'\n  WHEN [#end_time#] IS NOT NULL THEN 'SUCCESS'\n  WHEN DATE_ADD([#start_time#], INTERVAL [#timeout_seconds#] SECOND) < NOW() THEN 'TIMEOUT'\n  ELSE 'RUNNING'\nEND)",
             "OBJECT": "0x11eb9db7cd967aec9db7025041000001",
             "FORMATTER": "",
             "DISPLAYORDER": null,
@@ -806,7 +807,17 @@
             "DATA_ADDRESS_PROPS": null,
             "DEFAULT_VALUE": "",
             "FIXED_VALUE": "",
-            "CUSTOM_DATA_TYPE": null
+            "CUSTOM_DATA_TYPE": {
+                "show_values": false,
+                "values": {
+                    "SUCCESS": "Done",
+                    "RUNNING": "Running",
+                    "ERROR": "Failed",
+                    "TIMEOUT": "Timed out",
+                    "INVALIDATED": "Invalidated",
+                    "DISABLED": "Disabled"
+                }
+            }
         },
         {
             "CREATED_ON": "2021-03-04 11:58:01",
