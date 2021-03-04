@@ -23,6 +23,7 @@ use exface\Core\Interfaces\DataSheets\DataSheetInterface;
 use exface\Core\Interfaces\Exceptions\ExceptionInterface;
 use exface\Core\Exceptions\InternalError;
 use exface\Core\Factories\UiPageFactory;
+use exface\Core\Interfaces\Exceptions\ActionExceptionInterface;
 
 class RunETL extends AbstractActionDeferred implements iCanBeCalledFromCLI
 {
@@ -74,18 +75,16 @@ class RunETL extends AbstractActionDeferred implements iCanBeCalledFromCLI
                     }
                     $this->logRunSuccess($logRow, $log, $generator->getReturn());
                 } catch (\Throwable $e) {
-                    yield PHP_EOL . PHP_EOL . 'ERROR: ' . $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine();
-                    if (! $e instanceof ExceptionInterface) {
-                        $e = new InternalError($e->getMessage(), null, $e);
+                    if (! $e instanceof ActionExceptionInterface) {
+                        $e = new ActionRuntimeError($this, $e->getMessage(), null, $e);
                     }
-                    $this->getWorkbench()->getLogger()->logException($e);
                     try {
                         $this->logRunError($logRow, $e, $log);
-                    } catch (\Throwable $e) {
-                        $this->getWorkbench()->getLogger()->logException($e);
-                        yield PHP_EOL . 'Could not save ETL run log: ' . $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine();
+                    } catch (\Throwable $el) {
+                        $this->getWorkbench()->getLogger()->logException($el);
+                        yield PHP_EOL . 'Could not save ETL run log: ' . $el->getMessage() . ' in ' . $el->getFile() . ' on line ' . $el->getLine();
                     }
-                    break;
+                    throw $e;
                 }
             }
             
@@ -111,6 +110,7 @@ class RunETL extends AbstractActionDeferred implements iCanBeCalledFromCLI
         $ds = DataSheetFactory::createFromObjectIdOrAlias($this->getWorkbench(), 'axenox.ETL.run');
         $row['end_time'] = $time;
         $row['output'] = $output;
+        $row['error_falg'] = 1;
         $row['error_message'] = $exception->getMessage();
         $row['error_log_id'] = $exception->getId();
         try {
@@ -132,7 +132,8 @@ class RunETL extends AbstractActionDeferred implements iCanBeCalledFromCLI
         $row = [
             'step' => $this->getStepUid($step),
             'flow_run_uid' => $flowRunUid,
-            'start_time' => $time
+            'start_time' => $time,
+            'timeout_seconds' => $step->getTimeout()
         ];
         if ($step->isDisabled()) {
             $row['step_disabled_flag'] = 1;

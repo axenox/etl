@@ -25,6 +25,8 @@ abstract class AbstractETLPrototype implements ETLStepInterface
     
     private $disabled = null;
     
+    private $timeout = (60 * 5);
+    
     public function __construct(string $name, MetaObjectInterface $toObject, MetaObjectInterface $fromObject = null, UxonObject $uxon = null)
     {
         $this->workbench = $fromObject->getWorkbench();
@@ -155,5 +157,30 @@ abstract class AbstractETLPrototype implements ETLStepInterface
     public function __toString() : string
     {
         return $this->getName();
+    }
+    
+    /**
+     * 
+     * {@inheritDoc}
+     * @see \axenox\ETL\Interfaces\ETLStepInterface::getTimeout()
+     */
+    public function getTimeout() : int
+    {
+        return $this->timeout;
+    }
+    
+    /**
+     * Number of seconds the step is allowed to run at maximum.
+     * 
+     * @uxon-property timeout
+     * @uxon-type integer
+     * 
+     * @param int $seconds
+     * @return ETLStepInterface
+     */
+    public function setTimeout(int $seconds) : ETLStepInterface
+    {
+        $this->timeout = $seconds;
+        return $this;
     }
 }

@@ -20,4 +20,11 @@ interface ETLStepInterface extends WorkbenchDependantInterface, iCanBeConvertedT
     public function setDisabled(bool $value) : ETLStepInterface;
     
     public function getName() : string;
+    
+    /**
+     * Returns the maximum time this step is allowed to run in seconds.
+     * 
+     * @return int
+     */
+    public function getTimeout() : int;
 }
