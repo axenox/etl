@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS `etl_run` (
   `created_by_user_oid` binary(16) NOT NULL,
   `modified_by_user_oid` binary(16) NOT NULL,
   `step_oid` binary(16) NOT NULL,
+  `flow_oid` binary(16) NOT NULL,
   `step_disabled_flag` tinyint(1) NOT NULL DEFAULT '0',
   `flow_run_uid` binary(16) NOT NULL,
   `start_time` datetime NOT NULL,
