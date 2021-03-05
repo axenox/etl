@@ -80,25 +80,25 @@
     ],
     "rows": [
         {
-            "CREATED_ON": "2021-03-02 10:36:45",
-            "MODIFIED_ON": "2021-03-05 10:04:03",
+            "CREATED_ON": "2021-03-04 20:37:24",
+            "MODIFIED_ON": "2021-03-04 20:46:02",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
             "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
-            "UID": "0x11eb9db7cd967aec9db7025041000001",
+            "UID": "0x11eb8cf50be0d9b88cf5025041000001",
             "READABLE_FLAG": "1",
-            "WRITABLE_FLAG": "1",
+            "WRITABLE_FLAG": "0",
             "COMMENTS": "",
             "DOCS": "",
-            "NAME": "Step run",
+            "NAME": "Last run",
             "INHERIT_DATA_SOURCE_BASE_OBJECT": "1",
             "DATA_SOURCE": "0x32000000000000000000000000000000",
             "APP": "0x11ebbc50679eacdabc50025041000001",
-            "SHORT_DESCRIPTION": "",
+            "SHORT_DESCRIPTION": "VIEW",
             "PARENT_OBJECT": "",
             "DATA_ADDRESS_PROPS": null,
             "DEFAULT_EDITOR_UXON": null,
-            "ALIAS": "run",
-            "DATA_ADDRESS": "etl_run"
+            "ALIAS": "flow_run_latest",
+            "DATA_ADDRESS": "etl_flow_run_latest"
         }
     ],
     "totals_rows": [],
