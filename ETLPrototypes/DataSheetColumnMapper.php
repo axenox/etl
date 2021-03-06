@@ -10,6 +10,8 @@ use exface\Core\Factories\DataSheetMapperFactory;
 use exface\Core\Factories\BehaviorFactory;
 use exface\Core\Behaviors\PreventDuplicatesBehavior;
 use axenox\ETL\Common\AbstractETLPrototype;
+use exface\Core\Exceptions\RuntimeException;
+use exface\Core\DataTypes\StringDataType;
 
 class DataSheetColumnMapper extends AbstractETLPrototype
 {
@@ -19,6 +21,8 @@ class DataSheetColumnMapper extends AbstractETLPrototype
     
     private $updateIfMatchingAttributeAliases = [];
     
+    private $pageSize = null;
+    
     /**
      * 
      * {@inheritDoc}
@@ -26,18 +30,44 @@ class DataSheetColumnMapper extends AbstractETLPrototype
      */
     public function run(string $stepRunUid, string $previousStepRunUid = null, string $incrementValue = null) : \Generator
     {
-        $fromSheet = $this->getFromDataSheet();
+        $baseSheet = $this->getFromDataSheet();
         $mapper = $this->getMapper();
         
-        $toSheet = $mapper->map($fromSheet, true);
-        $toSheet->getColumns()
-        ->addFromAttribute($this->getToObject()->getAttribute($this->getStepRunUidAttributeAlias()))
-        ->setValueOnAllRows($stepRunUid);
-        
         $this->addDuplicatePreventingBehavior($this->getToObject());
-        $cnt = $toSheet->dataCreate();
         
-        yield 'Created/updated ' . $cnt . ' rows' . PHP_EOL;
+        if ($limit = $this->getPageSize()) {
+            $baseSheet->setRowsLimit($limit);
+        }
+        $baseSheet->setAutoCount(false);
+        
+        $transaction = $this->getWorkbench()->data()->startTransaction();
+        
+        $cnt = 0;
+        $offset = 0;
+        try {
+            do {
+                $fromSheet = $baseSheet->copy();
+                $fromSheet->setRowsOffset($offset);
+                yield 'Reading ' . ($limit ? 'rows ' . ($offset+1) . ' - ' . ($offset+$limit) . '...' : ' all rows...') . PHP_EOL;
+                
+                $toSheet = $mapper->map($fromSheet, true);
+                $toSheet->getColumns()
+                    ->addFromAttribute($this->getToObject()->getAttribute($this->getStepRunUidAttributeAlias()))
+                    ->setValueOnAllRows($stepRunUid);
+                $toSheet->dataCreate(false, $transaction);
+                
+                $cnt += $fromSheet->countRows();
+                $offset = $offset + $limit;
+                /*if ($cnt > 2000) {
+                    throw new RuntimeException('Testing transactions');
+                }*/
+            } while ($fromSheet->isPaged() && $fromSheet->countRows() >= $limit);
+        } catch (\Throwable $e) {
+            $transaction->rollback();
+        }
+        $transaction->commit();
+        
+        yield ' processed ' . $cnt . ' rows in total' . PHP_EOL;
     }
 
     public function validate(): \Generator
@@ -139,6 +169,26 @@ class DataSheetColumnMapper extends AbstractETLPrototype
     protected function setMapper(UxonObject $uxon) : DataSheetColumnMapper
     {
         $this->mapperUxon = $uxon;
+        return $this;
+    }
+    
+    protected function getPageSize() : ?int
+    {
+        return $this->pageSize;
+    }
+    
+    /**
+     * Number of rows to process at once - no limit if NULL.
+     * 
+     * @uxon-property page_size
+     * @uxon-type integers
+     * 
+     * @param int $numberOfRows
+     * @return DataSheetColumnMapper
+     */
+    protected function setPageSize(int $numberOfRows) : DataSheetColumnMapper
+    {
+        $this->pageSize = $numberOfRows;
         return $this;
     }
 }
