@@ -261,7 +261,7 @@
         },
         {
             "CREATED_ON": "2021-03-04 20:31:23",
-            "MODIFIED_ON": "2021-03-09 11:23:43",
+            "MODIFIED_ON": "2021-03-09 21:36:58",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
             "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
             "UID": "0x11eb969b3442e474969b025041000001",
@@ -282,7 +282,7 @@
             "RELATION_CARDINALITY": "",
             "TYPE": "D",
             "COPYABLEFLAG": "0",
-            "ALIAS": "flow_oid",
+            "ALIAS": "flow",
             "DATATYPE": "0x11e8091315d97da6b5b5e4b318306b9a",
             "DATA_ADDRESS": "flow_oid",
             "OBJECT": "0x11ebbb7534237cb0bb75025041000001",
@@ -481,7 +481,7 @@
         },
         {
             "CREATED_ON": "2021-03-05 10:03:36",
-            "MODIFIED_ON": "2021-03-09 18:38:55",
+            "MODIFIED_ON": "2021-03-09 21:57:02",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
             "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
             "UID": "0x11ebaddeabe39b24adde025041000001",
@@ -505,9 +505,7 @@
                     "RUNNING": "yellow",
                     "ERROR": "orangered",
                     "TIMEOUT": "orangered",
-                    "INVALIDATED": "gray",
-                    "DISABLED": "lightgray",
-                    "SKIPPED": "lightgray"
+                    "INVALIDATED": "gray"
                 }
             },
             "COMMENTS": "",
@@ -517,7 +515,7 @@
             "COPYABLEFLAG": "0",
             "ALIAS": "status",
             "DATATYPE": "0x11e7c3960c3586c38001e4b318306b9a",
-            "DATA_ADDRESS": "(CASE\n  WHEN [#errors#] = 0 AND [#steps_timed_out#] = 0 THEN 'SUCCESS'\n  WHEN [#errors#] > 0 || [#steps_timed_out#] > 0 THEN 'ERROR'\n  WHEN [#steps_invalidated#] > 0 THEN 'INVALIDATED'\n  ELSE 'RUNNING'\nEND)",
+            "DATA_ADDRESS": "(CASE\n  WHEN [#steps_invalidated#] > 0 THEN 'INVALIDATED'\n  WHEN [#errors#] > 0 THEN 'ERROR'\n  WHEN [#steps_timed_out#] > 0 THEN 'TIMEOUT'\n  WHEN [#errors#] = 0 AND [#steps_timed_out#] = 0 THEN 'SUCCESS'\n  ELSE 'RUNNING'\nEND)",
             "OBJECT": "0x11ebbb7534237cb0bb75025041000001",
             "FORMATTER": "",
             "DISPLAYORDER": null,
@@ -541,9 +539,7 @@
                     "RUNNING": "Running",
                     "ERROR": "Failed",
                     "TIMEOUT": "Timed out",
-                    "INVALIDATED": "Invalidated",
-                    "DISABLED": "Disabled",
-                    "SKIPPED": "Skipped"
+                    "INVALIDATED": "Invalidated"
                 }
             }
         },
@@ -634,6 +630,52 @@
             "DEFAULT_VALUE": "",
             "FIXED_VALUE": "",
             "CUSTOM_DATA_TYPE": null
+        },
+        {
+            "CREATED_ON": "2021-03-09 21:35:18",
+            "MODIFIED_ON": "2021-03-09 21:35:18",
+            "CREATED_BY_USER": "0x31000000000000000000000000000000",
+            "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
+            "UID": "0x11eb86a2f6bf7fb886a2025041000001",
+            "SORTABLEFLAG": "1",
+            "FILTERABLEFLAG": "1",
+            "AGGREGATABLEFLAG": "1",
+            "DEFAULT_AGGREGATE_FUNCTION": null,
+            "VALUE_LIST_DELIMITER": ",",
+            "READABLEFLAG": "1",
+            "WRITABLEFLAG": "0",
+            "SYSTEMFLAG": "0",
+            "DEFAULT_EDITOR_UXON": null,
+            "COPY_WITH_RELATED_OBJECT": null,
+            "DELETE_WITH_RELATED_OBJECT": null,
+            "DEFAULT_DISPLAY_UXON": null,
+            "COMMENTS": null,
+            "NAME": "Error message",
+            "RELATION_CARDINALITY": "",
+            "TYPE": "D",
+            "COPYABLEFLAG": "0",
+            "ALIAS": "error_message",
+            "DATATYPE": "0x30000000000000000000000000000000",
+            "DATA_ADDRESS": "error_message",
+            "OBJECT": "0x11ebbb7534237cb0bb75025041000001",
+            "FORMATTER": null,
+            "DISPLAYORDER": null,
+            "LABELFLAG": "0",
+            "UIDFLAG": "0",
+            "HIDDENFLAG": "0",
+            "EDITABLEFLAG": "0",
+            "REQUIREDFLAG": "0",
+            "RELATED_OBJ": "",
+            "SORTERPOS": null,
+            "SORTERDIR": null,
+            "RELATED_OBJ_ATTR": "",
+            "SHORT_DESCRIPTION": "",
+            "DATA_ADDRESS_PROPS": null,
+            "DEFAULT_VALUE": null,
+            "FIXED_VALUE": null,
+            "CUSTOM_DATA_TYPE": {
+                "length_max": "200"
+            }
         }
     ],
     "totals_rows": [],

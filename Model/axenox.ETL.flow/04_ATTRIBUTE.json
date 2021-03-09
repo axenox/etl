@@ -173,7 +173,7 @@
     "rows": [
         {
             "CREATED_ON": "2021-02-26 16:44:38",
-            "MODIFIED_ON": "2021-03-09 16:40:01",
+            "MODIFIED_ON": "2021-03-09 21:38:18",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
             "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
             "UID": "0x11ebaf4d888fec92af4d025041000001",
@@ -199,7 +199,7 @@
             "DATA_ADDRESS": "alias",
             "OBJECT": "0x11eb90858867906c9085025041000001",
             "FORMATTER": "",
-            "DISPLAYORDER": null,
+            "DISPLAYORDER": "2",
             "LABELFLAG": "0",
             "UIDFLAG": "0",
             "HIDDENFLAG": "0",
@@ -219,7 +219,7 @@
         },
         {
             "CREATED_ON": "2021-02-26 16:44:38",
-            "MODIFIED_ON": "2021-02-26 16:45:57",
+            "MODIFIED_ON": "2021-03-09 21:38:18",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
             "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
             "UID": "0x11ebb4788890697eb478025041000001",
@@ -265,7 +265,7 @@
         },
         {
             "CREATED_ON": "2021-02-26 16:44:38",
-            "MODIFIED_ON": "2021-02-26 16:45:57",
+            "MODIFIED_ON": "2021-03-09 21:38:18",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
             "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
             "UID": "0x11ebb622888f2e60b622025041000001",
@@ -291,7 +291,7 @@
             "DATA_ADDRESS": "name",
             "OBJECT": "0x11eb90858867906c9085025041000001",
             "FORMATTER": null,
-            "DISPLAYORDER": null,
+            "DISPLAYORDER": "1",
             "LABELFLAG": "1",
             "UIDFLAG": "0",
             "HIDDENFLAG": "0",
@@ -311,7 +311,7 @@
         },
         {
             "CREATED_ON": "2021-03-02 10:36:18",
-            "MODIFIED_ON": "2021-03-03 15:26:28",
+            "MODIFIED_ON": "2021-03-09 21:38:18",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
             "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
             "UID": "0x11eba9aebdb7b7a8a9ae025041000001",
@@ -337,7 +337,7 @@
             "DATA_ADDRESS": "app_oid",
             "OBJECT": "0x11eb90858867906c9085025041000001",
             "FORMATTER": "",
-            "DISPLAYORDER": null,
+            "DISPLAYORDER": "3",
             "LABELFLAG": "0",
             "UIDFLAG": "0",
             "HIDDENFLAG": "0",
