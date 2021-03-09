@@ -61,8 +61,8 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI
         
         $prevStepRunUid = null;
         $indent = '  ';
-        foreach ($this->getSteps($alias) as $step) {
-            $logRow = $this->logRunStart($step, $flowRunUid)->getRow(0);
+        foreach ($this->getSteps($alias) as $pos => $step) {
+            $logRow = $this->logRunStart($step, $flowRunUid, $pos)->getRow(0);
             $stepRunUid = $logRow['UID'];
             yield $indent . $step->getName() . ': ';
             if ($step->isDisabled()) {
@@ -128,14 +128,15 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI
         return $ds;
     }
     
-    protected function logRunStart(ETLStepInterface $step, string $flowRunUid) : DataSheetInterface
+    protected function logRunStart(ETLStepInterface $step, string $flowRunUid, int $position) : DataSheetInterface
     {
         $time = DateTimeDataType::now();
         $ds = DataSheetFactory::createFromObjectIdOrAlias($this->getWorkbench(), 'axenox.ETL.run');
         $row = [
             'step' => $this->getStepUid($step),
             'flow' => $this->getFlowUid($step),
-            'flow_run_uid' => $flowRunUid,
+            'flow_run_oid' => $flowRunUid,
+            'flow_run_pos' => $position,
             'start_time' => $time,
             'timeout_seconds' => $step->getTimeout()
         ];

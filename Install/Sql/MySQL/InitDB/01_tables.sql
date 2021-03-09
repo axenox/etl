@@ -2,7 +2,6 @@
 -- Table structure for table `etl_flow`
 --
 
-DROP TABLE IF EXISTS `etl_flow`;
 CREATE TABLE IF NOT EXISTS `etl_flow` (
   `oid` binary(16) NOT NULL,
   `created_on` datetime NOT NULL,
@@ -22,7 +21,6 @@ CREATE TABLE IF NOT EXISTS `etl_flow` (
 -- Table structure for table `etl_run`
 --
 
-DROP TABLE IF EXISTS `etl_run`;
 CREATE TABLE IF NOT EXISTS `etl_run` (
   `oid` binary(16) NOT NULL,
   `created_on` datetime NOT NULL,
@@ -31,20 +29,24 @@ CREATE TABLE IF NOT EXISTS `etl_run` (
   `modified_by_user_oid` binary(16) NOT NULL,
   `step_oid` binary(16) NOT NULL,
   `flow_oid` binary(16) NOT NULL,
-  `step_disabled_flag` tinyint(1) NOT NULL DEFAULT '0',
-  `flow_run_uid` binary(16) NOT NULL,
+  `flow_run_oid` binary(16) NOT NULL,
+  `flow_run_pos` int(11) NOT NULL,
   `start_time` datetime NOT NULL,
   `timeout_seconds` int(11) NOT NULL,
   `end_time` datetime DEFAULT NULL,
   `end_increment_value` varchar(200) DEFAULT NULL,
   `output` longtext,
+  `step_disabled_flag` tinyint(1) NOT NULL DEFAULT '0',
+  `success_flag` tinyint(1) NOT NULL DEFAULT '0',
+  `skipped_flag` tinyint(1) NOT NULL DEFAULT '0',
   `invalidated_flag` tinyint(1) NOT NULL DEFAULT '0',
   `error_flag` tinyint(1) NOT NULL DEFAULT '0',
   `error_message` varchar(200) DEFAULT NULL,
   `error_log_id` varchar(10) DEFAULT NULL,
   `error_widget` longtext,
   PRIMARY KEY (`oid`) USING BTREE,
-  KEY `start time` (`start_time`)
+  UNIQUE KEY `Flow run pos unique per run` (`flow_run_oid`,`flow_run_pos`) USING BTREE,
+  KEY `Flow run` (`flow_run_oid`,`flow_oid`,`start_time`,`end_time`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;
 
 -- --------------------------------------------------------
@@ -53,7 +55,6 @@ CREATE TABLE IF NOT EXISTS `etl_run` (
 -- Table structure for table `etl_step`
 --
 
-DROP TABLE IF EXISTS `etl_step`;
 CREATE TABLE IF NOT EXISTS `etl_step` (
   `oid` binary(16) NOT NULL,
   `created_on` datetime NOT NULL,
