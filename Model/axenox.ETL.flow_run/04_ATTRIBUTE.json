@@ -481,7 +481,7 @@
         },
         {
             "CREATED_ON": "2021-03-05 10:03:36",
-            "MODIFIED_ON": "2021-03-09 11:23:43",
+            "MODIFIED_ON": "2021-03-09 18:38:55",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
             "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
             "UID": "0x11ebaddeabe39b24adde025041000001",
@@ -517,7 +517,7 @@
             "COPYABLEFLAG": "0",
             "ALIAS": "status",
             "DATATYPE": "0x11e7c3960c3586c38001e4b318306b9a",
-            "DATA_ADDRESS": "(CASE\n  WHEN [#errors#] = 0 AND [#steps_timed_out#] = 0 THEN 'SUCCESS'\n  WHEN [#errors#] > 0 THEN 'ERROR'\n  WHEN [#steps_invalidated#] > 0 THEN 'INVALIDATED'\n  ELSE 'RUNNING'\nEND)",
+            "DATA_ADDRESS": "(CASE\n  WHEN [#errors#] = 0 AND [#steps_timed_out#] = 0 THEN 'SUCCESS'\n  WHEN [#errors#] > 0 || [#steps_timed_out#] > 0 THEN 'ERROR'\n  WHEN [#steps_invalidated#] > 0 THEN 'INVALIDATED'\n  ELSE 'RUNNING'\nEND)",
             "OBJECT": "0x11ebbb7534237cb0bb75025041000001",
             "FORMATTER": "",
             "DISPLAYORDER": null,

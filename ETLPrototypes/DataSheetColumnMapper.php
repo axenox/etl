@@ -48,7 +48,7 @@ class DataSheetColumnMapper extends AbstractETLPrototype
             do {
                 $fromSheet = $baseSheet->copy();
                 $fromSheet->setRowsOffset($offset);
-                yield 'Reading ' . ($limit ? 'rows ' . ($offset+1) . ' - ' . ($offset+$limit) . '...' : ' all rows...') . PHP_EOL;
+                yield 'Reading ' . ($limit ? 'rows ' . ($offset+1) . ' - ' . ($offset+$limit) . '...' : 'all rows...') . PHP_EOL;
                 
                 $toSheet = $mapper->map($fromSheet, true);
                 $toSheet->getColumns()
@@ -61,9 +61,10 @@ class DataSheetColumnMapper extends AbstractETLPrototype
                 /*if ($cnt > 2000) {
                     throw new RuntimeException('Testing transactions');
                 }*/
-            } while ($fromSheet->isPaged() && $fromSheet->countRows() >= $limit);
+            } while ($limit !== null && $fromSheet->isPaged() && $fromSheet->countRows() >= $limit);
         } catch (\Throwable $e) {
             $transaction->rollback();
+            throw $e;
         }
         $transaction->commit();
         
@@ -98,7 +99,7 @@ class DataSheetColumnMapper extends AbstractETLPrototype
     /**
      * The attributes to compare when searching for existing data rows
      *
-     * @uxon-property update_if_match_on_attributes
+     * @uxon-property update_if_matching_attributes
      * @uxon-type metamodel:attribute[]
      * @uxon-template [""]
      * 
@@ -116,11 +117,13 @@ class DataSheetColumnMapper extends AbstractETLPrototype
      * @param MetaObjectInterface $fromObject
      * @return DataSheetInterface
      */
-    protected function getFromDataSheet() : DataSheetInterface
+    protected function getFromDataSheet(array $placeholders = []) : DataSheetInterface
     {
         $ds = DataSheetFactory::createFromObject($this->getFromObject());
         if ($this->sourceSheetUxon && ! $this->sourceSheetUxon->isEmpty()) {
-            $ds->importUxonObject($this->sourceSheetUxon);
+            $json = $this->sourceSheetUxon->toJson();
+            StringDataType::replacePlaceholders($json, $placeholders);
+            $ds->importUxonObject(UxonObject::fromJson($json));
         }
         return $ds;
     }

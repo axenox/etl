@@ -135,7 +135,7 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI
         $row = [
             'step' => $this->getStepUid($step),
             'flow' => $this->getFlowUid($step),
-            'flow_run_oid' => $flowRunUid,
+            'flow_run' => $flowRunUid,
             'flow_run_pos' => $position,
             'start_time' => $time,
             'timeout_seconds' => $step->getTimeout()

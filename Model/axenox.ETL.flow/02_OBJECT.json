@@ -81,7 +81,7 @@
     "rows": [
         {
             "CREATED_ON": "2021-02-26 16:44:37",
-            "MODIFIED_ON": "2021-03-04 13:12:57",
+            "MODIFIED_ON": "2021-03-09 16:43:57",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
             "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
             "UID": "0x11eb90858867906c9085025041000001",
@@ -105,6 +105,11 @@
                             {
                                 "height": 3,
                                 "widgets": [
+                                    {
+                                        "attribute_alias": "UID",
+                                        "widget_type": "InputHidden",
+                                        "id": "uid_field"
+                                    },
                                     {
                                         "attribute_alias": "name"
                                     },
@@ -170,7 +175,17 @@
                                         ],
                                         "buttons": [
                                             {
-                                                "action_alias": "exface.Core.ShowObjectCreateDialog"
+                                                "action_alias": "exface.Core.ShowObjectCreateDialog",
+                                                "disabled_if": {
+                                                    "operator": "AND",
+                                                    "conditions": [
+                                                        {
+                                                            "value_left": "=uid_field",
+                                                            "comparator": "==",
+                                                            "value_right": ""
+                                                        }
+                                                    ]
+                                                }
                                             },
                                             {
                                                 "action_alias": "exface.Core.ShowObjectEditDialog",

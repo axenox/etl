@@ -62,7 +62,7 @@ CREATE TABLE IF NOT EXISTS `etl_step` (
   `created_by_user_oid` binary(16) NOT NULL,
   `modified_by_user_oid` binary(16) NOT NULL,
   `name` varchar(50) NOT NULL,
-  `type` char(1) DEFAULT NULL,
+  `type` char(1) NOT NULL,
   `description` text,
   `flow_oid` binary(16) NOT NULL,
   `from_object_oid` binary(16) DEFAULT NULL,
