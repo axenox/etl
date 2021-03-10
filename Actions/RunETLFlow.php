@@ -97,7 +97,7 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI
     protected function logRunSuccess(array $row, string $output, string $endIncrementValue = null) : DataSheetInterface
     {
         $time = DateTimeDataType::now();
-        $ds = DataSheetFactory::createFromObjectIdOrAlias($this->getWorkbench(), 'axenox.ETL.run');
+        $ds = DataSheetFactory::createFromObjectIdOrAlias($this->getWorkbench(), 'axenox.ETL.step_run');
         $row['end_time'] = $time;
         $row['end_increment_value'] = $endIncrementValue;
         $row['success_flag'] = true;
@@ -110,7 +110,7 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI
     protected function logRunError(array $row, ExceptionInterface $exception, string $output = '') : DataSheetInterface
     {
         $time = DateTimeDataType::now();
-        $ds = DataSheetFactory::createFromObjectIdOrAlias($this->getWorkbench(), 'axenox.ETL.run');
+        $ds = DataSheetFactory::createFromObjectIdOrAlias($this->getWorkbench(), 'axenox.ETL.step_run');
         $row['end_time'] = $time;
         $row['output'] = $output;
         $row['error_flag'] = true;
@@ -131,7 +131,7 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI
     protected function logRunStart(ETLStepInterface $step, string $flowRunUid, int $position) : DataSheetInterface
     {
         $time = DateTimeDataType::now();
-        $ds = DataSheetFactory::createFromObjectIdOrAlias($this->getWorkbench(), 'axenox.ETL.run');
+        $ds = DataSheetFactory::createFromObjectIdOrAlias($this->getWorkbench(), 'axenox.ETL.step_run');
         $row = [
             'step' => $this->getStepUid($step),
             'flow' => $this->getFlowUid($step),
@@ -187,7 +187,7 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI
             'required_for_step',
             'UID',
             'name',
-            'etl_prototype_path',
+            'etl_prototype',
             'etl_config_uxon',
             'from_object',
             'to_object',
@@ -222,7 +222,7 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI
             }
             
             $step = ETLStepFactory::createFromFile(
-                $row['etl_prototype_path'], 
+                $row['etl_prototype'], 
                 $row['name'], 
                 $toObj,
                 $fromObj,
