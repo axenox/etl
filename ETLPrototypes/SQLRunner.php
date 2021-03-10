@@ -22,7 +22,7 @@ class SQLRunner extends AbstractETLPrototype
         $query = $connection->runSql($sql, true);
         // TODO get some results from the query here?
         $query->freeResult();
-        yield 'SQL query executed successfully' . PHP_EOL;
+        yield 'SQL query successful (' . $query->countAffectedRows() . ' affected rows)' . PHP_EOL;
     }
 
     /**

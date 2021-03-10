@@ -11,7 +11,7 @@
     "created_by_user_selector": "0x31000000000000000000000000000000",
     "created_on": "2021-02-26 16:55:01",
     "modified_by_user_selector": "0x31000000000000000000000000000000",
-    "modified_on": "2021-03-10 10:54:12",
+    "modified_on": "2021-03-10 11:52:23",
     "contents": {
         "widget_type": "SplitHorizontal",
         "object_alias": "axenox.ETL.flow",
@@ -115,6 +115,12 @@
                                             "group_by_attribute_alias": "type",
                                             "hide_caption": true
                                         },
+                                        "sorters": [
+                                            {
+                                                "attribute_alias": "level",
+                                                "direction": "asc"
+                                            }
+                                        ],
                                         "columns": [
                                             {
                                                 "attribute_alias": "object__NAME"
