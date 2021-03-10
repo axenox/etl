@@ -100,7 +100,7 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI
         $ds = DataSheetFactory::createFromObjectIdOrAlias($this->getWorkbench(), 'axenox.ETL.run');
         $row['end_time'] = $time;
         $row['end_increment_value'] = $endIncrementValue;
-        $row['success_flag'] = 1;
+        $row['success_flag'] = true;
         $row['output'] = $output;
         $ds->addRow($row);
         $ds->dataUpdate();
@@ -113,7 +113,7 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI
         $ds = DataSheetFactory::createFromObjectIdOrAlias($this->getWorkbench(), 'axenox.ETL.run');
         $row['end_time'] = $time;
         $row['output'] = $output;
-        $row['error_flag'] = 1;
+        $row['error_flag'] = true;
         $row['error_message'] = $exception->getMessage();
         $row['error_log_id'] = $exception->getId();
         try {
@@ -141,7 +141,7 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI
             'timeout_seconds' => $step->getTimeout()
         ];
         if ($step->isDisabled()) {
-            $row['step_disabled_flag'] = 1;
+            $row['step_disabled_flag'] = true;
             $row['end_time'] = $time;
         }
         $ds->getColumns()->addFromSystemAttributes();

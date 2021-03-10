@@ -81,7 +81,7 @@
     "rows": [
         {
             "CREATED_ON": "2021-02-26 16:46:29",
-            "MODIFIED_ON": "2021-03-03 21:47:02",
+            "MODIFIED_ON": "2021-03-10 11:03:41",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
             "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
             "UID": "0x11ebae9fcb215da2ae9f025041000001",
@@ -127,9 +127,8 @@
                                 "id": "to_object_field"
                             },
                             {
-                                "attribute_alias": "etl_prototype_path",
-                                "id": "prototype_field",
-                                "width": "max"
+                                "attribute_alias": "etl_prototype",
+                                "id": "prototype_field"
                             }
                         ]
                     },

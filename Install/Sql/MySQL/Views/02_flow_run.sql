@@ -9,7 +9,7 @@ SELECT
 	SUM(r.invalidated_flag) AS `steps_invalidated`,
 	SUM(
 		CASE
-			WHEN DATE_ADD(r.start_time, INTERVAL r.timeout_seconds SECOND) < NOW() THEN 1 
+			WHEN r.success_flag = 0 AND DATE_ADD(r.start_time, INTERVAL r.timeout_seconds SECOND) < NOW() THEN 1 
 			ELSE 0 
 		END
 	) AS steps_timed_out,
@@ -20,5 +20,5 @@ SELECT
 	MAX(r.modified_on) AS modified_on,
 	MAX(r.created_by_user_oid) AS created_by_user_oid,
 	MAX(r.modified_by_user_oid) AS modified_by_user_oid
-FROM etl_run r
+FROM etl_step_run r
 GROUP BY r.flow_run_oid, r.flow_oid;
