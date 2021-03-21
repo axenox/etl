@@ -11,7 +11,14 @@ interface ETLStepInterface extends WorkbenchDependantInterface, iCanBeConvertedT
     
     public function getToObject() : MetaObjectInterface;
     
-    public function run(string $stepRunUid, string $previousStepRunUid = null, string $incrementValue = null) : \Generator;
+    /**
+     * 
+     * @param string $stepRunUid
+     * @param string $previousStepRunUid
+     * @param string $incrementValue
+     * @return \Generator|string[]|ETLStepResultInterface
+     */
+    public function run(string $stepRunUid, string $previousStepRunUid = null, ETLStepResultInterface $lastResult = null) : \Generator;
     
     public function validate() : \Generator;
     
@@ -27,4 +34,11 @@ interface ETLStepInterface extends WorkbenchDependantInterface, iCanBeConvertedT
      * @return int
      */
     public function getTimeout() : int;
+    
+    /**
+     *
+     * @param string $resultData
+     * @return ETLStepResultInterface
+     */
+    public static function parseResult(string $stepRunUid, string $resultData = null) : ETLStepResultInterface;
 }

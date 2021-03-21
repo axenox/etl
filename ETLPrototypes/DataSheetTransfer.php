@@ -10,10 +10,11 @@ use exface\Core\Factories\DataSheetMapperFactory;
 use exface\Core\Factories\BehaviorFactory;
 use exface\Core\Behaviors\PreventDuplicatesBehavior;
 use axenox\ETL\Common\AbstractETLPrototype;
-use exface\Core\Exceptions\RuntimeException;
+use axenox\ETL\Interfaces\ETLStepResultInterface;
 use exface\Core\DataTypes\StringDataType;
+use axenox\ETL\Common\IncrementalEtlStepResult;
 
-class DataSheetColumnMapper extends AbstractETLPrototype
+class DataSheetTransfer extends AbstractETLPrototype
 {
     private $mapperUxon = null;
     
@@ -28,7 +29,7 @@ class DataSheetColumnMapper extends AbstractETLPrototype
      * {@inheritDoc}
      * @see \axenox\ETL\Interfaces\ETLStepInterface::run()
      */
-    public function run(string $stepRunUid, string $previousStepRunUid = null, string $incrementValue = null) : \Generator
+    public function run(string $stepRunUid, string $previousStepRunUid = null, ETLStepResultInterface $lastResult = null) : \Generator
     {
         $baseSheet = $this->getFromDataSheet();
         $mapper = $this->getMapper();
@@ -69,6 +70,8 @@ class DataSheetColumnMapper extends AbstractETLPrototype
         $transaction->commit();
         
         yield ' processed ' . $cnt . ' rows in total' . PHP_EOL;
+        
+        return (new IncrementalEtlStepResult($stepRunUid))->setProcessedRowsCounter($cnt);
     }
 
     public function validate(): \Generator
@@ -104,9 +107,9 @@ class DataSheetColumnMapper extends AbstractETLPrototype
      * @uxon-template [""]
      * 
      * @param UxonObject $uxon
-     * @return DataSheetColumnMapper
+     * @return DataSheetTransfer
      */
-    protected function setUpdateIfMatchingAttributes(UxonObject $uxon) : DataSheetColumnMapper
+    protected function setUpdateIfMatchingAttributes(UxonObject $uxon) : DataSheetTransfer
     {
         $this->updateIfMatchingAttributeAliases = $uxon->toArray();
         return $this;
@@ -136,9 +139,9 @@ class DataSheetColumnMapper extends AbstractETLPrototype
      * @uxon-template {"filters":{"operator": "AND","conditions":[{"expression": "","comparator": "=","value": ""}]},"sorters": [{"attribute_alias": "","direction": "ASC"}]}
      * 
      * @param UxonObject $uxon
-     * @return DataSheetColumnMapper
+     * @return DataSheetTransfer
      */
-    protected function setFromDataSheet(UxonObject $uxon) : DataSheetColumnMapper
+    protected function setFromDataSheet(UxonObject $uxon) : DataSheetTransfer
     {
         $this->sourceSheetUxon = $uxon;
         return $this;
@@ -167,9 +170,9 @@ class DataSheetColumnMapper extends AbstractETLPrototype
      * @uxon-required true
      * 
      * @param UxonObject $uxon
-     * @return DataSheetColumnMapper
+     * @return DataSheetTransfer
      */
-    protected function setMapper(UxonObject $uxon) : DataSheetColumnMapper
+    protected function setMapper(UxonObject $uxon) : DataSheetTransfer
     {
         $this->mapperUxon = $uxon;
         return $this;
@@ -187,11 +190,17 @@ class DataSheetColumnMapper extends AbstractETLPrototype
      * @uxon-type integers
      * 
      * @param int $numberOfRows
-     * @return DataSheetColumnMapper
+     * @return DataSheetTransfer
      */
-    protected function setPageSize(int $numberOfRows) : DataSheetColumnMapper
+    protected function setPageSize(int $numberOfRows) : DataSheetTransfer
     {
         $this->pageSize = $numberOfRows;
         return $this;
+    }
+    
+    
+    public static function parseResult(string $stepRunUid, string $resultData = null): ETLStepResultInterface
+    {
+        return new IncrementalEtlStepResult($stepRunUid, $resultData);
     }
 }

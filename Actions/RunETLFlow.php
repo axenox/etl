@@ -24,12 +24,15 @@ use exface\Core\Interfaces\Exceptions\ExceptionInterface;
 use exface\Core\Factories\UiPageFactory;
 use exface\Core\Interfaces\Exceptions\ActionExceptionInterface;
 use exface\Core\Exceptions\Actions\ActionInputMissingError;
+use axenox\ETL\Interfaces\ETLStepResultInterface;
 
 class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI
 {
     private $stepsLoaded = [];
     
     private $stepsPerFlowUid = [];
+    
+    private $stepsPreviousRsults = [];
     
     /**
      *
@@ -52,7 +55,13 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI
             yield from $this->runFlow($alias);
         }
     }
-        
+    
+    /**
+     * 
+     * @param string $alias
+     * @throws null
+     * @return \Generator|string[]
+     */
     protected function runFlow(string $alias) : \Generator
     {
         $flowRunUid = UUIDDataType::generateSqlOptimizedUuid();
@@ -62,7 +71,8 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI
         $prevStepRunUid = null;
         $indent = '  ';
         foreach ($this->getSteps($alias) as $pos => $step) {
-            $logRow = $this->logRunStart($step, $flowRunUid, $pos)->getRow(0);
+            $prevRunResult = $this->getPreviousResultData($step);
+            $logRow = $this->logRunStart($step, $flowRunUid, $pos, $prevRunResult)->getRow(0);
             $stepRunUid = $logRow['UID'];
             yield $indent . $step->getName() . ': ';
             if ($step->isDisabled()) {
@@ -94,12 +104,13 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI
         }
     }
     
-    protected function logRunSuccess(array $row, string $output, string $endIncrementValue = null) : DataSheetInterface
+    protected function logRunSuccess(array $row, string $output, ETLStepResultInterface $result = null) : DataSheetInterface
     {
         $time = DateTimeDataType::now();
         $ds = DataSheetFactory::createFromObjectIdOrAlias($this->getWorkbench(), 'axenox.ETL.step_run');
         $row['end_time'] = $time;
-        $row['end_increment_value'] = $endIncrementValue;
+        $row['result_count'] = $result->countProcessedRows();
+        $row['result_uxon'] = $result->__toString();
         $row['success_flag'] = true;
         $row['output'] = $output;
         $ds->addRow($row);
@@ -128,7 +139,7 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI
         return $ds;
     }
     
-    protected function logRunStart(ETLStepInterface $step, string $flowRunUid, int $position) : DataSheetInterface
+    protected function logRunStart(ETLStepInterface $step, string $flowRunUid, int $position, ETLStepResultInterface $previousRunResult) : DataSheetInterface
     {
         $time = DateTimeDataType::now();
         $ds = DataSheetFactory::createFromObjectIdOrAlias($this->getWorkbench(), 'axenox.ETL.step_run');
@@ -138,7 +149,8 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI
             'flow_run' => $flowRunUid,
             'flow_run_pos' => $position,
             'start_time' => $time,
-            'timeout_seconds' => $step->getTimeout()
+            'timeout_seconds' => $step->getTimeout(),
+            'result_uxon_of_prev_run' => $previousRunResult->__toString()
         ];
         if ($step->isDisabled()) {
             $row['step_disabled_flag'] = true;
@@ -272,6 +284,25 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI
             }
         }
         throw new ActionInputMissingError($this, 'No ETL flow to run: please provide `flow` parameter or input data based on the flow object (axenox.ETL.flow)!');
+    }
+    
+    /**
+     * 
+     * @param ETLStepInterface $step
+     * @return string|NULL
+     */
+    protected function getPreviousResultData(ETLStepInterface $step) : ?ETLStepResultInterface
+    {
+        $sheet = DataSheetFactory::createFromObjectIdOrAlias($this->getWorkbench(), 'axenox.ETL.step_run');
+        $sheet->getFilters()->addConditionFromString('step', $this->getStepUid($step), ComparatorDataType::EQUALS);
+        $sheet->getFilters()->addConditionFromString('success_flag', true, ComparatorDataType::EQUALS);
+        $sheet->getSorters()->addFromString('start_time', SortingDirectionsDataType::DESC);
+        $sheet->getColumns()->addMultiple([
+            'UID',
+            'result_uxon'
+        ]);
+        $sheet->dataRead(1);
+        return $step::parseResult($sheet->getCellValue('UID', 0), $sheet->getCellValue('result_uxon', 0));
     }
     
     public function getCliArguments(): array

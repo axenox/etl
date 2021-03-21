@@ -4,6 +4,9 @@ namespace axenox\ETL\ETLPrototypes;
 use axenox\ETL\Common\AbstractETLPrototype;
 use exface\Core\Interfaces\DataSources\SqlDataConnectorInterface;
 use exface\Core\DataTypes\StringDataType;
+use axenox\ETL\Interfaces\ETLStepResultInterface;
+use axenox\ETL\Common\IncrementalEtlStepResult;
+use exface\Core\CommonLogic\DataQueries\SqlDataQuery;
 
 class SQLRunner extends AbstractETLPrototype
 {
@@ -14,15 +17,30 @@ class SQLRunner extends AbstractETLPrototype
      * {@inheritDoc}
      * @see \axenox\ETL\Interfaces\ETLStepInterface::run()
      */
-    public function run(string $stepRunUid, string $previousStepRunUid = null, string $incrementValue = null) : \Generator
+    public function run(string $stepRunUid, string $previousStepRunUid = null, ETLStepResultInterface $lastResult = null) : \Generator
     {
         $sql = $this->getSql();
-        $sql = $this->replacePlaceholders($sql, $stepRunUid, $previousStepRunUid, $incrementValue);
+        $sql = $this->replacePlaceholders($sql, $stepRunUid, $previousStepRunUid);
         $connection = $this->getSqlConnection();
         $query = $connection->runSql($sql, true);
-        // TODO get some results from the query here?
+        $cnt = $this->countAffectedRows($query);
         $query->freeResult();
-        yield 'SQL query successful (' . $query->countAffectedRows() . ' affected rows)' . PHP_EOL;
+        yield 'SQL query successful (' . $cnt . ' affected rows)' . PHP_EOL;
+        $result = new IncrementalEtlStepResult($stepRunUid);
+        if ($cnt !== null) {
+            $result->setProcessedRowsCounter($cnt);
+        }
+        return $result;
+    }
+    
+    /**
+     * 
+     * @param SqlDataQuery $query
+     * @return int|NULL
+     */
+    protected function countAffectedRows(SqlDataQuery $query) : ?int
+    {
+        return $query->countAffectedRows();
     }
 
     /**
@@ -53,7 +71,6 @@ class SQLRunner extends AbstractETLPrototype
      * - `[#to_object_address#]`
      * - `[#step_run_uid#]`
      * - `[#previuos_step_run_uid#]`
-     * - `[#increment_value#]`
      * 
      * @uxon-property sql
      * @uxon-type string
@@ -91,8 +108,12 @@ class SQLRunner extends AbstractETLPrototype
             'from_object_address' => $this->getFromObject()->getDataAddress(),
             'to_object_address' => $this->getToObject()->getDataAddress(),
             'step_run_uid' => $stepRunUid,
-            'previuos_step_run_uid' => $previousStepRunUid ?? 'NULL',
-            'increment_value' => $incrementValue ?? ''
+            'previuos_step_run_uid' => $previousStepRunUid ?? 'NULL'
         ]);
+    }
+    
+    public static function parseResult(string $stepRunUid, string $resultData = null): ETLStepResultInterface
+    {
+        return new IncrementalEtlStepResult($stepRunUid, $resultData);
     }
 }

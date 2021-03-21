@@ -1,6 +1,8 @@
 <?php
 namespace axenox\ETL\ETLPrototypes;
 
+use exface\Core\CommonLogic\DataQueries\SqlDataQuery;
+
 class SQLSelectValidator extends SQLRunner
 {
     private $maxRows = null;
@@ -21,6 +23,16 @@ class SQLSelectValidator extends SQLRunner
 SELECT * FROM [#to_object_address#] {$where};
 
 SQL;
+    }
+    
+    /**
+     * 
+     * {@inheritDoc}
+     * @see \axenox\ETL\ETLPrototypes\SQLRunner::countAffectedRows()
+     */
+    protected function countAffectedRows(SqlDataQuery $query) : ?int
+    {
+        return count($query->getResultArray());
     }
     
     public function setMaxRows(int $value) : \SQLSelectValidator

@@ -6,6 +6,7 @@ use exface\Core\CommonLogic\UxonObject;
 use exface\Core\CommonLogic\Traits\ImportUxonObjectTrait;
 use axenox\ETL\Interfaces\ETLStepInterface;
 use exface\Core\Interfaces\Model\MetaObjectInterface;
+use axenox\ETL\Interfaces\ETLStepResultInterface;
 
 abstract class AbstractETLPrototype implements ETLStepInterface
 {
@@ -182,5 +183,5 @@ abstract class AbstractETLPrototype implements ETLStepInterface
     {
         $this->timeout = $seconds;
         return $this;
-    }
+    }    
 }
