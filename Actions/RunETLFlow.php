@@ -112,7 +112,7 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI
         $time = DateTimeDataType::now();
         $ds = DataSheetFactory::createFromObjectIdOrAlias($this->getWorkbench(), 'axenox.ETL.step_run');
         $row['end_time'] = $time;
-        $row['result_count'] = $result->countProcessedRows();
+        $row['result_count'] = $result->countProcessedRows() ?? 0;
         $row['result_uxon'] = $result->__toString();
         $row['success_flag'] = true;
         $row['output'] = $output;
@@ -142,7 +142,7 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI
         return $ds;
     }
     
-    protected function logRunStart(ETLStepInterface $step, string $flowRunUid, int $position, ETLStepResultInterface $previousRunResult) : DataSheetInterface
+    protected function logRunStart(ETLStepInterface $step, string $flowRunUid, int $position, ETLStepResultInterface $previousRunResult = null) : DataSheetInterface
     {
         $time = DateTimeDataType::now();
         $ds = DataSheetFactory::createFromObjectIdOrAlias($this->getWorkbench(), 'axenox.ETL.step_run');
@@ -153,7 +153,7 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI
             'flow_run_pos' => $position,
             'start_time' => $time,
             'timeout_seconds' => $step->getTimeout(),
-            'result_uxon_of_prev_run' => $previousRunResult->__toString()
+            'result_uxon_of_prev_run' => $previousRunResult === null ? null : $previousRunResult->__toString()
         ];
         if ($step->isDisabled()) {
             $row['step_disabled_flag'] = true;
@@ -305,7 +305,11 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI
             'result_uxon'
         ]);
         $sheet->dataRead(1);
-        return $step::parseResult($sheet->getCellValue('UID', 0), $sheet->getCellValue('result_uxon', 0));
+        if (! $sheet->isEmpty()) {
+            return $step::parseResult($sheet->getCellValue('UID', 0), $sheet->getCellValue('result_uxon', 0));
+        } else {
+            return null;
+        }
     }
     
     public function getCliArguments(): array

@@ -42,7 +42,9 @@ class DataSheetTransfer extends AbstractETLPrototype
         $mapper = $this->getMapper();
         $result = new IncrementalEtlStepResult($stepRunUid);
         
-        $this->addDuplicatePreventingBehavior($this->getToObject());
+        if ($this->isUpdateIfMatchingAttributes()) {
+            $this->addDuplicatePreventingBehavior($this->getToObject());
+        }
         
         if ($limit = $this->getPageSize()) {
             $baseSheet->setRowsLimit($limit);
@@ -77,9 +79,6 @@ class DataSheetTransfer extends AbstractETLPrototype
                 
                 $cnt += $fromSheet->countRows();
                 $offset = $offset + $limit;
-                /*if ($cnt > 2000) {
-                    throw new RuntimeException('Testing transactions');
-                }*/
             } while ($limit !== null && $fromSheet->isPaged() && $fromSheet->countRows() >= $limit);
         } catch (\Throwable $e) {
             $transaction->rollback();
@@ -131,6 +130,11 @@ class DataSheetTransfer extends AbstractETLPrototype
     {
         $this->updateIfMatchingAttributeAliases = $uxon->toArray();
         return $this;
+    }
+    
+    protected function isUpdateIfMatchingAttributes() : bool
+    {
+        return empty($this->updateIfMatchingAttributeAliases) === false;
     }
 
     /**
