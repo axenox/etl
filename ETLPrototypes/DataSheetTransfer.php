@@ -87,7 +87,7 @@ class DataSheetTransfer extends AbstractETLPrototype
         }
         $transaction->commit();
         
-        yield ' processed ' . $cnt . ' rows in total' . PHP_EOL;
+        yield '...processed ' . $cnt . ' rows in total' . PHP_EOL;
         
         return $result->setProcessedRowsCounter($cnt);
     }

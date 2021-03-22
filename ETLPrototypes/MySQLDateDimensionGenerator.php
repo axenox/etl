@@ -25,6 +25,11 @@ class MySQLDateDimensionGenerator extends SQLRunner
         'weekend_flag' => 'weekend_flag'
     ];
     
+    /**
+     * 
+     * {@inheritDoc}
+     * @see \axenox\ETL\ETLPrototypes\SQLRunner::getSql()
+     */
     protected function getSql() : string
     {
         if ($customSql = parent::getSql()) {

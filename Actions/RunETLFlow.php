@@ -82,6 +82,7 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI
                 try {
                     $generator = $step->run($stepRunUid, $prevStepRunUid);
                     foreach ($generator as $msg) {
+                        $msg = $indent . $indent . $msg;
                         $log .= $msg;
                         yield $msg;
                     }
