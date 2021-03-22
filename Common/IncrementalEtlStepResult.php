@@ -3,7 +3,16 @@ namespace axenox\ETL\Common;
 
 class IncrementalEtlStepResult extends UxonEtlStepResult
 {
-    private $timeAttributeAlias = null;
+    private $incrementValue = null;
     
-    private $timeValue = null;
+    public function getIncrementValue() : ?string
+    {
+        return $this->incrementValue;
+    }
+    
+    public function setIncrementValue(string $value) : IncrementalEtlStepResult
+    {
+        $this->incrementValue = $value;
+        return $this;
+    }
 }

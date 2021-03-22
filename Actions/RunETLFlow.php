@@ -102,6 +102,8 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI
             
             $prevStepRunUid = $stepRunUid;
         }
+        
+        yield PHP_EOL . '✓ Finished successfully' . PHP_EOL;
     }
     
     protected function logRunSuccess(array $row, string $output, ETLStepResultInterface $result = null) : DataSheetInterface

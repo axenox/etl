@@ -13,6 +13,9 @@ use axenox\ETL\Common\AbstractETLPrototype;
 use axenox\ETL\Interfaces\ETLStepResultInterface;
 use exface\Core\DataTypes\StringDataType;
 use axenox\ETL\Common\IncrementalEtlStepResult;
+use exface\Core\Interfaces\Model\MetaAttributeInterface;
+use exface\Core\DataTypes\ComparatorDataType;
+use exface\Core\DataTypes\DateTimeDataType;
 
 class DataSheetTransfer extends AbstractETLPrototype
 {
@@ -24,6 +27,10 @@ class DataSheetTransfer extends AbstractETLPrototype
     
     private $pageSize = null;
     
+    private $incrementalTimeAttributeAlias = null;
+    
+    private $incrementalTimeOffsetMinutes = 0;
+    
     /**
      * 
      * {@inheritDoc}
@@ -33,6 +40,7 @@ class DataSheetTransfer extends AbstractETLPrototype
     {
         $baseSheet = $this->getFromDataSheet();
         $mapper = $this->getMapper();
+        $result = new IncrementalEtlStepResult($stepRunUid);
         
         $this->addDuplicatePreventingBehavior($this->getToObject());
         
@@ -40,6 +48,16 @@ class DataSheetTransfer extends AbstractETLPrototype
             $baseSheet->setRowsLimit($limit);
         }
         $baseSheet->setAutoCount(false);
+        
+        if ($this->isIncrementalByTime()) {
+            if ($lastResult instanceof IncrementalEtlStepResult) {
+                $lastResultIncrement = $lastResult->getIncrementValue();
+            }
+            if ($lastResultIncrement !== null) {
+                $baseSheet->getFilters()->addConditionFromAttribute($this->getIncrementalTimeAttribute(), $lastResultIncrement, ComparatorDataType::GREATER_THAN_OR_EQUALS);
+            }
+            $result->setIncrementValue(DateTimeDataType::formatDateNormalized($this->getIncrementalTimeCurrentValue()));
+        }
         
         $transaction = $this->getWorkbench()->data()->startTransaction();
         
@@ -71,7 +89,7 @@ class DataSheetTransfer extends AbstractETLPrototype
         
         yield ' processed ' . $cnt . ' rows in total' . PHP_EOL;
         
-        return (new IncrementalEtlStepResult($stepRunUid))->setProcessedRowsCounter($cnt);
+        return $result->setProcessedRowsCounter($cnt);
     }
 
     public function validate(): \Generator
@@ -198,9 +216,82 @@ class DataSheetTransfer extends AbstractETLPrototype
         return $this;
     }
     
-    
+    /**
+     *
+     * {@inheritDoc}
+     * @see \axenox\ETL\Interfaces\ETLStepInterface::parseResult()
+     */
     public static function parseResult(string $stepRunUid, string $resultData = null): ETLStepResultInterface
     {
         return new IncrementalEtlStepResult($stepRunUid, $resultData);
+    }
+    
+    /**
+     * 
+     * @return string|NULL
+     */
+    protected function getIncrementalTimeAttributeAlias() : ?string
+    {
+        return $this->incrementalTimeAttributeAlias;
+    }
+    
+    /**
+     * 
+     * @return MetaAttributeInterface
+     */
+    protected function getIncrementalTimeAttribute() : MetaAttributeInterface
+    {
+        return $this->getFromObject()->getAttribute($this->getIncrementalTimeAttributeAlias());
+    }
+    
+    /**
+     * Alias of the from-object attribute holding last change time to be used for incremental loading.
+     * 
+     * @uxon-property incremental_time_attribute_alias
+     * @uxon-type metamodel:attribute
+     * 
+     * @param string $value
+     * @return DataSheetTransfer
+     */
+    protected function setIncrementalTimeAttributeAlias(string $value) : DataSheetTransfer
+    {
+        $this->incrementalTimeAttributeAlias = $value;
+        return $this;
+    }
+    
+    public function isIncrementalByTime() : bool
+    {
+        return $this->incrementalTimeAttributeAlias !== null;
+    }
+    
+    /**
+     * Number of minutes to add/subtract from the current time when initializing the increment value
+     * 
+     * @uxon-property incremental_time_offset_in_minutes
+     * @uxon-type integer
+     * 
+     * @return int
+     */
+    protected function getIncrementalTimeOffsetInMinutes() : int
+    {
+        return $this->incrementalTimeOffsetMinutes;
+    }
+    
+    protected function setIncrementalTimeOffsetInMinutes(int $value) : DataSheetTransfer
+    {
+        $this->incrementalTimeOffsetMinutes = $value;
+        return $this;
+    }
+    
+    protected function getIncrementalTimeCurrentValue() : \DateTime
+    {
+        $now = new \DateTime();
+        $offset = $this->getIncrementalTimeOffsetInMinutes();
+        if ($offset < 0) {
+            $now->sub(new \DateInterval('PT' . abs($offset) . 'M'));
+        } elseif ($offset > 0) {
+            $now->add(new \DateInterval('PT' . abs($offset) . 'M'));
+        }
+        return $now;
     }
 }

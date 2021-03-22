@@ -112,6 +112,11 @@ class SQLRunner extends AbstractETLPrototype
         ]);
     }
     
+    /**
+     *
+     * {@inheritDoc}
+     * @see \axenox\ETL\Interfaces\ETLStepInterface::parseResult()
+     */
     public static function parseResult(string $stepRunUid, string $resultData = null): ETLStepResultInterface
     {
         return new IncrementalEtlStepResult($stepRunUid, $resultData);
