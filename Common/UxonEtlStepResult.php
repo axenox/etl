@@ -18,6 +18,7 @@ class UxonEtlStepResult implements ETLStepResultInterface
     public function __construct(string $stepRunUid, string $encodedData = null)
     {
         $this->uxon = UxonObject::fromAnything($encodedData);
+        $this->importUxonObject($this->uxon);
         $this->stepRunUid = $stepRunUid;
     }
     

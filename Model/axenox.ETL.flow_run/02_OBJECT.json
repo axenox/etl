@@ -81,7 +81,7 @@
     "rows": [
         {
             "CREATED_ON": "2021-03-04 20:31:23",
-            "MODIFIED_ON": "2021-03-21 21:37:42",
+            "MODIFIED_ON": "2021-03-23 16:55:28",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
             "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
             "UID": "0x11ebbb7534237cb0bb75025041000001",
@@ -144,13 +144,19 @@
                                 "calculation": "=Left(error_message, 80)"
                             },
                             {
+                                "attribute_alias": "error_log_id"
+                            },
+                            {
+                                "attribute_alias": "result_count"
+                            },
+                            {
                                 "attribute_alias": "start_time"
                             },
                             {
                                 "attribute_alias": "end_time"
                             },
                             {
-                                "attribute_alias": "result_count"
+                                "attribute_alias": "result_uxon"
                             }
                         ],
                         "sorters": [

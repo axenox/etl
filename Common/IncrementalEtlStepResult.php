@@ -10,9 +10,18 @@ class IncrementalEtlStepResult extends UxonEtlStepResult
         return $this->incrementValue;
     }
     
-    public function setIncrementValue(string $value) : IncrementalEtlStepResult
+    public function setIncrementValue($value) : IncrementalEtlStepResult
     {
         $this->incrementValue = $value;
         return $this;
+    }
+    
+    public function exportUxonObject()
+    {
+        $uxon = parent::exportUxonObject();
+        if ($this->incrementValue !== null) {
+            $uxon->setProperty('increment_value', $this->getIncrementValue());
+        }
+        return $uxon;
     }
 }

@@ -183,5 +183,30 @@ abstract class AbstractETLPrototype implements ETLStepInterface
     {
         $this->timeout = $seconds;
         return $this;
-    }    
+    }
+    
+    /**
+     * Returns an array with names and values for placeholders that can be used in the steps config.
+     * 
+     * @param string $stepRunUid
+     * @param ETLStepResultInterface $lastResult
+     * @return array
+     */
+    protected function getPlaceholders(string $stepRunUid, ETLStepResultInterface $lastResult = null) : array
+    {
+        $phs = [
+            'step_run_uid' => $stepRunUid
+        ];
+        
+        if ($lastResult !== null) {
+            $phs['last_run_uid'] = $lastResult->getStepRunUid();
+            foreach ($lastResult->exportUxonObject()->toArray() as $ph => $val) {
+                if (is_scalar($val)) {
+                    $phs['last_run_' . $ph] = $val;
+                }
+            }
+        }
+        
+        return $phs;
+    }
 }

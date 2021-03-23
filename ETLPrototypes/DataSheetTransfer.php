@@ -38,7 +38,7 @@ class DataSheetTransfer extends AbstractETLPrototype
      */
     public function run(string $stepRunUid, string $previousStepRunUid = null, ETLStepResultInterface $lastResult = null) : \Generator
     {
-        $baseSheet = $this->getFromDataSheet();
+        $baseSheet = $this->getFromDataSheet($this->getPlaceholders($stepRunUid, $lastResult));
         $mapper = $this->getMapper();
         $result = new IncrementalEtlStepResult($stepRunUid);
         
@@ -55,7 +55,7 @@ class DataSheetTransfer extends AbstractETLPrototype
             if ($lastResult instanceof IncrementalEtlStepResult) {
                 $lastResultIncrement = $lastResult->getIncrementValue();
             }
-            if ($lastResultIncrement !== null) {
+            if ($lastResultIncrement !== null && $this->getIncrementalTimeAttributeAlias() !== null) {
                 $baseSheet->getFilters()->addConditionFromAttribute($this->getIncrementalTimeAttribute(), $lastResultIncrement, ComparatorDataType::GREATER_THAN_OR_EQUALS);
             }
             $result->setIncrementValue(DateTimeDataType::formatDateNormalized($this->getIncrementalTimeCurrentValue()));
@@ -69,7 +69,10 @@ class DataSheetTransfer extends AbstractETLPrototype
             do {
                 $fromSheet = $baseSheet->copy();
                 $fromSheet->setRowsOffset($offset);
-                yield 'Reading ' . ($limit ? 'rows ' . ($offset+1) . ' - ' . ($offset+$limit) . '...' : 'all rows...') . PHP_EOL;
+                yield 'Reading ' 
+                    . ($limit ? 'rows ' . ($offset+1) . ' - ' . ($offset+$limit) : 'all rows') 
+                    . ($lastResultIncrement !== null ? ' starting from "' . $lastResultIncrement . '"' : '')
+                    . '...' . PHP_EOL;
                 
                 $toSheet = $mapper->map($fromSheet, true);
                 $toSheet->getColumns()
@@ -147,7 +150,7 @@ class DataSheetTransfer extends AbstractETLPrototype
         $ds = DataSheetFactory::createFromObject($this->getFromObject());
         if ($this->sourceSheetUxon && ! $this->sourceSheetUxon->isEmpty()) {
             $json = $this->sourceSheetUxon->toJson();
-            StringDataType::replacePlaceholders($json, $placeholders);
+            $json = StringDataType::replacePlaceholders($json, $placeholders);
             $ds->importUxonObject(UxonObject::fromJson($json));
         }
         return $ds;
@@ -265,7 +268,14 @@ class DataSheetTransfer extends AbstractETLPrototype
     
     public function isIncrementalByTime() : bool
     {
-        return $this->incrementalTimeAttributeAlias !== null;
+        if ($this->incrementalTimeAttributeAlias !== null) {
+            return true;
+        }
+        if ($this->sourceSheetUxon && stripos($this->sourceSheetUxon->toJson(), '[#last_run_') !== false) {
+            return true;
+        }
+        
+        return false;
     }
     
     /**

@@ -11,7 +11,7 @@
     "created_by_user_selector": "0x31000000000000000000000000000000",
     "created_on": "2021-02-26 16:55:01",
     "modified_by_user_selector": "0x31000000000000000000000000000000",
-    "modified_on": "2021-03-21 21:57:02",
+    "modified_on": "2021-03-23 17:45:40",
     "contents": {
         "widget_type": "SplitHorizontal",
         "object_alias": "axenox.ETL.flow",
@@ -261,7 +261,7 @@
                                                 "attribute_alias": "status"
                                             },
                                             {
-                                                "attribute_alias": "step_run__UID:COUNT",
+                                                "attribute_alias": "flow__step__UID:COUNT",
                                                 "caption": "Steps"
                                             },
                                             {

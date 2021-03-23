@@ -22,7 +22,7 @@ class SQLRunner extends AbstractETLPrototype
     public function run(string $stepRunUid, string $previousStepRunUid = null, ETLStepResultInterface $lastResult = null) : \Generator
     {
         $sql = $this->getSql();
-        $sql = $this->replacePlaceholders($sql, $stepRunUid, $previousStepRunUid);
+        $sql = StringDataType::replacePlaceholders($sql, $this->getPlaceholders($stepRunUid, $lastResult));
         $connection = $this->getSqlConnection();
         
         if ($this->isWrappedInTransaction()) {
@@ -82,7 +82,7 @@ class SQLRunner extends AbstractETLPrototype
      * - `[#from_object_address#]`
      * - `[#to_object_address#]`
      * - `[#step_run_uid#]`
-     * - `[#previuos_step_run_uid#]`
+     * - `[#last_run_uid#]`
      * 
      * @uxon-property sql
      * @uxon-type string
@@ -105,22 +105,11 @@ class SQLRunner extends AbstractETLPrototype
         return $this->getToObject()->getDataConnection();
     }
     
-    /**
-     * 
-     * @param string $sql
-     * @param string $stepRunUid
-     * @param string $previousStepRunUid
-     * @param string $incrementValue
-     * 
-     * @return string
-     */
-    protected function replacePlaceholders(string $sql, string $stepRunUid, string $previousStepRunUid = null, string $incrementValue = null) : string
+    protected function getPlaceholders(string $stepRunUid, ETLStepResultInterface $lastResult = null) : array
     {
-        return StringDataType::replacePlaceholders($sql, [
+        return array_merge(parent::getPlaceholders($stepRunUid, $lastResult),[
             'from_object_address' => $this->getFromObject()->getDataAddress(),
-            'to_object_address' => $this->getToObject()->getDataAddress(),
-            'step_run_uid' => $stepRunUid,
-            'previuos_step_run_uid' => $previousStepRunUid ?? 'NULL'
+            'to_object_address' => $this->getToObject()->getDataAddress()
         ]);
     }
     

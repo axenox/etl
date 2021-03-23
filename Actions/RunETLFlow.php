@@ -81,7 +81,7 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI
             } else {
                 $log = '';
                 try {
-                    $generator = $step->run($stepRunUid, $prevStepRunUid);
+                    $generator = $step->run($stepRunUid, $prevStepRunUid, $prevRunResult);
                     foreach ($generator as $msg) {
                         $msg = $indent . $indent . $msg;
                         $log .= $msg;
@@ -96,11 +96,13 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI
                         $this->logRunError($logRow, $e, $log);
                     } catch (\Throwable $el) {
                         $this->getWorkbench()->getLogger()->logException($el);
-                        yield PHP_EOL . 'Could not save ETL run log: ' . $el->getMessage() . ' in ' . $el->getFile() . ' on line ' . $el->getLine();
+                        yield PHP_EOL . $indent .  '✗ Could not save ETL run log: ' . $el->getMessage() . ' in ' . $el->getFile() . ' on line ' . $el->getLine();
                     }
                     if ($this->getStopFlowOnError($step)) {
                         throw $e;
                     } else {
+                        yield PHP_EOL . '✗ ERROR: ' . $e->getMessage();
+                        yield PHP_EOL . '  See log-ID ' . $e->getId() . ' for details!';
                         $this->getWorkbench()->getLogger()->logException($e);
                     }
                 }
