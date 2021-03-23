@@ -12,6 +12,8 @@ class SQLRunner extends AbstractETLPrototype
 {
     private $sql = null;
     
+    private $wrapInTransaction = true;
+    
     /**
      * 
      * {@inheritDoc}
@@ -22,10 +24,20 @@ class SQLRunner extends AbstractETLPrototype
         $sql = $this->getSql();
         $sql = $this->replacePlaceholders($sql, $stepRunUid, $previousStepRunUid);
         $connection = $this->getSqlConnection();
+        
+        if ($this->isWrappedInTransaction()) {
+            $connection->transactionStart();
+        }
         $query = $connection->runSql($sql, true);
+        if ($this->isWrappedInTransaction()) {
+            $connection->transactionCommit();
+        }
+        
         $cnt = $this->countAffectedRows($query);
         $query->freeResult();
+        
         yield 'SQL query successful (' . $cnt . ' affected rows)' . PHP_EOL;
+        
         $result = new IncrementalEtlStepResult($stepRunUid);
         if ($cnt !== null) {
             $result->setProcessedRowsCounter($cnt);
@@ -120,5 +132,29 @@ class SQLRunner extends AbstractETLPrototype
     public static function parseResult(string $stepRunUid, string $resultData = null): ETLStepResultInterface
     {
         return new IncrementalEtlStepResult($stepRunUid, $resultData);
+    }
+    
+    protected function isWrappedInTransaction() : bool
+    {
+        return $this->wrapInTransaction;
+    }
+    
+    /**
+     * Set to FALSE to skip starting/committing a transaction before/after the SQL query.
+     * 
+     * Disabling the transaction may be usefull if transaction handling is done by the query
+     * itself (if supported by the database).
+     * 
+     * @uxon-property wrap_in_transaction
+     * @uxon-type boolean
+     * @uxon-default true
+     * 
+     * @param bool $value
+     * @return SQLRunner
+     */
+    public function setWrapInTransaction(bool $value) : SQLRunner
+    {
+        $this->wrapInTransaction = $value;
+        return $this;
     }
 }
