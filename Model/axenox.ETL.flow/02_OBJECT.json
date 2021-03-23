@@ -81,7 +81,7 @@
     "rows": [
         {
             "CREATED_ON": "2021-02-26 16:44:37",
-            "MODIFIED_ON": "2021-03-10 13:06:29",
+            "MODIFIED_ON": "2021-03-23 15:09:00",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
             "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
             "UID": "0x11eb90858867906c9085025041000001",
@@ -148,13 +148,18 @@
                                                 "attribute_alias": "name"
                                             },
                                             {
-                                                "attribute_alias": "to_object__LABEL"
+                                                "attribute_alias": "to_object__ALIAS_WITH_NS",
+                                                "caption": "From"
                                             },
                                             {
-                                                "attribute_alias": "from_object__LABEL"
+                                                "attribute_alias": "from_object__ALIAS_WITH_NS",
+                                                "caption": "To"
                                             },
                                             {
                                                 "attribute_alias": "disabled"
+                                            },
+                                            {
+                                                "attribute_alias": "run_after_step__LABEL"
                                             },
                                             {
                                                 "attribute_alias": "etl_prototype"

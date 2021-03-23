@@ -81,7 +81,7 @@
     "rows": [
         {
             "CREATED_ON": "2021-02-26 16:46:29",
-            "MODIFIED_ON": "2021-03-10 11:03:41",
+            "MODIFIED_ON": "2021-03-23 12:14:49",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
             "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
             "UID": "0x11ebae9fcb215da2ae9f025041000001",
@@ -110,7 +110,8 @@
                                 "attribute_alias": "type"
                             },
                             {
-                                "attribute_alias": "flow"
+                                "attribute_alias": "flow",
+                                "id": "flow_selector"
                             },
                             {
                                 "attribute_alias": "description",
@@ -129,6 +130,20 @@
                             {
                                 "attribute_alias": "etl_prototype",
                                 "id": "prototype_field"
+                            },
+                            {
+                                "attribute_alias": "run_after_step"
+                            },
+                            {
+                                "attribute_alias": "stop_flow_on_error",
+                                "widget_type": "InputComboTable",
+                                "filters": [
+                                    {
+                                        "attribute_alias": "flow",
+                                        "value": "=flow_selector",
+                                        "comparator": "=="
+                                    }
+                                ]
                             }
                         ]
                     },

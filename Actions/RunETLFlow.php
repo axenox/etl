@@ -25,6 +25,7 @@ use exface\Core\Factories\UiPageFactory;
 use exface\Core\Interfaces\Exceptions\ActionExceptionInterface;
 use exface\Core\Exceptions\Actions\ActionInputMissingError;
 use axenox\ETL\Interfaces\ETLStepResultInterface;
+use exface\Core\Exceptions\Actions\ActionConfigurationError;
 
 class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI
 {
@@ -32,7 +33,7 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI
     
     private $stepsPerFlowUid = [];
     
-    private $stepsPreviousRsults = [];
+    private $flowStoppers = [];
     
     /**
      *
@@ -97,7 +98,11 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI
                         $this->getWorkbench()->getLogger()->logException($el);
                         yield PHP_EOL . 'Could not save ETL run log: ' . $el->getMessage() . ' in ' . $el->getFile() . ' on line ' . $el->getLine();
                     }
-                    throw $e;
+                    if ($this->getStopFlowOnError($step)) {
+                        throw $e;
+                    } else {
+                        $this->getWorkbench()->getLogger()->logException($e);
+                    }
                 }
             }
             
@@ -207,7 +212,9 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI
             'from_object',
             'to_object',
             'disabled',
-            'flow'
+            'flow',
+            'stop_flow_on_error',
+            'run_after_step'
         ]);
         $ds->dataRead();
         
@@ -215,18 +222,33 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI
             throw new ActionRuntimeError($this, 'ETL flow "' . $flowAlias . '" not found!');
         }
         
-        /* Steps in original reading order with UIDs as keys. Planned steps are moved
+        /* 
+         * Steps in original reading order with UIDs as keys. Planned steps are moved
          * from this array to $stepsPlanned.
-         * @var $stepsToPlan \axenox\ETL\Interfaces\ETLStepInterface[] */
+         * @var $stepsToPlan \axenox\ETL\Interfaces\ETLStepInterface[] 
+         */
         $stepsToPlan = [];
-        /* Steps in execution order with regular numeric keys starting with 0.
-         * @var $stepsPlanned \axenox\ETL\Interfaces\ETLStepInterface[] */
+        
+        /* 
+         * Steps in execution order with regular numeric keys starting with 0.
+         * @var $stepsPlanned \axenox\ETL\Interfaces\ETLStepInterface[] 
+         */
         $stepsPlanned = [];
-        /* Array with object aliases as keys and subsets of $stepsToPlan still required 
+        
+        /* 
+         * Array with object aliases as keys and subsets of $stepsToPlan still required 
          * to populate each object as values. Once a step is planned it should be removed
          * from each step-array here it was contained in.
-         * @var $stepsForObject \axenox\ETL\Interfaces\ETLStepInterface[][] */
+         * @var $stepsForObject \axenox\ETL\Interfaces\ETLStepInterface[][] 
+         */
         $stepsForObject = [];
+        
+        /*
+         * Array with step UIDs for keys and their immediate follower step UID as value.
+         * It contains only those UIDs, that really have an immediate follower!
+         * @var $explicitFollowers string[]
+         */
+        $explicitFollowers = [];
         
         foreach ($ds->getRows() as $row) {
             $toObj = MetaObjectFactory::createFromString($this->getWorkbench(), $row['to_object']);
@@ -247,6 +269,17 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI
             $stepsToPlan[$row['UID']] = $step;
             $stepsForObject[$toObj->getAliasWithNamespace()][$row['UID']] = $step;
             $flowUId = $row['flow'];
+            
+            if ($row['stop_flow_on_error']) {
+                $this->flowStoppers[] = $step;
+            }
+            
+            if ($predecessorUid = ($row['run_after_step'] ?? null)) {
+                if (array_key_exists($predecessorUid, $explicitFollowers)) {
+                    throw new ActionConfigurationError($this, 'Step "' . $row['name'] . '" cannot be run immediately after step id "' . $explicitFollowers . '": another step is scheduled to run at the same time!');
+                }
+                $explicitFollowers[$predecessorUid] = $row['UID'];
+            }
         }
         
         $this->stepsLoaded = $stepsToPlan;
@@ -255,15 +288,49 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI
         $stepsCnt = count($stepsToPlan);
         for ($i = 0; $i < $stepsCnt; $i++) {
             foreach ($stepsToPlan as $stepUid => $step) {
+                // If the step was already planned, skip it
+                if (in_array($step, $stepsPlanned)) {
+                    continue;
+                }
+                // If the step is an immediate follower of another step - skip it as it
+                // will be handled when that other step (being followed) is planned.
+                if (in_array($stepUid, $explicitFollowers)) {
+                    continue;
+                }
+                // See if the steps from-object still has non-planned required steps
                 $stepsRequired = $step->getFromObject() ? ($stepsForObject[$step->getFromObject()->getAliasWithNamespace()] ?? []) : [];
-                if (! in_array($step, $stepsPlanned) && (empty($stepsRequired) || (count($stepsRequired) === 1 && $stepsRequired[$stepUid] === $step))) {
+                // If not, enqueue the step
+                if (empty($stepsRequired) || (count($stepsRequired) === 1 && $stepsRequired[$stepUid] === $step)) {
                     $stepsPlanned[] = $step;
+                    // Remove it from all object requirements
                     foreach ($stepsForObject as $o => $reqs) {
                         if (array_key_exists($stepUid, $reqs)) {
                             unset($stepsForObject[$o][$stepUid]);
                         }
                     }
+                    // Remove it from the steps to plan to reduce future iterations
                     unset($stepsToPlan[$stepUid]);
+                    
+                    // See if the step has an immediate follower
+                    $followerUid = $explicitFollowers[$stepUid] ?? null;
+                    while ($followerUid !== null) {
+                        // If so, plan the follow-up step now
+                        $followerStep = $stepsToPlan[$followerUid];
+                        $stepsPlanned[] = $followerStep;
+                        unset($stepsToPlan[$followerUid]);
+                        // Remove the follow-up from object requirements
+                        foreach ($stepsForObject as $o => $reqs) {
+                            if (array_key_exists($followerUid, $reqs)) {
+                                unset($stepsForObject[$o][$followerUid]);
+                            }
+                        }
+                        // See if the follow-up has a follow-up and, if so, stay in the WHILE
+                        // to handle it - otherwise proceed regularly.
+                        $followerUid = $explicitFollowers[$followerUid] ?? null;
+                    }
+                    
+                    // Leave the inner FOREACH and start over from the beginning of the
+                    // remaining steps to plan.
                     break;
                 }
             }
@@ -310,6 +377,11 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI
         } else {
             return null;
         }
+    }
+    
+    protected function getStopFlowOnError(ETLStepInterface $step) : bool
+    {
+        return in_array($step, $this->flowStoppers);
     }
     
     public function getCliArguments(): array
