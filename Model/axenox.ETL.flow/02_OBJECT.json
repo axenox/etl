@@ -81,7 +81,7 @@
     "rows": [
         {
             "CREATED_ON": "2021-02-26 16:44:37",
-            "MODIFIED_ON": "2021-03-23 15:09:00",
+            "MODIFIED_ON": "2021-03-24 12:36:07",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
             "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
             "UID": "0x11eb90858867906c9085025041000001",
@@ -148,11 +148,11 @@
                                                 "attribute_alias": "name"
                                             },
                                             {
-                                                "attribute_alias": "to_object__ALIAS_WITH_NS",
+                                                "attribute_alias": "from_object__ALIAS_WITH_NS",
                                                 "caption": "From"
                                             },
                                             {
-                                                "attribute_alias": "from_object__ALIAS_WITH_NS",
+                                                "attribute_alias": "to_object__ALIAS_WITH_NS",
                                                 "caption": "To"
                                             },
                                             {
