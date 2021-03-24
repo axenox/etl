@@ -90,7 +90,7 @@ abstract class AbstractETLPrototype implements ETLStepInterface
         return $this->uxon->hasProperty($name);
     }
     
-    protected function getStepRunUidAttributeAlias() : string
+    protected function getStepRunUidAttributeAlias() : ?string
     {
         return $this->stepRunUidAttributeAlias;
     }

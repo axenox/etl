@@ -7,6 +7,8 @@ class SQLSelectValidator extends SQLRunner
 {
     private $maxRows = null;
     
+    private $incrementalWhere = null;
+    
     /**
      * 
      * {@inheritDoc}
@@ -14,10 +16,10 @@ class SQLSelectValidator extends SQLRunner
      */
     protected function getSql() : string
     {
-        /*if ($runUidAlias = $this->getStepRunUidAttributeAlias()) {
-            $runUidCol = $this->getToObject()->getAttribute($runUidAlias)->getDataAddress();
-            $where = "WHERE $runUidCol = [#previuos_step_run_uid#]";
-        }*/
+        if ($incr = $this->getIncrementalWhere()) {
+            $where = 'WHERE ' . $incr;
+        }
+        
         return <<<SQL
 
 SELECT * FROM [#to_object_address#] {$where};
@@ -35,7 +37,7 @@ SQL;
         return count($query->getResultArray());
     }
     
-    public function setMaxRows(int $value) : \SQLSelectValidator
+    public function setMaxRows(int $value) : SQLSelectValidator
     {
         $this->maxRows = $value;
         return $this;
@@ -45,4 +47,25 @@ SQL;
     {
         return $this->maxRows;
     }
+    
+    protected function getIncrementalWhere() : ?string
+    {
+        return $this->incrementalWhere;
+    }
+    
+    /**
+     * SQL predicate for the WHERE statement that will take care of the `[#last_step_increment_value#]` placeholder.
+     *
+     * @uxon-property incremental_where
+     * @uxon-type string
+     *
+     * @param string $value
+     * @return MySQLReplace
+     */
+    protected function setIncrementalWhere(string $value) : SQLSelectValidator
+    {
+        $this->incrementalWhere = $value;
+        return $this;
+    }
+        
 }
