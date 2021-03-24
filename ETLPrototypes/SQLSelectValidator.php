@@ -14,10 +14,10 @@ class SQLSelectValidator extends SQLRunner
      */
     protected function getSql() : string
     {
-        if ($runUidAlias = $this->getStepRunUidAttributeAlias()) {
+        /*if ($runUidAlias = $this->getStepRunUidAttributeAlias()) {
             $runUidCol = $this->getToObject()->getAttribute($runUidAlias)->getDataAddress();
             $where = "WHERE $runUidCol = [#previuos_step_run_uid#]";
-        }
+        }*/
         return <<<SQL
 
 SELECT * FROM [#to_object_address#] {$where};
