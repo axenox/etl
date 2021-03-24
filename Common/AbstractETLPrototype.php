@@ -200,7 +200,7 @@ abstract class AbstractETLPrototype implements ETLStepInterface
         
         if ($lastResult !== null) {
             $phs['last_run_uid'] = $lastResult->getStepRunUid();
-            foreach ($lastResult->exportUxonObject()->toArray() as $ph => $val) {
+            foreach ($lastResult->exportUxonObject(true)->toArray() as $ph => $val) {
                 if (is_scalar($val)) {
                     $phs['last_run_' . $ph] = $val;
                 }

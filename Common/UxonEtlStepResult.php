@@ -53,9 +53,13 @@ class UxonEtlStepResult implements ETLStepResultInterface
      * {@inheritDoc}
      * @see \exface\Core\Interfaces\iCanBeConvertedToUxon::exportUxonObject()
      */
-    public function exportUxonObject()
+    public function exportUxonObject(bool $forceAllProperties = false)
     {
         $uxon = $this->uxon ?? new UxonObject();
+        
+        if ($forceAllProperties) {
+            $uxon->setProperty('processed_rows_counter', $this->countProcessedRows());
+        }
         
         return $uxon;
     }
