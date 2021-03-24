@@ -66,12 +66,19 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI
     protected function runFlow(string $alias) : \Generator
     {
         $flowRunUid = UUIDDataType::generateSqlOptimizedUuid();
+        $indent = '  ';
         
-        yield 'Running ETL flow "' . $alias . '" (run-UID ' . $flowRunUid . ')' . PHP_EOL;
+        yield 'Running ETL flow "' . $alias . '" (run-UID ' . $flowRunUid . ').' . PHP_EOL;
+        yield PHP_EOL . $indent . 'Execution plan:' . PHP_EOL;
         
         $prevStepRunUid = null;
-        $indent = '  ';
-        foreach ($this->getSteps($alias) as $pos => $step) {
+        
+        $planner = $this->getStepsPlanGenerator($alias, $indent.$indent);
+        yield from $planner;
+        $plan = $planner->getReturn();
+        
+        yield PHP_EOL . 'Startig now...' . PHP_EOL . PHP_EOL;
+        foreach ($plan as $pos => $step) {
             $prevRunResult = $this->getPreviousResultData($step);
             $logRow = $this->logRunStart($step, $flowRunUid, $pos, $prevRunResult)->getRow(0);
             $stepRunUid = $logRow['UID'];
@@ -198,9 +205,9 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI
      * 
      * @param string $flowAlias
      * @throws ActionRuntimeError
-     * @return ETLStepInterface[]
+     * @return \Generator|ETLStepInterface[]
      */
-    protected function getSteps(string $flowAlias) : array
+    protected function getStepsPlanGenerator(string $flowAlias, string $logIndent) : \Generator
     {
         $ds = DataSheetFactory::createFromObjectIdOrAlias($this->getWorkbench(), 'axenox.ETL.step');
         $ds->getFilters()->addConditionFromString('flow__alias', $flowAlias, ComparatorDataType::EQUALS);
@@ -304,6 +311,7 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI
                 // If not, enqueue the step
                 if (empty($stepsRequired) || (count($stepsRequired) === 1 && $stepsRequired[$stepUid] === $step)) {
                     $stepsPlanned[] = $step;
+                    yield $logIndent . count($stepsPlanned) . '. ' . $step->getName() . PHP_EOL;
                     // Remove it from all object requirements
                     foreach ($stepsForObject as $o => $reqs) {
                         if (array_key_exists($stepUid, $reqs)) {
@@ -319,6 +327,7 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI
                         // If so, plan the follow-up step now
                         $followerStep = $stepsToPlan[$followerUid];
                         $stepsPlanned[] = $followerStep;
+                        yield $logIndent . count($stepsPlanned) . '. ' . $followerStep->getName() . ' - as immediate follower of (' . (count($stepsPlanned)-1) . '.)' . PHP_EOL;
                         unset($stepsToPlan[$followerUid]);
                         // Remove the follow-up from object requirements
                         foreach ($stepsForObject as $o => $reqs) {
@@ -339,7 +348,15 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI
         }
         
         if (count($stepsPlanned) !== $stepsCnt) {
-            throw new RuntimeException('Cannot determine execution order for ETL steps!');
+            yield $logIndent . '✗ Cannot order remaining steps according to their dependencies:' . PHP_EOL;
+            foreach ($stepsToPlan as $step) {
+                yield $logIndent . '  - Step "' . $step->getName() . '" requires ' . ($step->getFromObject() ? 'object "' . $step->getFromObject()->getAliasWithNamespace() . '"' : 'nothing') . ' with:' . PHP_EOL;
+                $stepsRequired = $step->getFromObject() ? ($stepsForObject[$step->getFromObject()->getAliasWithNamespace()] ?? []) : [];
+                foreach ($stepsRequired as $req) {
+                    yield $logIndent . $logIndent . '- "' . $req->getName() . '"' . PHP_EOL;
+                }
+            }
+            throw new RuntimeException('Cannot determine execution order for ETL steps! Circular dependency?');
         }
         
         return $stepsPlanned;
