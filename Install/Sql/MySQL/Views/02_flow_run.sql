@@ -2,6 +2,7 @@ CREATE OR REPLACE VIEW etl_flow_run AS
 SELECT 
 	r.flow_run_oid AS oid,
 	r.flow_oid,
+	COUNT(1) AS steps_started,
 	SUM(r.success_flag + r.error_flag) AS steps_run,
 	SUM(r.error_flag) AS `errors`,
 	SUM(r.step_disabled_flag) AS `steps_disabled`,
