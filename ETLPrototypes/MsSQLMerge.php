@@ -26,8 +26,8 @@ class MsSQLMerge extends SQLRunner
         
         foreach ($this->getColumnMappings() as $map) {
             $insertCols .= ($insertCols ? ', ' : '') . $map->getToSql();
-            $insertValues .= ($insertValues ? ', ' : '') . "[#merge_target#].{$map->getFromSql()}";
-            $updates .= ($updates ? ', ' : '') . "[#merge_target#].{$map->getToSql()} = [#merge_source#].{$map->getFromSql()}";
+            $insertValues .= ($insertValues ? ', ' : '') . "[#source#].{$map->getFromSql()}";
+            $updates .= ($updates ? ', ' : '') . "[#target#].{$map->getToSql()} = [#source#].{$map->getFromSql()}";
         }
         
         if ($insertValues === '' || $insertCols === '') {
@@ -38,10 +38,10 @@ class MsSQLMerge extends SQLRunner
             $toSql = $this->getToObject()->getAttribute($runUidAlias)->getDataAddress();
             $insertCols .= ', ' . $toSql;
             $insertValues .= ', [#step_run_uid#]';
-            $updates .= ($updates ? ', ' : '') . "[#merge_target#].{$toSql} = [#step_run_uid#]";
+            $updates .= ($updates ? ', ' : '') . "[#target#].{$toSql} = [#step_run_uid#]";
         }
         
-        $mergeCondition = StringDataType::replacePlaceholders($this->getMergeOnCondition());
+        $mergeCondition = $this->getSqlMergeOnCondition();
         
         if ($incr = $this->getIncrementalWhere()) {
             $mergeCondition .= ' AND ' . $incr;
@@ -49,8 +49,8 @@ class MsSQLMerge extends SQLRunner
         
         return <<<SQL
 
-MERGE [#to_object_address#] [#merge_target#] USING [#from_object_address#] [#merge_source#]
-    ON {$mergeCondition}
+MERGE [#to_object_address#] [#target#] USING [#from_object_address#] [#source#]
+    ON ({$mergeCondition})
     WHEN MATCHED
         THEN UPDATE SET {$updates}
     WHEN NOT MATCHED
@@ -68,8 +68,8 @@ SQL;
     protected function getPlaceholders(string $stepRunUid, ETLStepResultInterface $lastResult = null) : array
     {
         return array_merge(parent::getPlaceholders($stepRunUid, $lastResult), [
-            'merge_source' => 'exfs',
-            'merge_target' => 'exft'
+            'source' => 'exfs',
+            'target' => 'exft'
         ]);
     }
     
@@ -77,17 +77,20 @@ SQL;
      * 
      * @return string
      */
-    protected function getMergeOnCondition() : string
+    protected function getSqlMergeOnCondition() : string
     {
         return $this->mergeOnCondition;
     }
     
     /**
+     * The SQL to use in the ON clause of the MERGE
+     * 
+     * @uxon-property sql_merge_on_condition
      * 
      * @param string $value
      * @return MsSQLMerge
      */
-    protected function setMergeOnCondition(string $value) : MsSQLMerge
+    protected function setSqlMergeOnCondition(string $value) : MsSQLMerge
     {
         $this->mergeOnCondition = $value;
         return $this;

@@ -49,8 +49,8 @@ class SqlColumnMapping implements iCanBeConvertedToUxon
     
     public function getFromSql() : string
     {
-        $expr = $this->getToExpression();
-        $obj = $this->getToObject();
+        $expr = $this->getFromExpression();
+        $obj = $this->getFromObject();
         switch (true) {
             case stripos($expr, '(') !== false:
                 $sql = $expr;
