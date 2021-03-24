@@ -190,7 +190,7 @@ abstract class AbstractETLPrototype implements ETLStepInterface
      * 
      * @param string $stepRunUid
      * @param ETLStepResultInterface $lastResult
-     * @return array
+     * @return string[]
      */
     protected function getPlaceholders(string $stepRunUid, ETLStepResultInterface $lastResult = null) : array
     {

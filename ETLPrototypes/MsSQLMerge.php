@@ -4,9 +4,14 @@ namespace axenox\ETL\ETLPrototypes;
 use exface\Core\Exceptions\RuntimeException;
 use exface\Core\DataTypes\StringDataType;
 use axenox\ETL\Interfaces\ETLStepResultInterface;
+use axenox\ETL\Common\Traits\SqlColumnMappingsTrait;
+use axenox\ETL\Common\Traits\IncrementalSqlWhereTrait;
 
-class MsSQLMerge extends MySQLReplace
+class MsSQLMerge extends SQLRunner
 {    
+   use SqlColumnMappingsTrait;
+   use IncrementalSqlWhereTrait;
+   
    private $mergeOnCondition = null;
    
    protected function getSql() : string
@@ -20,9 +25,9 @@ class MsSQLMerge extends MySQLReplace
         $updates = '';
         
         foreach ($this->getColumnMappings() as $map) {
-            $insertValues .= ($insertValues ? ', ' : '') . $map->getToSql();
-            $insertCols .= ($insertCols ? ', ' : '') . $map->getFromSql();
-            $updates .= ($updates ? ', ' : '') . "[#merge_target#].{$map->getToSql()} = [#merge_source#].{$map->getFromSql}";
+            $insertCols .= ($insertCols ? ', ' : '') . $map->getToSql();
+            $insertValues .= ($insertValues ? ', ' : '') . "[#merge_target#].{$map->getFromSql()}";
+            $updates .= ($updates ? ', ' : '') . "[#merge_target#].{$map->getToSql()} = [#merge_source#].{$map->getFromSql()}";
         }
         
         if ($insertValues === '' || $insertCols === '') {
@@ -31,8 +36,8 @@ class MsSQLMerge extends MySQLReplace
         
         if ($runUidAlias = $this->getStepRunUidAttributeAlias()) {
             $toSql = $this->getToObject()->getAttribute($runUidAlias)->getDataAddress();
-            $insertValues .= ', ' . $toSql;
-            $insertCols .= ', [#step_run_uid#]';
+            $insertCols .= ', ' . $toSql;
+            $insertValues .= ', [#step_run_uid#]';
             $updates .= ($updates ? ', ' : '') . "[#merge_target#].{$toSql} = [#step_run_uid#]";
         }
         
@@ -50,7 +55,7 @@ MERGE [#to_object_address#] [#merge_target#] USING [#from_object_address#] [#mer
         THEN UPDATE SET {$updates}
     WHEN NOT MATCHED
         THEN INSERT ($insertCols)
-            VALUES ($insertValues);
+             VALUES ($insertValues);
 
 SQL;
     }
@@ -60,7 +65,7 @@ SQL;
      * {@inheritDoc}
      * @see \axenox\ETL\ETLPrototypes\SQLRunner::getPlaceholders()
      */
-    protected function getPlaceholders(string $stepRunUid, ETLStepResultInterface $lastResult = null)
+    protected function getPlaceholders(string $stepRunUid, ETLStepResultInterface $lastResult = null) : array
     {
         return array_merge(parent::getPlaceholders($stepRunUid, $lastResult), [
             'merge_source' => 'exfs',
