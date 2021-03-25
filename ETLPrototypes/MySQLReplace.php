@@ -2,12 +2,13 @@
 namespace axenox\ETL\ETLPrototypes;
 
 use exface\Core\Exceptions\RuntimeException;
-use axenox\ETL\Common\Traits\IncrementalSqlWhereTrait;
+use axenox\ETL\Common\Traits\SqlIncrementalWhereTrait;
 use axenox\ETL\Common\Traits\SqlColumnMappingsTrait;
+use axenox\ETL\Interfaces\ETLStepResultInterface;
 
 class MySQLReplace extends SQLRunner
 {
-    use IncrementalSqlWhereTrait; 
+    use SqlIncrementalWhereTrait; 
     use SqlColumnMappingsTrait;
     
     /**
@@ -20,9 +21,23 @@ class MySQLReplace extends SQLRunner
         if ($customSql = parent::getSql()) {
             return $customSql;
         }
+        
+        return <<<SQL
+
+REPLACE INTO [#to_object_address#] 
+    ([#columns#]) 
+    SELECT 
+        [#selects#] 
+    FROM [#from_object_address#]
+    WHERE [#incremental_where#];
+
+SQL;
+    }
+    
+    protected function getPlaceholders(string $stepRunUid, ETLStepResultInterface $lastResult = null) : array
+    {
         $targetCols = '';
         $sourceCols = '';
-        $where = '';
         
         foreach ($this->getColumnMappings() as $map) {
             $targetCols .= ($targetCols ? ', ' : '') . $map->getToSql();
@@ -38,19 +53,10 @@ class MySQLReplace extends SQLRunner
             $sourceCols .= ', [#step_run_uid#]';
         }
         
-        if ($incr = $this->getIncrementalWhere()) {
-            $where = 'WHERE ' . $incr;
-        }
-        
-        return <<<SQL
-
-REPLACE INTO [#to_object_address#] 
-    ({$targetCols}) 
-    SELECT 
-        {$sourceCols} 
-    FROM [#from_object_address#]
-    {$where};
-
-SQL;
+        return array_merge(parent::getPlaceholders($stepRunUid, $lastResult), [
+            'columns' => $targetCols,
+            'selects' => $sourceCols,
+            'incremental_where' => $this->getSqlIncrementalWhere() ?? '1'
+        ]);
     }
 }

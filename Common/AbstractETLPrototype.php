@@ -98,13 +98,13 @@ abstract class AbstractETLPrototype implements ETLStepInterface
     /**
      * Alias of the attribute of the to-object where the UID of every step run is to be saved
      * 
-     * @uxon-property step_run_uid_attribute_alias
+     * @uxon-property step_run_uid_attribute
      * @uxon-type metamodel:attribute
      * 
      * @param string $value
      * @return AbstractETLPrototype
      */
-    protected function setStepRunUidAttributeAlias(string $value) : AbstractETLPrototype
+    protected function setStepRunUidAttribute(string $value) : AbstractETLPrototype
     {
         $this->stepRunUidAttributeAlias = $value;
         return $this;

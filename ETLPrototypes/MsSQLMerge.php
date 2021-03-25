@@ -5,21 +5,72 @@ use exface\Core\Exceptions\RuntimeException;
 use exface\Core\DataTypes\StringDataType;
 use axenox\ETL\Interfaces\ETLStepResultInterface;
 use axenox\ETL\Common\Traits\SqlColumnMappingsTrait;
-use axenox\ETL\Common\Traits\IncrementalSqlWhereTrait;
+use axenox\ETL\Common\Traits\SqlIncrementalWhereTrait;
 
 class MsSQLMerge extends SQLRunner
 {    
    use SqlColumnMappingsTrait;
-   use IncrementalSqlWhereTrait;
+   use SqlIncrementalWhereTrait;
    
    private $mergeOnCondition = null;
    
+   /**
+    * 
+    * {@inheritDoc}
+    * @see \axenox\ETL\ETLPrototypes\SQLRunner::getSql()
+    */
    protected function getSql() : string
     {
         if ($customSql = parent::getSql()) {
             return $customSql;
         }
         
+        return <<<SQL
+
+MERGE [#to_object_address#] [#target#] USING [#from_object_address#] [#source#]
+    ON ([#merge_condition#] AND [#incremental_where#])
+    WHEN MATCHED
+        THEN UPDATE SET [#update_pairs#]
+    WHEN NOT MATCHED
+        THEN INSERT ([#insert_columns#])
+             VALUES ([#insert_values#]);
+
+SQL;
+    }
+    
+    /**
+     * Override the default MERGE statement to add a GROUP BY or other enhancements.
+     * 
+     * The default statement is
+     * 
+     * ```
+     * MERGE [#to_object_address#] [#target#] USING [#from_object_address#] [#source#]
+     *    ON ([#merge_condition#] AND [#incremental_where#])
+     *    WHEN MATCHED
+     *        THEN UPDATE SET [#update_pairs#]
+     *    WHEN NOT MATCHED
+     *        THEN INSERT ([#insert_columns#])
+     *             VALUES ([#insert_values#]);
+     *             
+     * ```
+     * 
+     * @uxon-property sql
+     * @uxon-type string
+     * 
+     * @see \axenox\ETL\ETLPrototypes\SQLRunner::setSql()
+     */
+    protected function setSql(string $value) : SQLRunner
+    {
+        return parent::setSql($value);
+    }
+    
+    /**
+     * 
+     * {@inheritDoc}
+     * @see \axenox\ETL\ETLPrototypes\SQLRunner::getPlaceholders()
+     */
+    protected function getPlaceholders(string $stepRunUid, ETLStepResultInterface $lastResult = null) : array
+    {
         $insertValues = '';
         $insertCols = '';
         $updates = '';
@@ -43,33 +94,14 @@ class MsSQLMerge extends SQLRunner
         
         $mergeCondition = $this->getSqlMergeOnCondition();
         
-        if ($incr = $this->getIncrementalWhere()) {
-            $mergeCondition .= ' AND ' . $incr;
-        }
-        
-        return <<<SQL
-
-MERGE [#to_object_address#] [#target#] USING [#from_object_address#] [#source#]
-    ON ({$mergeCondition})
-    WHEN MATCHED
-        THEN UPDATE SET {$updates}
-    WHEN NOT MATCHED
-        THEN INSERT ($insertCols)
-             VALUES ($insertValues);
-
-SQL;
-    }
-    
-    /**
-     * 
-     * {@inheritDoc}
-     * @see \axenox\ETL\ETLPrototypes\SQLRunner::getPlaceholders()
-     */
-    protected function getPlaceholders(string $stepRunUid, ETLStepResultInterface $lastResult = null) : array
-    {
         return array_merge(parent::getPlaceholders($stepRunUid, $lastResult), [
             'source' => 'exfs',
-            'target' => 'exft'
+            'target' => 'exft',
+            'merge_condition' => $mergeCondition,
+            'insert_values' => $insertValues,
+            'insert_columns' => $insertCols,
+            'update_pairs' => $updates,
+            'incremental_where' => $this->getSqlIncrementalWhere() ?? '1'
         ]);
     }
     

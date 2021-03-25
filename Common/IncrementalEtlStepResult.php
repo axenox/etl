@@ -34,7 +34,7 @@ class IncrementalEtlStepResult extends UxonEtlStepResult
     {
         $uxon = parent::exportUxonObject();
         if ($forceAllProperties === true || $this->incrementValue !== null) {
-            $uxon->setProperty('increment_value', $this->getIncrementValue());
+            $uxon->setProperty('increment_value', $this->getIncrementValue() ?? 'NULL');
         }
         return $uxon;
     }
