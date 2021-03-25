@@ -81,10 +81,11 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI
         
         yield PHP_EOL . 'Starting now...' . PHP_EOL . PHP_EOL;
         foreach ($plan as $pos => $step) {
+            $nr = $pos+1;
             $prevRunResult = $this->getPreviousResultData($step);
-            $logRow = $this->logRunStart($step, $flowRunUid, $pos, $prevRunResult)->getRow(0);
+            $logRow = $this->logRunStart($step, $flowRunUid, $nr, $prevRunResult)->getRow(0);
             $stepRunUid = $logRow['UID'];
-            yield $indent . $pos . '. ' . $step->getName() . ': ';
+            yield $indent . $nr . '. ' . $step->getName() . ': ';
             if ($step->isDisabled()) {
                 yield 'disabled' . PHP_EOL;
             } else {
