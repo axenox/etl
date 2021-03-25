@@ -47,7 +47,7 @@ SQL;
     protected function getPlaceholders(string $stepRunUid, ETLStepResultInterface $lastResult = null) : array
     {
         return array_merge(parent::getPlaceholders($stepRunUid, $lastResult), [
-            'incremental_where' => $this->getSqlIncrementalWhere() ?? '1'
+            'incremental_where' => $this->getSqlIncrementalWhere() ?? '(1=1)'
         ]);
     }
     

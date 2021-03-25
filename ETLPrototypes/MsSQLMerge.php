@@ -2,7 +2,6 @@
 namespace axenox\ETL\ETLPrototypes;
 
 use exface\Core\Exceptions\RuntimeException;
-use exface\Core\DataTypes\StringDataType;
 use axenox\ETL\Interfaces\ETLStepResultInterface;
 use axenox\ETL\Common\Traits\SqlColumnMappingsTrait;
 use axenox\ETL\Common\Traits\SqlIncrementalWhereTrait;
@@ -12,7 +11,7 @@ class MsSQLMerge extends SQLRunner
    use SqlColumnMappingsTrait;
    use SqlIncrementalWhereTrait;
    
-   private $mergeOnCondition = null;
+   private $mergeOnCondition = '';
    
    /**
     * 
@@ -44,7 +43,8 @@ SQL;
      * The default statement is
      * 
      * ```
-     * MERGE [#to_object_address#] [#target#] USING [#from_object_address#] [#source#]
+     * MERGE [#to_object_address#] [#target#] 
+     *    USING [#from_object_address#] [#source#]
      *    ON ([#merge_condition#] AND [#incremental_where#])
      *    WHEN MATCHED
      *        THEN UPDATE SET [#update_pairs#]
@@ -56,6 +56,7 @@ SQL;
      * 
      * @uxon-property sql
      * @uxon-type string
+     * @uxon-template MERGE [#to_object_address#] [#target#] \n    USING [#from_object_address#] [#source#]\n    ON ([#merge_condition#] AND [#incremental_where#])\n    WHEN MATCHED\n        THEN UPDATE SET [#update_pairs#]\n    WHEN NOT MATCHED\n        THEN INSERT ([#insert_columns#])\n             VALUES ([#insert_values#]);
      * 
      * @see \axenox\ETL\ETLPrototypes\SQLRunner::setSql()
      */
@@ -73,12 +74,17 @@ SQL;
     {
         $insertValues = '';
         $insertCols = '';
+        $sourceCols = '';
         $updates = '';
         
         foreach ($this->getColumnMappings() as $map) {
+            $fromAlias = substr($map->getFromSql(), 0, 1) !== '(' ? '[#source#].' : '';
             $insertCols .= ($insertCols ? ', ' : '') . $map->getToSql();
-            $insertValues .= ($insertValues ? ', ' : '') . "[#source#].{$map->getFromSql()}";
-            $updates .= ($updates ? ', ' : '') . "[#target#].{$map->getToSql()} = [#source#].{$map->getFromSql()}";
+            $insertValues .= ($insertValues ? ', ' : '') . $fromAlias . $map->getFromSql();
+            if ($fromAlias !== '') {
+                $sourceCols .= ($sourceCols ? ', ' : '') . $map->getFromSql();
+            }
+            $updates .= ($updates ? ', ' : '') . "[#target#].{$map->getToSql()} = {$fromAlias}{$map->getFromSql()}";
         }
         
         if ($insertValues === '' || $insertCols === '') {
@@ -100,8 +106,9 @@ SQL;
             'merge_condition' => $mergeCondition,
             'insert_values' => $insertValues,
             'insert_columns' => $insertCols,
+            'source_columns' => $sourceCols,
             'update_pairs' => $updates,
-            'incremental_where' => $this->getSqlIncrementalWhere() ?? '1'
+            'incremental_where' => $this->getSqlIncrementalWhere() ?? '(1=1)'
         ]);
     }
     

@@ -56,7 +56,7 @@ SQL;
         return array_merge(parent::getPlaceholders($stepRunUid, $lastResult), [
             'columns' => $targetCols,
             'selects' => $sourceCols,
-            'incremental_where' => $this->getSqlIncrementalWhere() ?? '1'
+            'incremental_where' => $this->getSqlIncrementalWhere() ?? '(1=1)'
         ]);
     }
 }

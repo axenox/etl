@@ -35,6 +35,8 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI
     
     private $flowStoppers = [];
     
+    private $flowToRun = null;
+    
     /**
      *
      * {@inheritDoc}
@@ -77,12 +79,12 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI
         yield from $planner;
         $plan = $planner->getReturn();
         
-        yield PHP_EOL . 'Startig now...' . PHP_EOL . PHP_EOL;
+        yield PHP_EOL . 'Starting now...' . PHP_EOL . PHP_EOL;
         foreach ($plan as $pos => $step) {
             $prevRunResult = $this->getPreviousResultData($step);
             $logRow = $this->logRunStart($step, $flowRunUid, $pos, $prevRunResult)->getRow(0);
             $stepRunUid = $logRow['UID'];
-            yield $indent . $step->getName() . ': ';
+            yield $indent . $pos . '. ' . $step->getName() . ': ';
             if ($step->isDisabled()) {
                 yield 'disabled' . PHP_EOL;
             } else {
@@ -364,13 +366,16 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI
     
     protected function getFlowAliases(TaskInterface $task) : array
     {
-        if ($task->hasParameter('flow')) {
-            return explode(',', $task->getParameter('flow'));
-        } else {
-            $inputData = $this->getInputDataSheet($task);
-            if ($inputData->getMetaObject()->is('axenox.ETL.flow') && $col = $inputData->getColumns()->get('host')) {
-                return $col->getValues();
-            }
+        switch (true) {
+            case $this->getFlowAlias():
+                return $this->getFlowAlias();
+            case $task->hasParameter('flow'):
+                return explode(',', $task->getParameter('flow'));
+            default:
+                $inputData = $this->getInputDataSheet($task);
+                if ($inputData->getMetaObject()->is('axenox.ETL.flow') && $col = $inputData->getColumns()->get('host')) {
+                    return $col->getValues();
+                }
         }
         throw new ActionInputMissingError($this, 'No ETL flow to run: please provide `flow` parameter or input data based on the flow object (axenox.ETL.flow)!');
     }
@@ -415,5 +420,33 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI
     public function getCliOptions(): array
     {
         return [];
+    }
+    
+    /**
+     * 
+     * @return string|NULL
+     */
+    protected function getFlowAlias() : ?string
+    {
+        return $this->flowToRun;
+    }
+    
+    /**
+     * Alias of the flow to run.
+     * 
+     * If not set, the flow alias will be determined from the task provided:
+     * - task parameter `flow` or
+     * - values from the `alias` column in the input data sheet
+     * 
+     * @uxon-property flow
+     * @uxon-type string
+     * 
+     * @param string $value
+     * @return RunETLFlow
+     */
+    public function setFlowAlias(string $value) : RunETLFlow
+    {
+        $this->flowToRun = $value;
+        return $this;
     }
 }

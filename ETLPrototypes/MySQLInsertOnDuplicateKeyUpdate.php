@@ -99,7 +99,7 @@ SQL;
             'update_pairs' => $updates,
             'insert_columns' => $insertCols,
             'insert_selects' => $insertSelects,
-            'incremental_where' => $this->getSqlIncrementalWhere() ?? '1'
+            'incremental_where' => $this->getSqlIncrementalWhere() ?? '(1=1)'
         ]);
     }
 }
