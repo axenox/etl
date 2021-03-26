@@ -81,9 +81,9 @@
     "rows": [
         {
             "CREATED_ON": "2021-02-26 16:44:37",
-            "MODIFIED_ON": "2021-03-24 12:36:07",
+            "MODIFIED_ON": "2021-03-26 12:14:46",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
-            "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
+            "MODIFIED_BY_USER": "0x11e999bb0f9cb5a8910a005056905f94",
             "UID": "0x11eb90858867906c9085025041000001",
             "READABLE_FLAG": "1",
             "WRITABLE_FLAG": "1",
@@ -137,6 +137,17 @@
                                                 "hidden": true,
                                                 "required": true,
                                                 "comparator": "=="
+                                            },
+                                            {
+                                                "attribute_alias": "etl_config_uxon",
+                                                "input_widget": {
+                                                    "widget_type": "Input",
+                                                    "height": 1,
+                                                    "width": 1
+                                                }
+                                            },
+                                            {
+                                                "attribute_alias": "etl_prototype"
                                             }
                                         ],
                                         "row_grouper": {
