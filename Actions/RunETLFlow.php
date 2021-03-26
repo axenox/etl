@@ -390,7 +390,8 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI
     {
         $sheet = DataSheetFactory::createFromObjectIdOrAlias($this->getWorkbench(), 'axenox.ETL.step_run');
         $sheet->getFilters()->addConditionFromString('step', $this->getStepUid($step), ComparatorDataType::EQUALS);
-        $sheet->getFilters()->addConditionFromString('success_flag', true, ComparatorDataType::EQUALS);
+        $sheet->getFilters()->addConditionFromString('success_flag', 1, ComparatorDataType::EQUALS);
+        $sheet->getFilters()->addConditionFromString('invalidated_flag', 0, ComparatorDataType::EQUALS);
         $sheet->getSorters()->addFromString('start_time', SortingDirectionsDataType::DESC);
         $sheet->getColumns()->addMultiple([
             'UID',
