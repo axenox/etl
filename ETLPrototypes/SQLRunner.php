@@ -37,7 +37,7 @@ class SQLRunner extends AbstractETLPrototype
         // Handle incremental logic
         if ($this->isIncremental()) {
             if (! array_key_exists('last_run_increment_value', $phs)) {
-                $phs['last_run_increment_value'] = 'NULL';
+                $phs['last_run_increment_value'] = '';
             }
             $incrSql = $this->getSqlToGetCurrentIncrementValue();
             if ($incrSql === null || $incrSql === '') {
