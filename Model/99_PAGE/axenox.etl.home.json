@@ -11,7 +11,7 @@
     "created_by_user_selector": "0x31000000000000000000000000000000",
     "created_on": "2021-02-26 16:55:01",
     "modified_by_user_selector": "0x11e999bb0f9cb5a8910a005056905f94",
-    "modified_on": "2021-03-26 14:12:20",
+    "modified_on": "2021-03-29 19:34:59",
     "contents": {
         "widget_type": "SplitHorizontal",
         "object_alias": "axenox.ETL.flow",
@@ -82,6 +82,8 @@
                                                 "icon": "gears",
                                                 "action": {
                                                     "alias": "exface.Core.ShowDialog",
+                                                    "input_rows_min": 1,
+                                                    "input_rows_max": 1,
                                                     "widget": {
                                                         "widget_type": "Console",
                                                         "disabled": true,
@@ -93,31 +95,69 @@
                                                 }
                                             },
                                             {
+                                                "widget_type": "MenuButton",
                                                 "caption": "Invalidate",
                                                 "icon": "eraser",
-                                                "action": {
-                                                    "alias": "exface.core.UpdateData",
-                                                    "object_alias": "axenox.ETL.step_run",
-                                                    "input_mapper": {
-                                                        "column_to_column_mappings": [
-                                                            {
-                                                                "from": "=1",
-                                                                "to": "invalidated_flag"
-                                                            },
-                                                            {
-                                                                "from": "step_run__MODIFIED_ON:MAX",
-                                                                "to": "MODIFIED_ON"
+                                                "buttons": [
+                                                    {
+                                                        "caption": "Invalidate last run",
+                                                        "icon": "eraser",
+                                                        "action": {
+                                                            "alias": "exface.core.UpdateData",
+                                                            "object_alias": "axenox.ETL.step_run",
+                                                            "input_rows_min": 1,
+                                                            "input_rows_max": 1,
+                                                            "input_mapper": {
+                                                                "column_to_column_mappings": [
+                                                                    {
+                                                                        "from": "=1",
+                                                                        "to": "invalidated_flag"
+                                                                    },
+                                                                    {
+                                                                        "from": "step_run__MODIFIED_ON:MAX",
+                                                                        "to": "MODIFIED_ON"
+                                                                    }
+                                                                ],
+                                                                "column_to_filter_mappings": [
+                                                                    {
+                                                                        "from": "flow_run_latest__flow_run",
+                                                                        "to": "flow_run",
+                                                                        "comparator": "=="
+                                                                    }
+                                                                ]
                                                             }
-                                                        ],
-                                                        "column_to_filter_mappings": [
-                                                            {
-                                                                "from": "UID",
-                                                                "to": "step__flow",
-                                                                "comparator": "=="
+                                                        }
+                                                    },
+                                                    {
+                                                        "caption": "Invalidate all",
+                                                        "icon": "eraser",
+                                                        "action": {
+                                                            "alias": "exface.core.UpdateData",
+                                                            "object_alias": "axenox.ETL.step_run",
+                                                            "input_rows_min": 1,
+                                                            "input_rows_max": 1,
+                                                            "input_mapper": {
+                                                                "column_to_column_mappings": [
+                                                                    {
+                                                                        "from": "=1",
+                                                                        "to": "invalidated_flag"
+                                                                    },
+                                                                    {
+                                                                        "from": "step_run__MODIFIED_ON:MAX",
+                                                                        "to": "MODIFIED_ON"
+                                                                    }
+                                                                ],
+                                                                "column_to_filter_mappings": [
+                                                                    {
+                                                                        "from": "UID",
+                                                                        "to": "step__flow",
+                                                                        "comparator": "=="
+                                                                    }
+                                                                ]
                                                             }
-                                                        ]
+                                                        }
                                                     }
-                                                }
+                                                ]
                                             }
                                         ]
                                     }
@@ -175,6 +215,7 @@
                                         ],
                                         "buttons": [
                                             {
+                                                "bind_to_double_click": true,
                                                 "action": {
                                                     "alias": "exface.Core.ShowObjectEditDialog",
                                                     "object_alias": "exface.Core.OBJECT",
@@ -312,6 +353,35 @@
                                                 "action_alias": "exface.Core.ShowObjectEditDialog",
                                                 "caption": "Open",
                                                 "bind_to_double_click": true
+                                            },
+                                            {
+                                                "caption": "Invalidate",
+                                                "icon": "eraser",
+                                                "action": {
+                                                    "alias": "exface.core.UpdateData",
+                                                    "object_alias": "axenox.ETL.step_run",
+                                                    "input_rows_min": 1,
+                                                    "input_rows_max": 1,
+                                                    "input_mapper": {
+                                                        "column_to_column_mappings": [
+                                                            {
+                                                                "from": "=1",
+                                                                "to": "invalidated_flag"
+                                                            },
+                                                            {
+                                                                "from": "step_run__MODIFIED_ON:MAX",
+                                                                "to": "MODIFIED_ON"
+                                                            }
+                                                        ],
+                                                        "column_to_filter_mappings": [
+                                                            {
+                                                                "from": "UID",
+                                                                "to": "flow_run",
+                                                                "comparator": "=="
+                                                            }
+                                                        ]
+                                                    }
+                                                }
                                             }
                                         ]
                                     }

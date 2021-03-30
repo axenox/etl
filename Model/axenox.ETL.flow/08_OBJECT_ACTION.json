@@ -61,14 +61,14 @@
     "rows": [
         {
             "CREATED_ON": "2021-03-03 09:13:54",
-            "MODIFIED_ON": "2021-03-03 09:20:59",
+            "MODIFIED_ON": "2021-03-29 16:36:40",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
-            "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
+            "MODIFIED_BY_USER": "0x11e999bb0f9cb5a8910a005056905f94",
             "UID": "0x11eb9a29656d73f89a29025041000001",
             "OBJECT": "0x11eb90858867906c9085025041000001",
             "ACTION_PROTOTYPE": "exface\/Core\/Actions\/ShowDialog.php",
             "ALIAS": "ShowEtlFlowGraph",
-            "NAME": "Flow Graph",
+            "NAME": "Data Flow",
             "SHORT_DESCRIPTION": "",
             "CONFIG_UXON": {
                 "icon": "share-alt",
