@@ -81,7 +81,7 @@
     "rows": [
         {
             "CREATED_ON": "2021-03-04 20:31:23",
-            "MODIFIED_ON": "2021-03-23 16:55:28",
+            "MODIFIED_ON": "2021-03-30 16:17:08",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
             "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
             "UID": "0x11ebbb7534237cb0bb75025041000001",
@@ -120,6 +120,7 @@
                     {
                         "widget_type": "DataTable",
                         "object_alias": "axenox.ETL.step_run",
+                        "id": "table_step_runs",
                         "filters": [
                             {
                                 "attribute_alias": "flow_run",
@@ -144,25 +145,65 @@
                                 "calculation": "=Left(error_message, 80)"
                             },
                             {
-                                "attribute_alias": "error_log_id"
+                                "attribute_alias": "error_log_id",
+                                "caption": "Log-ID"
                             },
                             {
                                 "attribute_alias": "result_count"
                             },
                             {
-                                "attribute_alias": "start_time"
+                                "attribute_alias": "incremental_flag"
                             },
                             {
-                                "attribute_alias": "end_time"
+                                "attribute_alias": "incremental_after_run__start_time",
+                                "caption": "Incr. after"
                             },
                             {
                                 "attribute_alias": "result_uxon"
+                            },
+                            {
+                                "attribute_alias": "error_flag",
+                                "hidden": true
                             }
                         ],
                         "sorters": [
                             {
                                 "attribute_alias": "flow_run_pos",
                                 "direction": "asc"
+                            }
+                        ],
+                        "buttons": [
+                            {
+                                "action_alias": "axenox.ETL.ShowEtlStepRunDebugDialog",
+                                "bind_to_double_click": true
+                            },
+                            {
+                                "action_alias": "axenox.ETL.ShowEtlStepRunErrorDialog",
+                                "disabled_if": {
+                                    "operator": "AND",
+                                    "conditions": [
+                                        {
+                                            "value_left": "=table_step_runs!error_flag",
+                                            "comparator": "==",
+                                            "value_right": 0
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                "caption": "Step config (current)",
+                                "action": {
+                                    "alias": "exface.Core.ShowObjectInfoDialog",
+                                    "object_alias": "axenox.ETL.step",
+                                    "input_mapper": {
+                                        "column_to_column_mappings": [
+                                            {
+                                                "from": "step",
+                                                "to": "UID"
+                                            }
+                                        ]
+                                    }
+                                }
                             }
                         ]
                     }

@@ -4,8 +4,11 @@ namespace axenox\ETL\Interfaces;
 use exface\Core\Interfaces\WorkbenchDependantInterface;
 use exface\Core\Interfaces\Model\MetaObjectInterface;
 use exface\Core\Interfaces\iCanBeConvertedToUxon;
+use exface\Core\Interfaces\WidgetInterface;
+use exface\Core\Interfaces\Model\UiPageInterface;
+use exface\Core\Interfaces\iCanGenerateDebugWidgets;
 
-interface ETLStepInterface extends WorkbenchDependantInterface, iCanBeConvertedToUxon
+interface ETLStepInterface extends WorkbenchDependantInterface, iCanBeConvertedToUxon, iCanGenerateDebugWidgets
 {
     public function getFromObject() : MetaObjectInterface;
     
@@ -14,11 +17,11 @@ interface ETLStepInterface extends WorkbenchDependantInterface, iCanBeConvertedT
     /**
      * 
      * @param string $stepRunUid
-     * @param string $previousStepRunUid
-     * @param string $incrementValue
+     * @param ETLStepResultInterface $previousStepResult
+     * @param ETLStepResultInterface $lastResult
      * @return \Generator|string[]|ETLStepResultInterface
      */
-    public function run(string $stepRunUid, string $previousStepRunUid = null, ETLStepResultInterface $lastResult = null) : \Generator;
+    public function run(string $stepRunUid, ETLStepResultInterface $previousStepResult = null, ETLStepResultInterface $lastResult = null) : \Generator;
     
     public function validate() : \Generator;
     
@@ -41,4 +44,6 @@ interface ETLStepInterface extends WorkbenchDependantInterface, iCanBeConvertedT
      * @return ETLStepResultInterface
      */
     public static function parseResult(string $stepRunUid, string $resultData = null) : ETLStepResultInterface;
+    
+    public function isIncremental() : bool;
 }

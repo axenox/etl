@@ -16,6 +16,10 @@ use axenox\ETL\Common\IncrementalEtlStepResult;
 use exface\Core\Interfaces\Model\MetaAttributeInterface;
 use exface\Core\DataTypes\ComparatorDataType;
 use exface\Core\DataTypes\DateTimeDataType;
+use exface\Core\Interfaces\Model\UiPageInterface;
+use exface\Core\Interfaces\WidgetInterface;
+use exface\Core\Widgets\DebugMessage;
+use axenox\ETL\Events\Flow\OnBeforeETLStepRun;
 
 class DataSheetTransfer extends AbstractETLPrototype
 {
@@ -31,12 +35,14 @@ class DataSheetTransfer extends AbstractETLPrototype
     
     private $incrementalTimeOffsetMinutes = 0;
     
+    private $baseSheet = null;
+    
     /**
      * 
      * {@inheritDoc}
      * @see \axenox\ETL\Interfaces\ETLStepInterface::run()
      */
-    public function run(string $stepRunUid, string $previousStepRunUid = null, ETLStepResultInterface $lastResult = null) : \Generator
+    public function run(string $stepRunUid, ETLStepResultInterface $previousStepResult = null, ETLStepResultInterface $lastResult = null) : \Generator
     {
         $baseSheet = $this->getFromDataSheet($this->getPlaceholders($stepRunUid, $lastResult));
         $mapper = $this->getMapper();
@@ -60,6 +66,10 @@ class DataSheetTransfer extends AbstractETLPrototype
             }
             $result->setIncrementValue(DateTimeDataType::formatDateNormalized($this->getIncrementalTimeCurrentValue()));
         }
+        
+        $this->baseSheet = $baseSheet;
+        
+        $this->getWorkbench()->eventManager()->dispatch(new OnBeforeETLStepRun($this));
         
         $transaction = $this->getWorkbench()->data()->startTransaction();
         
@@ -268,7 +278,21 @@ class DataSheetTransfer extends AbstractETLPrototype
         return $this;
     }
     
-    public function isIncrementalByTime() : bool
+    /**
+     * 
+     * {@inheritDoc}
+     * @see \axenox\ETL\Interfaces\ETLStepInterface::isIncremental()
+     */
+    public function isIncremental() : bool
+    {
+        return $this->isIncrementalByTime();
+    }
+    
+    /**
+     * 
+     * @return bool
+     */
+    protected function isIncrementalByTime() : bool
     {
         if ($this->incrementalTimeAttributeAlias !== null) {
             return true;
@@ -309,5 +333,18 @@ class DataSheetTransfer extends AbstractETLPrototype
             $now->add(new \DateInterval('PT' . abs($offset) . 'M'));
         }
         return $now;
+    }
+    
+    /**
+     * 
+     * {@inheritDoc}
+     * @see \exface\Core\Interfaces\iCanGenerateDebugWidgets::createDebugWidget()
+     */
+    public function createDebugWidget(DebugMessage $debug_widget)
+    {
+        if ($this->baseSheet !== null) {
+            $debug_widget = $this->baseSheet->createDebugWidget($debug_widget);
+        }
+        return $debug_widget;
     }
 }

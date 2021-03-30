@@ -9,6 +9,8 @@ use axenox\ETL\Common\IncrementalEtlStepResult;
 use exface\Core\CommonLogic\DataQueries\SqlDataQuery;
 use exface\Core\Exceptions\RuntimeException;
 use axenox\ETL\Common\UxonEtlStepResult;
+use axenox\ETL\Events\Flow\OnBeforeETLStepRun;
+use exface\Core\Widgets\DebugMessage;
 
 class SQLRunner extends AbstractETLPrototype
 {
@@ -18,12 +20,14 @@ class SQLRunner extends AbstractETLPrototype
     
     private $wrapInTransaction = true;
     
+    private $query = null;
+    
     /**
      * 
      * {@inheritDoc}
      * @see \axenox\ETL\Interfaces\ETLStepInterface::run()
      */
-    public function run(string $stepRunUid, string $previousStepRunUid = null, ETLStepResultInterface $lastResult = null) : \Generator
+    public function run(string $stepRunUid, ETLStepResultInterface $previousStepResult = null, ETLStepResultInterface $lastResult = null) : \Generator
     {
         $sql = $this->getSql();
         $connection = $this->getSqlConnection();
@@ -56,7 +60,14 @@ class SQLRunner extends AbstractETLPrototype
         $sql = StringDataType::replacePlaceholders($sql, $phs, true, true);
         
         // Execute the main statement
-        $query = $connection->runSql($sql, true);
+        $query = new SqlDataQuery();
+        $query->setSql($sql);
+        $query->forceMultipleStatements(true);
+        $this->query = $query;
+        
+        $this->getWorkbench()->eventManager()->dispatch(new OnBeforeETLStepRun($this));
+        
+        $query = $connection->query($query);
         $cnt = $this->countAffectedRows($query);
         $query->freeResult();
         
@@ -64,7 +75,7 @@ class SQLRunner extends AbstractETLPrototype
             $connection->transactionCommit();
         }
         
-        yield 'SQL query successful (' . $cnt . ' affected rows)' . PHP_EOL;
+        yield 'SQL query successful (' . $cnt . ' affected rows' . ($phs['last_run_increment_value'] ? ', starting with ' . $phs['last_run_increment_value'] : '') . ')' . PHP_EOL;
         
         if ($cnt !== null) {
             $result->setProcessedRowsCounter($cnt);
@@ -185,7 +196,8 @@ class SQLRunner extends AbstractETLPrototype
     
     /**
      * 
-     * @return bool
+     * {@inheritDoc}
+     * @see \axenox\ETL\Interfaces\ETLStepInterface::isIncremental()
      */
     public function isIncremental() : bool
     {
@@ -218,5 +230,18 @@ class SQLRunner extends AbstractETLPrototype
     {
         $this->sqlToGetCurrentIncrementValue = $value;
         return $this;
+    }
+    
+    /**
+     *
+     * {@inheritDoc}
+     * @see \exface\Core\Interfaces\iCanGenerateDebugWidgets::createDebugWidget()
+     */
+    public function createDebugWidget(DebugMessage $debug_widget)
+    {
+        if ($this->query !== null) {
+            $debug_widget = $this->query->createDebugWidget($debug_widget);
+        }
+        return $debug_widget;
     }
 }

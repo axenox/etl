@@ -26,6 +26,9 @@ use exface\Core\Interfaces\Exceptions\ActionExceptionInterface;
 use exface\Core\Exceptions\Actions\ActionInputMissingError;
 use axenox\ETL\Interfaces\ETLStepResultInterface;
 use exface\Core\Exceptions\Actions\ActionConfigurationError;
+use axenox\ETL\Events\Flow\OnBeforeETLStepRun;
+use exface\Core\Factories\WidgetFactory;
+use axenox\ETL\Common\IncrementalEtlStepResult;
 
 class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI
 {
@@ -73,7 +76,7 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI
         yield 'Running ETL flow "' . $alias . '" (run-UID ' . $flowRunUid . ').' . PHP_EOL;
         yield PHP_EOL . $indent . 'Execution plan:' . PHP_EOL;
         
-        $prevStepRunUid = null;
+        $prevStepResult = null;
         
         $planner = $this->getStepsPlanGenerator($alias, $indent.$indent);
         yield from $planner;
@@ -84,20 +87,29 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI
             $nr = $pos+1;
             $prevRunResult = $this->getPreviousResultData($step);
             $logRow = $this->logRunStart($step, $flowRunUid, $nr, $prevRunResult)->getRow(0);
+            
             $stepRunUid = $logRow['UID'];
             yield $indent . $nr . '. ' . $step->getName() . ': ';
             if ($step->isDisabled()) {
                 yield 'disabled' . PHP_EOL;
             } else {
                 $log = '';
+                $this->getWorkbench()->eventManager()->addListener(OnBeforeETLStepRun::getEventName(), function(OnBeforeETLStepRun $event) use (&$logRow, $step) {
+                    if ($event->getStep() !== $step) {
+                        return;
+                    }
+                    $ds = $this->logRunDebug($event, $logRow);
+                    $logRow = $ds->getRow(0);
+                });
                 try {
-                    $generator = $step->run($stepRunUid, $prevStepRunUid, $prevRunResult);
+                    $generator = $step->run($stepRunUid, $prevStepResult, $prevRunResult);
                     foreach ($generator as $msg) {
                         $msg = $indent . $indent . $msg;
                         $log .= $msg;
                         yield $msg;
                     }
-                    $this->logRunSuccess($logRow, $log, $generator->getReturn());
+                    $stepResult = $generator->getReturn();
+                    $this->logRunSuccess($logRow, $log, $stepResult);
                 } catch (\Throwable $e) {
                     if (! $e instanceof ActionExceptionInterface) {
                         $e = new ActionRuntimeError($this, $e->getMessage(), null, $e);
@@ -118,10 +130,27 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI
                 }
             }
             
-            $prevStepRunUid = $stepRunUid;
+            $prevStepResult = $stepResult;
         }
         
         yield PHP_EOL . '✓ Finished successfully' . PHP_EOL;
+    }
+    
+    protected function logRunDebug(OnBeforeETLStepRun $event, array $row)
+    {
+        $ds = DataSheetFactory::createFromObjectIdOrAlias($this->getWorkbench(), 'axenox.ETL.step_run');
+        try {
+            $debugMessage = WidgetFactory::createOnBlankPage($this->getWorkbench(), 'DebugMessage', $ds->getMetaObject());
+            $widgetJson = $event->getStep()->createDebugWidget($debugMessage)->exportUxonObject()->toJson();
+            $row['debug_widget'] = $widgetJson;
+            $ds->addRow($row);
+            $ds->dataUpdate();
+        } catch (\Throwable $e) {
+            // Forget the widget if rendering does not work
+            $this->getWorkbench()->getLogger()->logException($e);
+            $ds->addRow($row);
+        }
+        return $ds;
     }
     
     protected function logRunSuccess(array $row, string $output, ETLStepResultInterface $result = null) : DataSheetInterface
@@ -133,6 +162,14 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI
         $row['result_uxon'] = $result->__toString();
         $row['success_flag'] = true;
         $row['output'] = $output;
+        
+        if (($result instanceof IncrementalEtlStepResult) && $result->getIncrementValue() !== null) {
+            $row['incremental_flag'] = true;
+        } else {
+            $row['incremental_flag'] = false;
+            $row['incremental_after_run'] = null;
+        }
+        
         $ds->addRow($row);
         $ds->dataUpdate();
         return $ds;
@@ -159,7 +196,7 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI
         return $ds;
     }
     
-    protected function logRunStart(ETLStepInterface $step, string $flowRunUid, int $position, ETLStepResultInterface $previousRunResult = null) : DataSheetInterface
+    protected function logRunStart(ETLStepInterface $step, string $flowRunUid, int $position, ETLStepResultInterface $lastResult = null) : DataSheetInterface
     {
         $time = DateTimeDataType::now();
         $ds = DataSheetFactory::createFromObjectIdOrAlias($this->getWorkbench(), 'axenox.ETL.step_run');
@@ -170,8 +207,16 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI
             'flow_run_pos' => $position,
             'start_time' => $time,
             'timeout_seconds' => $step->getTimeout(),
-            'result_uxon_of_prev_run' => $previousRunResult === null ? null : $previousRunResult->__toString()
+            'incremental_flag' => $step->isIncremental(),
+            'incremental_after_run' => $lastResult === null ? null : $lastResult->getStepRunUid()
         ];
+        try {
+            $widgetJson = $step->createDebugWidget()->exportUxonObject()->toJson();
+            $row['error_widget'] = $widgetJson;
+        } catch (\Throwable $e) {
+            // Forget the widget if rendering does not work
+            $this->getWorkbench()->getLogger()->logException($e);
+        }
         if ($step->isDisabled()) {
             $row['step_disabled_flag'] = true;
             $row['end_time'] = $time;
