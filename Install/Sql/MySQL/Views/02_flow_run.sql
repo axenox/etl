@@ -14,6 +14,8 @@ SELECT
 			ELSE 0 
 		END
 	) AS steps_timed_out,
+	IF (SUM(r.success_flag) + SUM(r.step_disabled_flag) + SUM(r.skipped_flag) - SUM(r.invalidated_flag) = COUNT(1), 1, 0) AS 'valid_flag',
+	IF (SUM(r.success_flag) + SUM(r.step_disabled_flag) + SUM(r.skipped_flag) - SUM(r.invalidated_flag) = COUNT(1), 1, 0) * SUM(r.result_count) AS 'valid_rows',
 	MIN(r.start_time) AS start_time,
 	MAX(r.end_time) AS end_time,
 	MAX(r.error_message) AS error_message,
