@@ -29,8 +29,14 @@ use exface\Core\Exceptions\Actions\ActionConfigurationError;
 use axenox\ETL\Events\Flow\OnBeforeETLStepRun;
 use exface\Core\Factories\WidgetFactory;
 use axenox\ETL\Common\IncrementalEtlStepResult;
+use exface\Core\Interfaces\Actions\iModifyData;
 
-class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI
+/**
+ * 
+ * @author andrej.kabachnik
+ *
+ */
+class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI, iModifyData
 {
     private $stepsLoaded = [];
     

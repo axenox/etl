@@ -16,11 +16,21 @@ use axenox\ETL\Common\IncrementalEtlStepResult;
 use exface\Core\Interfaces\Model\MetaAttributeInterface;
 use exface\Core\DataTypes\ComparatorDataType;
 use exface\Core\DataTypes\DateTimeDataType;
-use exface\Core\Interfaces\Model\UiPageInterface;
-use exface\Core\Interfaces\WidgetInterface;
 use exface\Core\Widgets\DebugMessage;
 use axenox\ETL\Events\Flow\OnBeforeETLStepRun;
 
+/**
+ * Reads a data sheet from the from-object and maps it to the to-object similarly to an actions `input_mapper`.
+ * 
+ * This ETL prototype can be used with any data readable by query builders, which makes it
+ * very versatile. The main configuration options are
+ * 
+ * - `mapper` - a data sheet column mapper just like the one usable in the `input_mapper` of an action
+ * - `from_data_sheet` 
+ * 
+ * @author andrej.kabachnik
+ *
+ */
 class DataSheetTransfer extends AbstractETLPrototype
 {
     private $mapperUxon = null;
