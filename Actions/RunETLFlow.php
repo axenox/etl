@@ -146,8 +146,8 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI, 
     {
         $ds = DataSheetFactory::createFromObjectIdOrAlias($this->getWorkbench(), 'axenox.ETL.step_run');
         try {
-            $debugMessage = WidgetFactory::createOnBlankPage($this->getWorkbench(), 'DebugMessage', $ds->getMetaObject());
-            $widgetJson = $event->getStep()->createDebugWidget($debugMessage)->exportUxonObject()->toJson();
+            $debugContainer = WidgetFactory::createDebugMessage($this->getWorkbench(), $ds->getMetaObject());
+            $widgetJson = $event->getStep()->createDebugWidget($debugContainer)->exportUxonObject()->toJson();
             $row['debug_widget'] = $widgetJson;
             $ds->addRow($row);
             $ds->dataUpdate();
@@ -217,7 +217,8 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI, 
             'incremental_after_run' => $lastResult === null ? null : $lastResult->getStepRunUid()
         ];
         try {
-            $widgetJson = $step->createDebugWidget()->exportUxonObject()->toJson();
+            $debugContainer = WidgetFactory::createDebugMessage($this->getWorkbench(), $ds->getMetaObject());
+            $widgetJson = $step->createDebugWidget($debugContainer)->exportUxonObject()->toJson();
             $row['error_widget'] = $widgetJson;
         } catch (\Throwable $e) {
             // Forget the widget if rendering does not work
