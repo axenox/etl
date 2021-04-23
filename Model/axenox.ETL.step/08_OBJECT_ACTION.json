@@ -61,9 +61,9 @@
     "rows": [
         {
             "CREATED_ON": "2021-03-29 16:39:59",
-            "MODIFIED_ON": "2021-03-29 16:50:21",
+            "MODIFIED_ON": "2021-04-13 12:52:39",
             "CREATED_BY_USER": "0x11e999bb0f9cb5a8910a005056905f94",
-            "MODIFIED_BY_USER": "0x11e999bb0f9cb5a8910a005056905f94",
+            "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
             "UID": "0x11ebb16ca374b518b16c005056905f94",
             "OBJECT": "0x11ebae9fcb215da2ae9f025041000001",
             "ACTION_PROTOTYPE": "exface\/core\/Actions\/UpdateData.php",
@@ -73,9 +73,9 @@
             "CONFIG_UXON": {
                 "icon": "toggle-off",
                 "input_rows_min": 1,
-                "input_rows_max": 1,
                 "input_object_alias": "axenox.ETL.step",
                 "input_mapper": {
+                    "inherit_columns_only_for_system_attributes": true,
                     "column_to_column_mappings": [
                         {
                             "from": "=Not(disabled)",
