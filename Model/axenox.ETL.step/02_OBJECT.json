@@ -81,7 +81,7 @@
     "rows": [
         {
             "CREATED_ON": "2021-02-26 16:46:29",
-            "MODIFIED_ON": "2021-04-13 12:12:43",
+            "MODIFIED_ON": "2021-04-26 11:52:55",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
             "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
             "UID": "0x11ebae9fcb215da2ae9f025041000001",
@@ -158,7 +158,8 @@
                                 "height": 14,
                                 "widget_type": "InputUxon",
                                 "root_prototype": "=prototype_field",
-                                "root_object": "=to_object_field!UID"
+                                "root_object": "=to_object_field!UID",
+                                "schema": "\\axenox\\ETL\\Uxon\\ETLPrototypeSchema"
                             }
                         ]
                     }
