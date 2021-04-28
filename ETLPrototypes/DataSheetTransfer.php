@@ -22,11 +22,18 @@ use axenox\ETL\Events\Flow\OnBeforeETLStepRun;
 /**
  * Reads a data sheet from the from-object and maps it to the to-object similarly to an actions `input_mapper`.
  * 
- * This ETL prototype can be used with any data readable by query builders, which makes it
+ * This ETL prototype can be used with any data readable via query builders, which makes it
  * very versatile. The main configuration options are
  * 
- * - `mapper` - a data sheet column mapper just like the one usable in the `input_mapper` of an action
- * - `from_data_sheet` 
+ * - `mapper` - defines `from`-`to` relationships between attributes of the from- and to-objects
+ * - `from_data_sheet` - allows to customize the data read by adding `filters`, `sorters` or even 
+ * `aggregate_by_attribute_alias`. Placeholders can be used as described below
+ * - `page_size` - makes step read data X rows at a time
+ * - `update_if_matching_attributes` - defines a unique key for the to-object consisting of one
+ * or more attributes. If set, the step will update an item of the to-object if all these attributes
+ * match the read item instead of creating a new one.
+ * - `incremental_time_attribute`, `incremental_time_offset_minutes` - allows to use the current time
+ * for incremental reads.
  * 
  * @author andrej.kabachnik
  *
@@ -142,7 +149,12 @@ class DataSheetTransfer extends AbstractETLPrototype
     }
     
     /**
-     * The attributes to compare when searching for existing data rows
+     * The attributes to compare when searching for existing data rows.
+     * 
+     * If an existing item of the to-object with exact the same values in all of these attributes
+     * is found, the step will perform an update and will not create a new item.
+     * 
+     * **NOTE:** this will overwrite data in all the attributes affected by the `mapper`.
      *
      * @uxon-property update_if_matching_attributes
      * @uxon-type metamodel:attribute[]
@@ -179,7 +191,17 @@ class DataSheetTransfer extends AbstractETLPrototype
     }
     
     /**
-     * The data sheet to read the from-object data.
+     * Customize the data sheet to read the from-object data.
+     * 
+     * Typical things to do are adding `filters`, `sorters` or even `aggregate_by_attribute_alias`. 
+     * Placeholders can be used anywhere in the data sheet model:
+     * 
+     * - `step_run_uid`
+     * - `last_run_uid`
+     * - `last_run_increment_value`
+     * - `laxt_run_xxx` - any property of the result data of the last run of this step (replace `xxx`
+     * with the property name like `last_run_increment_value` for `increment_value` from the last runs
+     * result)
      * 
      * @uxon-property from_data_sheet
      * @uxon-type \exface\Core\CommonLogic\DataSheets\DataSheet
@@ -209,7 +231,23 @@ class DataSheetTransfer extends AbstractETLPrototype
     }
     
     /**
-     * The mapper to apply to the `from_data_sheet` to transform it into to-object data
+     * Data sheet mapper to be applied to the `from_data_sheet` in order to get the data for the to-object.
+     * 
+     * The syntax and functionality is the same as that of `input_mapper` in actions.
+     * 
+     * Example:
+     * 
+     * ```
+     *  {
+     *      "column_to_column_mappings": [
+     *          {
+     *              "from": "attribute_of_your_from_object", 
+     *              "to": "attribute_of_your_to_object"
+     *          }
+     *      ]
+     *  }
+     * 
+     * ```
      * 
      * @uxon-property mapper
      * @uxon-type \exface\Core\CommonLogic\DataSheets\DataSheetMapper
@@ -231,7 +269,10 @@ class DataSheetTransfer extends AbstractETLPrototype
     }
     
     /**
-     * Number of rows to process at once - no limit if NULL.
+     * Number of rows to process at once - no limit if set to NULL.
+     * 
+     * The step will make as many requests to the from-objects data source as needed to read
+     * all data by reading `page_size` rows at a time.
      * 
      * @uxon-property page_size
      * @uxon-type integers
@@ -275,6 +316,10 @@ class DataSheetTransfer extends AbstractETLPrototype
     
     /**
      * Alias of the from-object attribute holding last change time to be used for incremental loading.
+     * 
+     * If set, a filter over this attribute will be added to the `from_data_sheet` automatically.
+     * Alternatively you can add the incremental filter(s) explicitly using the placeholder 
+     * `[#last_run_increment_value#]`.
      * 
      * @uxon-property incremental_time_attribute_alias
      * @uxon-type metamodel:attribute

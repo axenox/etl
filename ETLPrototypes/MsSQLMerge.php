@@ -6,6 +6,32 @@ use axenox\ETL\Interfaces\ETLStepResultInterface;
 use axenox\ETL\Common\Traits\SqlColumnMappingsTrait;
 use axenox\ETL\Common\Traits\SqlIncrementalWhereTrait;
 
+/**
+ * Executes a MERGE statement on a Microsoft SQL Server data source.
+ * 
+ * You can either let the step generate a MERGE statement automatically by setting
+ * `sql_merge_condition` and `column_mappings` or write your own MERGE statement
+ * in the `sql` property using placeholders to keep it short and well readable.
+ * 
+ * The default MERGE statement is
+ * 
+ * ```
+ *  MERGE [#to_object_address#] [#target#] USING [#from_object_address#] [#source#]
+ *    ON ([#merge_condition#] AND [#incremental_where#])
+ *    WHEN MATCHED
+ *        THEN UPDATE SET [#update_pairs#]
+ *    WHEN NOT MATCHED
+ *        THEN INSERT ([#insert_columns#])
+ *             VALUES ([#insert_values#]);
+ * 
+ * ```
+ * 
+ * If you need an incremental step, use a custom `sql` with additional placeholders for
+ * `[#last_run_increment_value#]`, etc. 
+ * 
+ * @author andrej.kabachnik
+ *
+ */
 class MsSQLMerge extends SQLRunner
 {    
    use SqlColumnMappingsTrait;

@@ -3,6 +3,38 @@ namespace axenox\ETL\ETLPrototypes;
 
 use exface\Core\CommonLogic\UxonObject;
 
+/**
+ * Creates and fills a MySQL table with dates for the to-object.
+ * 
+ * The table will look like this:
+ * 
+ * ```
+ *  CREATE TABLE IF NOT EXISTS {$table} (
+ *        id           INTEGER PRIMARY KEY,  -- year*10000+month*100+day
+ *        db_date      DATE NOT NULL,
+ *        year         INTEGER NOT NULL,
+ *        month        INTEGER NOT NULL, -- 1 to 12
+ *        day          INTEGER NOT NULL, -- 1 to 31
+ *        quarter      INTEGER NOT NULL, -- 1 to 4
+ *        week_no      INTEGER NOT NULL, -- 1 to 52/53
+ *        weekday_no   INTEGER NOT NULL, -- 1 to 7
+ *        weekend_flag TINYINT(1) DEFAULT '0',
+ *        UNIQUE td_ymd_idx (year,month,day),
+ *        UNIQUE td_dbdate_idx (db_date)
+ *  ) Engine=InnoDB;
+ * 
+ * ```
+ * 
+ * You can override the column names via `column_names`.
+ * 
+ * The step will generate rows for a range defined via `days_back` and `days_forward`.
+ * 
+ * **NOTE:** this step requires the permission to create, execute and delete procedures
+ * for the SQL user!
+ *  
+ * @author Andrej Kabachnik
+ *
+ */
 class MySQLDateDimensionGenerator extends SQLRunner
 {
     private $dropTable = false;

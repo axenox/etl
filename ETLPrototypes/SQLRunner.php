@@ -12,6 +12,44 @@ use axenox\ETL\Common\UxonEtlStepResult;
 use axenox\ETL\Events\Flow\OnBeforeETLStepRun;
 use exface\Core\Widgets\DebugMessage;
 
+/**
+ * Runs any SQL script in the data source of the to-object
+ * 
+ * The script ist to be defined in the `sql` property. This step requires the from- and to-objects
+ * to have the same data source and that must have an SQL connection. It is also possible to leave
+ * the from-object empty.
+ * 
+ * If this step should be an incremental one, place the SQL to generate the current increment value
+ * in `sql_to_get_current_increment_value` - e.g. `SELECT NOW();` or similar. The result of this
+ * script will be saved in the step result data and will be available to the next run of this step
+ * via `[#last_run_increment_value#]` placeholder.
+ * 
+ * The `sql` may include the following placeholders:
+ * 
+ * - `[#from_object_address#]`
+ * - `[#to_object_address#]`
+ * - `[#step_run_uid#]`
+ * - `[#last_run_uid#]`
+ * - `[#last_run_increment_value#]`
+ * 
+ * If it is an incremental step, additional placeholders are available:
+ * 
+ * - `[#current_increment_value#]`
+ * 
+ * **NOTE:** most SQL connections do not support explicit transaction handling in SQL scripts.
+ * Instead use `wrap_in_transaction` to force/omit the commit at the end of this step.
+ * 
+ * **HINT:** There are also preconfigured ETL step prototypes for commonly used SQL statements
+ * 
+ * - `MySQLInsertOnDuplicateKeyUpdate`,
+ * - `MySQLReplace`
+ * - `MySQLDateDimensionGenerator`,
+ * - `MsSQLMerge`
+ * - `SQLSelectValidator`
+ * 
+ * @author andrej.kabachnik
+ *
+ */
 class SQLRunner extends AbstractETLPrototype
 {
     private $sql = null;
