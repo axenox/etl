@@ -11,7 +11,7 @@ use exface\Core\CommonLogic\UxonObject;
  * ```
  *  CREATE TABLE IF NOT EXISTS {$table} (
  *        id           INTEGER PRIMARY KEY,  -- year*10000+month*100+day
- *        db_date      DATE NOT NULL,
+ *        date      DATE NOT NULL,
  *        year         INTEGER NOT NULL,
  *        month        INTEGER NOT NULL, -- 1 to 12
  *        day          INTEGER NOT NULL, -- 1 to 31
@@ -20,7 +20,7 @@ use exface\Core\CommonLogic\UxonObject;
  *        weekday_no   INTEGER NOT NULL, -- 1 to 7
  *        weekend_flag TINYINT(1) DEFAULT '0',
  *        UNIQUE td_ymd_idx (year,month,day),
- *        UNIQUE td_dbdate_idx (db_date)
+ *        UNIQUE td_dbdate_idx (date)
  *  ) Engine=InnoDB;
  * 
  * ```
@@ -86,16 +86,16 @@ class MySQLDateDimensionGenerator extends SQLRunner
 {$prepare}
 CREATE TABLE IF NOT EXISTS {$table} (
         id                      INTEGER PRIMARY KEY,  -- year*10000+month*100+day
-        db_date                 DATE NOT NULL,
+        date                 DATE NOT NULL,
         {$cols['year']}         INTEGER NOT NULL,
         {$cols['month']}        INTEGER NOT NULL, -- 1 to 12
         {$cols['day']}          INTEGER NOT NULL, -- 1 to 31
         {$cols['quarter']}      INTEGER NOT NULL, -- 1 to 4
         {$cols['week_no']}      INTEGER NOT NULL, -- 1 to 52/53
         {$cols['weekday_no']}   INTEGER NOT NULL, -- 1 to 7
-        {$cols['weekend_flag']} TINYINT(1) DEFAULT '0',
+        {$cols['weekend_flag']} TINYINT DEFAULT '0',
         UNIQUE td_ymd_idx ({$cols['year']},{$cols['month']},{$cols['day']}),
-        UNIQUE td_dbdate_idx (db_date)
+        UNIQUE td_dbdate_idx (date)
 ) Engine=InnoDB;
 
 DROP PROCEDURE IF EXISTS fill_date_dimension;

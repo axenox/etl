@@ -177,16 +177,16 @@
         },
         {
             "CREATED_ON": "2021-04-26 12:21:47",
-            "MODIFIED_ON": "2021-04-26 12:21:47",
+            "MODIFIED_ON": "2021-05-10 10:35:50",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
             "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
             "UID": "0x11ebb03b34d20f00b03b025041000001",
             "APP": "0x11ebbc50679eacdabc50025041000001",
-            "NAME": "Lookup surrogate keys via SQL (if NULL)",
-            "DESCRIPTION": "Simple SQL to lookup for foreign (surrogate) keys in `target_tbl` by searching for a `name` in `something_tbl`. Attempts to update all records that do not have a foreign key yet.",
+            "NAME": "Lookup surrogate keys via T-SQL (if NULL)",
+            "DESCRIPTION": "Simple SQL to lookup for foreign (surrogate) keys in the to-object by searching for a `name` in the from-object. Replace `key_of_something`, `name_of_something` and `name` (the latter in the from-table!) as needed.",
             "PROTOTYPE": "axenox\/etl\/ETLPrototypes\/SQLRunner.php",
             "UXON": {
-                "sql": "UPDATE target_tbl SET \n    key_of_something = (\n        SELECT \n            id \n        FROM something_tbl smt \n        WHERE name_of_something = smt.name\n    ), \n    EtlRunUidUpdate = [#step_run_uid#] \nWHERE key_of_something IS NULL;"
+                "sql": "UPDATE [#to_object_address#] SET \n    EtlRunUidUpdate = [#step_run_uid#],\n    key_of_something = (\n        SELECT \n            f.id \n        FROM [#from_object_address#] f \n        WHERE name_of_something = f.name\n    )\nWHERE key_of_something IS NULL;"
             },
             "WRAP_PATH": "",
             "UXON_SCHEMA": "\\axenox\\ETL\\Uxon\\ETLPrototypeSchema",
@@ -215,6 +215,23 @@
                     }
                 ],
                 "sql": "MERGE [#to_object_address#] [#target#] \n    USING (\n    \tSELECT \n        \t*\n        \tFROM (\n        \t\tSELECT\n        \t\t  [#source_columns#]\n        \t\t  , EtlCreatedOn\n        \t\t  , row_number() over(partition by srcKeyCol ORDER BY [EtlCreatedOn] DESC) as rn\n        \t\t  FROM [#from_object_address#]\n        \t\t  WHERE \n        \t\t    EtlCreatedOn >= ( CASE WHEN '[#last_run_increment_value#]' != '' THEN '[#last_run_increment_value#]' ELSE '1970-01-01' END )\n        \t) AS tmp\n        WHERE rn = 1\n    ) [#source#]\n    ON ([#source#].srcKeyCol = [#target#].targetKeyCol)\n    WHEN MATCHED\n        THEN UPDATE SET \n            [#update_pairs#],\n            [#target#].EtlRunUidUpdate = [#step_run_uid#]\n    WHEN NOT MATCHED\n        THEN INSERT ([#insert_columns#], EtlRunUidCreate)\n             VALUES ([#insert_values#], [#step_run_uid#]);"
+            },
+            "WRAP_PATH": "",
+            "UXON_SCHEMA": "\\axenox\\ETL\\Uxon\\ETLPrototypeSchema",
+            "THUMBNAIL": ""
+        },
+        {
+            "CREATED_ON": "2021-05-10 10:33:01",
+            "MODIFIED_ON": "2021-05-10 10:36:07",
+            "CREATED_BY_USER": "0x31000000000000000000000000000000",
+            "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
+            "UID": "0x11ebaa8754f197b4aa87025041000001",
+            "APP": "0x11ebbc50679eacdabc50025041000001",
+            "NAME": "Lookup surrogate keys via MySQL (if NULL)",
+            "DESCRIPTION": "Simple SQL to lookup for foreign (surrogate) keys in to-object by searching for a `name` in from-object. Replace `something_name`, `something_id` and `name` (the latter in the from-table!) as needed.",
+            "PROTOTYPE": "axenox\/etl\/ETLPrototypes\/SQLRunner.php",
+            "UXON": {
+                "sql": "UPDATE [#to_object_address#] t SET \n    updated_by_etl_step_oid = [#step_run_uid#],\n    updated_on = NOW(),\n    something_id = (\n        SELECT \n            f.id \n        FROM [#from_object_address#] f\n        WHERE f.name = t.something_name\n    )\nWHERE t.something_id IS NULL;"
             },
             "WRAP_PATH": "",
             "UXON_SCHEMA": "\\axenox\\ETL\\Uxon\\ETLPrototypeSchema",

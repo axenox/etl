@@ -81,7 +81,7 @@
     "rows": [
         {
             "CREATED_ON": "2021-02-26 16:46:29",
-            "MODIFIED_ON": "2021-04-26 11:52:55",
+            "MODIFIED_ON": "2021-05-10 10:22:29",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
             "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
             "UID": "0x11ebae9fcb215da2ae9f025041000001",
@@ -134,6 +134,7 @@
                             {
                                 "attribute_alias": "run_after_step",
                                 "widget_type": "InputComboTable",
+                                "autoselect_single_suggestion": false,
                                 "filters": [
                                     {
                                         "attribute_alias": "flow",
