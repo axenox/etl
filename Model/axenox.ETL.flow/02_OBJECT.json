@@ -81,7 +81,7 @@
     "rows": [
         {
             "CREATED_ON": "2021-02-26 16:44:37",
-            "MODIFIED_ON": "2021-04-26 09:01:10",
+            "MODIFIED_ON": "2021-05-11 16:07:39",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
             "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
             "UID": "0x11eb90858867906c9085025041000001",
@@ -137,6 +137,9 @@
                                                 "hidden": true,
                                                 "required": true,
                                                 "comparator": "=="
+                                            },
+                                            {
+                                                "attribute_alias": "name"
                                             },
                                             {
                                                 "attribute_alias": "etl_config_uxon",
@@ -215,8 +218,7 @@
                                                 "action_alias": "axenox.ETL.EtlStepOnOffToggle"
                                             },
                                             {
-                                                "action_alias": "exface.Core.DeleteObject",
-                                                "visibility": "optional"
+                                                "action_alias": "exface.Core.DeleteObject"
                                             }
                                         ]
                                     }
