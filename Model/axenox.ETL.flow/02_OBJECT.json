@@ -81,7 +81,7 @@
     "rows": [
         {
             "CREATED_ON": "2021-02-26 16:44:37",
-            "MODIFIED_ON": "2021-05-11 16:07:39",
+            "MODIFIED_ON": "2021-05-18 16:40:25",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
             "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
             "UID": "0x11eb90858867906c9085025041000001",
@@ -115,13 +115,16 @@
                                     },
                                     {
                                         "attribute_alias": "description",
-                                        "height": 3
+                                        "height": 2
                                     },
                                     {
                                         "attribute_alias": "alias"
                                     },
                                     {
                                         "attribute_alias": "app"
+                                    },
+                                    {
+                                        "attribute_alias": "scheduler"
                                     }
                                 ]
                             },
