@@ -19,6 +19,7 @@ SELECT
 	MIN(r.start_time) AS start_time,
 	MAX(r.end_time) AS end_time,
 	MAX(r.error_message) AS error_message,
+	MAX(r.error_log_id) AS error_log_id,
 	MIN(r.created_on) AS created_on,
 	MAX(r.modified_on) AS modified_on,
 	MAX(r.created_by_user_oid) AS created_by_user_oid,

@@ -81,7 +81,7 @@
     "rows": [
         {
             "CREATED_ON": "2021-03-04 20:31:23",
-            "MODIFIED_ON": "2021-04-26 11:18:10",
+            "MODIFIED_ON": "2021-05-19 19:07:49",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
             "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
             "UID": "0x11ebbb7534237cb0bb75025041000001",
@@ -98,6 +98,7 @@
             "DATA_ADDRESS_PROPS": null,
             "DEFAULT_EDITOR_UXON": {
                 "widget_type": "Dialog",
+                "width": 3,
                 "header": {
                     "caption": "Flow Run",
                     "widgets": [
@@ -145,6 +146,11 @@
                                 "calculation": "=Left(error_message, 80)"
                             },
                             {
+                                "attribute_alias": "monitor_error__STATUS",
+                                "caption": "Err.Status",
+                                "hint": "Error status in monitor"
+                            },
+                            {
                                 "attribute_alias": "error_log_id",
                                 "caption": "Log-ID"
                             },
@@ -163,6 +169,10 @@
                             },
                             {
                                 "attribute_alias": "error_flag",
+                                "hidden": true
+                            },
+                            {
+                                "attribute_alias": "monitor_error__UID",
                                 "hidden": true
                             }
                         ],
@@ -186,6 +196,32 @@
                                             "value_left": "=table_step_runs!error_flag",
                                             "comparator": "==",
                                             "value_right": 0
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                "caption": "Monitor",
+                                "icon": "pencil",
+                                "action": {
+                                    "alias": "exface.Core.ShowMonitorErrorDialog",
+                                    "object_alias": "exface.Core.MONITOR_ERROR",
+                                    "input_mapper": {
+                                        "column_to_column_mappings": [
+                                            {
+                                                "from": "monitor_error__UID",
+                                                "to": "UID"
+                                            }
+                                        ]
+                                    }
+                                },
+                                "disabled_if": {
+                                    "operator": "AND",
+                                    "conditions": [
+                                        {
+                                            "value_left": "=table_step_runs!monitor_error__UID",
+                                            "comparator": "==",
+                                            "value_right": ""
                                         }
                                     ]
                                 }
