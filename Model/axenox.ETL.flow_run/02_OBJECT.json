@@ -81,9 +81,9 @@
     "rows": [
         {
             "CREATED_ON": "2021-03-04 20:31:23",
-            "MODIFIED_ON": "2021-05-19 19:07:49",
+            "MODIFIED_ON": "2021-06-09 18:09:35",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
-            "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
+            "MODIFIED_BY_USER": "0x11ea7e29e1126ef3a7eb0050568905af",
             "UID": "0x11ebbb7534237cb0bb75025041000001",
             "READABLE_FLAG": "1",
             "WRITABLE_FLAG": "0",
@@ -103,14 +103,20 @@
                     "caption": "Flow Run",
                     "widgets": [
                         {
+                            "attribute_alias": "flow__LABEL"
+                        },
+                        {
                             "attribute_alias": "UID",
                             "caption": "Run UID"
                         },
                         {
-                            "attribute_alias": "start_time"
+                            "attribute_alias": "status"
                         },
                         {
-                            "attribute_alias": "status"
+                            "widget_type": "WidgetGroup"
+                        },
+                        {
+                            "attribute_alias": "start_time"
                         },
                         {
                             "attribute_alias": "end_time"
@@ -118,6 +124,10 @@
                     ]
                 },
                 "widgets": [
+                    {
+                        "attribute_alias": "flow__alias",
+                        "widget_type": "InputHidden"
+                    },
                     {
                         "widget_type": "DataTable",
                         "object_alias": "axenox.ETL.step_run",
@@ -242,6 +252,29 @@
                                 }
                             }
                         ]
+                    }
+                ],
+                "buttons": [
+                    {
+                        "action_alias": "axenox.ETL.FlowRunInvalidate"
+                    },
+                    {
+                        "caption": "Retry",
+                        "action": {
+                            "alias": "axenox.ETL.EtlFlowRunInConsole",
+                            "input_mapper": {
+                                "column_to_column_mappings": [
+                                    {
+                                        "from": "flow",
+                                        "to": "UID"
+                                    },
+                                    {
+                                        "from": "flow__alias",
+                                        "to": "alias"
+                                    }
+                                ]
+                            }
+                        }
                     }
                 ]
             },
