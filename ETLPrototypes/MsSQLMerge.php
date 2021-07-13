@@ -148,7 +148,7 @@ SQL;
     }
     
     /**
-     * The SQL to use in the ON clause of the MERGE
+     * The SQL to use in the ON clause of the MERGE: e.g. `[#source#].col1 = [#target#].col2 AND ...`
      * 
      * @uxon-property sql_merge_on_condition
      * 

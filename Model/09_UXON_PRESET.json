@@ -236,6 +236,33 @@
             "WRAP_PATH": "",
             "UXON_SCHEMA": "\\axenox\\ETL\\Uxon\\ETLPrototypeSchema",
             "THUMBNAIL": ""
+        },
+        {
+            "CREATED_ON": "2021-07-06 10:21:01",
+            "MODIFIED_ON": "2021-07-06 10:21:01",
+            "CREATED_BY_USER": "0x31000000000000000000000000000000",
+            "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
+            "UID": "0x11eb9da719db256e9da7025041000001",
+            "APP": "0x11ebbc50679eacdabc50025041000001",
+            "NAME": "Simple SQL Server MERGE",
+            "DESCRIPTION": "Using `column_mappings` of the special MsSQLMerge prototype produces better readable step configs, than a hand written MERGE statement in an SQLRunner prototype.\n\nThis example shows a simple MERGE comparing two column in the `[#source#]` and `[#target#]` tables.",
+            "PROTOTYPE": "axenox\/etl\/ETLPrototypes\/MsSQLMerge.php",
+            "UXON": {
+                "column_mappings": [
+                    {
+                        "from": "",
+                        "to": ""
+                    },
+                    {
+                        "from": "",
+                        "to": ""
+                    }
+                ],
+                "sql_merge_on_condition": "[#source#].col11 = [#target#].col21 AND [#source#].col12= [#target#].col22"
+            },
+            "WRAP_PATH": "",
+            "UXON_SCHEMA": "\\axenox\\ETL\\Uxon\\ETLPrototypeSchema",
+            "THUMBNAIL": ""
         }
     ],
     "totals_rows": [],
