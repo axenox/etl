@@ -102,16 +102,19 @@ class DataSheetTransfer extends AbstractETLPrototype
                     . '...' . PHP_EOL;
                 
                 $toSheet = $mapper->map($fromSheet, true);
-                if (! $toSheet->isEmpty()) {
-                    $toSheet->getColumns()
-                        ->addFromAttribute($this->getToObject()->getAttribute($this->getStepRunUidAttributeAlias()))
-                        ->setValueOnAllRows($stepRunUid);
+                $rowsToCreate = $toSheet->countRows();
+                if ($rowsToCreate > 0) {
+                    if ($this->getStepRunUidAttributeAlias()) {
+                        $toSheet->getColumns()
+                            ->addFromAttribute($this->getToObject()->getAttribute($this->getStepRunUidAttributeAlias()))
+                            ->setValueOnAllRows($stepRunUid);
+                    }
                     $toSheet->dataCreate(false, $transaction);
                 }
                 
                 $cnt += $fromSheet->countRows();
                 $offset = $offset + $limit;
-            } while ($limit !== null && ! $toSheet->isEmpty() && $fromSheet->isPaged() && $fromSheet->countRows() >= $limit);
+            } while ($limit !== null && $rowsToCreate > 0 && $fromSheet->isPaged() && $fromSheet->countRows() >= $limit);
         } catch (\Throwable $e) {
             $transaction->rollback();
             throw $e;
