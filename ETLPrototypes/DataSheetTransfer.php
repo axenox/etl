@@ -18,6 +18,8 @@ use exface\Core\DataTypes\ComparatorDataType;
 use exface\Core\DataTypes\DateTimeDataType;
 use exface\Core\Widgets\DebugMessage;
 use axenox\ETL\Events\Flow\OnBeforeETLStepRun;
+use exface\Core\Exceptions\UxonParserError;
+use exface\Core\DataTypes\PhpClassDataType;
 
 /**
  * Reads a data sheet from the from-object and maps it to the to-object similarly to an actions `input_mapper`.
@@ -25,7 +27,7 @@ use axenox\ETL\Events\Flow\OnBeforeETLStepRun;
  * This ETL prototype can be used with any data readable via query builders, which makes it
  * very versatile. The main configuration options are
  * 
- * - `mapper` - defines `from`-`to` relationships between attributes of the from- and to-objects
+ * - `mapper` - defines `from`-`to` relationships between attributes of the from- and to-objects (like `input_mapper` for actions)
  * - `from_data_sheet` - allows to customize the data read by adding `filters`, `sorters` or even 
  * `aggregate_by_attribute_alias`. Placeholders can be used as described below
  * - `page_size` - makes step read data X rows at a time
@@ -228,7 +230,7 @@ class DataSheetTransfer extends AbstractETLPrototype
     protected function getMapper() : DataSheetMapperInterface
     {
         if (! $this->mapperUxon || $this->mapperUxon->isEmpty()) {
-            // TODO throw error
+            throw new UxonParserError($this->exportUxonObject(), 'Missing `mapper` in property in configuration of ETL prototype ' . PhpClassDataType::findClassNameWithoutNamespace(get_class($this)));
         }
         return DataSheetMapperFactory::createFromUxon($this->getWorkbench(), $this->mapperUxon, $this->getFromObject(), $this->getToObject()); 
     }
