@@ -26,8 +26,11 @@ class ETLApp extends App
             ->setDataConnection($modelDataSource)
             ->setFoldersWithStaticSql(['Views'])
             ->setMigrationsTableName('_migrations_etl');
+            
+            $installer->addInstaller($schema_installer); 
+        } else {
+            $this->getWorkbench()->getLogger()->error('Cannot initialize DB installer for app "' . $this->getSelector()->toString() . '": the cores model loader installer must be compatible with AbstractSqlDatabaseInstaller!');
         }
-        $installer->addInstaller($schema_installer); 
         
         return $installer;
     }

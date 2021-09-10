@@ -81,7 +81,7 @@
     "rows": [
         {
             "CREATED_ON": "2021-02-26 16:46:29",
-            "MODIFIED_ON": "2021-05-10 10:22:29",
+            "MODIFIED_ON": "2021-09-08 14:45:51",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
             "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
             "UID": "0x11ebae9fcb215da2ae9f025041000001",
@@ -156,7 +156,7 @@
                             {
                                 "attribute_alias": "etl_config_uxon",
                                 "hide_caption": true,
-                                "height": 14,
+                                "height": 12,
                                 "widget_type": "InputUxon",
                                 "root_prototype": "=prototype_field",
                                 "root_object": "=to_object_field!UID",
