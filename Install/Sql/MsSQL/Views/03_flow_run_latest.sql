@@ -1,5 +1,6 @@
 IF OBJECT_ID('dbo.etl_flow_run_latest', 'V') IS NOT NULL
     DROP VIEW [dbo].[etl_flow_run_latest];
+GO
 
 CREATE VIEW etl_flow_run_latest (
 	flow_oid,
