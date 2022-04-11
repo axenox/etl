@@ -16,9 +16,7 @@
     "extra": {
         "app": {
             "app_uid": "0x11ebbc50679eacdabc50025041000001",
-            "app_alias": "axenox.etl",
-            "model_md5": "fdb86765e636903d74d8a193009a25e8",
-            "model_timestamp": "2021-09-10 14:02:53"
+            "app_alias": "axenox.ETL"
         }
     }
 }

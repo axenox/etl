@@ -85,7 +85,7 @@
                 }
             },
             "APP": "0x11ebbc50679eacdabc50025041000001",
-            "USE_IN_OBJECT_BASKET_FLAG": "0",
+            "USE_IN_OBJECT_BASKET_FLAG": 0,
             "DOCS": ""
         }
     ],

@@ -49,7 +49,7 @@
     "rows": [
         {
             "CREATED_ON": "2021-03-09 16:38:33",
-            "MODIFIED_ON": "2021-03-09 16:38:33",
+            "MODIFIED_ON": "2021-11-04 11:13:47",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
             "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
             "UID": "0x11eb929c81d033c4929c025041000001",
@@ -57,7 +57,10 @@
             "CONFIG_UXON": {
                 "source_attribute_alias": "name",
                 "target_attribute_alias": "alias",
-                "case": "lower"
+                "case": "lower",
+                "replace_characters": {
+                    "\/[^a-zA-Z0-9_]\/": ""
+                }
             },
             "OBJECT": "0x11eb90858867906c9085025041000001",
             "APP": "0x11ebbc50679eacdabc50025041000001",
