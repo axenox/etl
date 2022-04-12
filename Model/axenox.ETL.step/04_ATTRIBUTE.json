@@ -533,7 +533,7 @@
         },
         {
             "CREATED_ON": "2021-03-02 13:13:26",
-            "MODIFIED_ON": "2021-03-23 12:10:09",
+            "MODIFIED_ON": "2022-04-12 17:19:59",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
             "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
             "UID": "0x11eba78eb118a406a78e025041000001",
@@ -573,9 +573,7 @@
             "DATA_ADDRESS_PROPS": null,
             "DEFAULT_VALUE": "",
             "FIXED_VALUE": "",
-            "CUSTOM_DATA_TYPE": {
-                "length_max": 1
-            }
+            "CUSTOM_DATA_TYPE": null
         },
         {
             "CREATED_ON": "2021-03-02 21:05:12",
