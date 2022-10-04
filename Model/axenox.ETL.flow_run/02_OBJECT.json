@@ -214,7 +214,7 @@
                                 "caption": "Monitor",
                                 "icon": "pencil",
                                 "action": {
-                                    "alias": "exface.Core.ShowMonitorErrorDialog",
+                                    "alias": "exface.Core.ShowObjectEditDialog",
                                     "object_alias": "exface.Core.MONITOR_ERROR",
                                     "input_mapper": {
                                         "column_to_column_mappings": [
