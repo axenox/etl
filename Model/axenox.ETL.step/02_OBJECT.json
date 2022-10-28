@@ -81,7 +81,7 @@
     "rows": [
         {
             "CREATED_ON": "2021-02-26 16:46:29",
-            "MODIFIED_ON": "2021-09-08 14:45:51",
+            "MODIFIED_ON": "2022-10-28 18:32:03",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
             "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
             "UID": "0x11ebae9fcb215da2ae9f025041000001",
@@ -121,11 +121,12 @@
                                 "attribute_alias": "disabled"
                             },
                             {
-                                "attribute_alias": "from_object"
+                                "attribute_alias": "from_object",
+                                "id": "from_object_selector"
                             },
                             {
                                 "attribute_alias": "to_object",
-                                "id": "to_object_field"
+                                "id": "to_object_selector"
                             },
                             {
                                 "attribute_alias": "etl_prototype",
@@ -152,17 +153,72 @@
                         "widget_type": "WidgetGroup",
                         "caption": "Configuration",
                         "width": "max",
+                        "height": 15,
                         "widgets": [
                             {
                                 "attribute_alias": "etl_config_uxon",
                                 "hide_caption": true,
-                                "height": 12,
+                                "height": "100%",
                                 "widget_type": "InputUxon",
                                 "root_prototype": "=prototype_field",
-                                "root_object": "=to_object_field!UID",
+                                "root_object": "=to_object_selector!UID",
                                 "schema": "\\axenox\\ETL\\Uxon\\ETLPrototypeSchema"
                             }
                         ]
+                    }
+                ],
+                "buttons": [
+                    {
+                        "caption": "Edit from-object",
+                        "close_dialog": false,
+                        "action": {
+                            "alias": "exface.Core.ShowObjectEditDialog",
+                            "object_alias": "exface.Core.OBJECT",
+                            "input_mapper": {
+                                "column_to_column_mappings": [
+                                    {
+                                        "from": "from_object",
+                                        "to": "UID"
+                                    }
+                                ]
+                            }
+                        },
+                        "disabled_if": {
+                            "operator": "AND",
+                            "conditions": [
+                                {
+                                    "value_left": "=from_object_selector",
+                                    "comparator": "==",
+                                    "value_right": ""
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "caption": "Edit to-object",
+                        "close_dialog": false,
+                        "action": {
+                            "alias": "exface.Core.ShowObjectEditDialog",
+                            "object_alias": "exface.Core.OBJECT",
+                            "input_mapper": {
+                                "column_to_column_mappings": [
+                                    {
+                                        "from": "to_object",
+                                        "to": "UID"
+                                    }
+                                ]
+                            }
+                        },
+                        "disabled_if": {
+                            "operator": "AND",
+                            "conditions": [
+                                {
+                                    "value_left": "=to_object_selector",
+                                    "comparator": "==",
+                                    "value_right": ""
+                                }
+                            ]
+                        }
                     }
                 ]
             },
