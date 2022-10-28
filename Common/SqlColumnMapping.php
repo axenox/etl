@@ -67,9 +67,7 @@ class SqlColumnMapping implements iCanBeConvertedToUxon
     }
     
     /**
-     * Any use of this expression in the data sheet will be transformed to the to-expression in the mapped sheet.
-     *
-     * The expression can be an attribute alias or an SQL statement enclosed in parenthes `()`.
+     * An attribute alias or an SQL statement enclosed in parenthes `()` to map from.
      *
      * @uxon-property from
      * @uxon-type metamodel:attribute|string
@@ -109,7 +107,9 @@ class SqlColumnMapping implements iCanBeConvertedToUxon
     }
     
     /**
-     * This is the expression, that the from-expression is going to be translated to: alias of an attribute or an SQL column name.
+     * Attribute alias or SQL column name to map to.
+     * 
+     * Any value, that is not a valid attribute alias will be treated as an SQL column name.
      *
      * @uxon-property to
      * @uxon-type metamodel:attribute|string
