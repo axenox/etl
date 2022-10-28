@@ -17,7 +17,7 @@ use exface\Core\CommonLogic\UxonObject;
  *        day          INTEGER NOT NULL, -- 1 to 31
  *        quarter      INTEGER NOT NULL, -- 1 to 4
  *        week_no      INTEGER NOT NULL, -- 1 to 52/53
- *        weekday_no   INTEGER NOT NULL, -- 1 to 7
+ *        weekday_no   INTEGER NOT NULL, -- 0 to 6
  *        weekend_flag TINYINT(1) DEFAULT '0',
  *        UNIQUE td_ymd_idx (year,month,day),
  *        UNIQUE td_dbdate_idx (date)
@@ -92,13 +92,15 @@ CREATE TABLE IF NOT EXISTS {$table} (
         {$cols['day']}          INTEGER NOT NULL, -- 1 to 31
         {$cols['quarter']}      INTEGER NOT NULL, -- 1 to 4
         {$cols['week_no']}      INTEGER NOT NULL, -- 1 to 52/53
-        {$cols['weekday_no']}   INTEGER NOT NULL, -- 1 to 7
+        {$cols['weekday_no']}   INTEGER NOT NULL, -- 0 to 6
         {$cols['weekend_flag']} TINYINT DEFAULT '0',
         UNIQUE td_ymd_idx ({$cols['year']},{$cols['month']},{$cols['day']}),
         UNIQUE td_dbdate_idx (date)
 ) Engine=InnoDB;
 
 DROP PROCEDURE IF EXISTS fill_date_dimension;
+
+delimiter //
 
 CREATE PROCEDURE fill_date_dimension(IN startdate DATE,IN stopdate DATE)
 BEGIN
@@ -113,12 +115,14 @@ BEGIN
             DAY(currentdate),
             QUARTER(currentdate),
             WEEKOFYEAR(currentdate),
-            DAYOFWEEK(currentdate),
-            CASE DAYOFWEEK(currentdate) WHEN 1 THEN 1 WHEN 7 then 1 ELSE 0 END
-            );
+            WEEKDAY(currentdate),
+            IF(WEEKDAY(currentdate) >= 5, 1, 0)
+         );
         SET currentdate = ADDDATE(currentdate,INTERVAL 1 DAY);
     END WHILE;
 END;
+
+delimiter ;
 
 CALL fill_date_dimension('{$from}','{$to}');
 DROP PROCEDURE IF EXISTS fill_date_dimension;
