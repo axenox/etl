@@ -61,9 +61,9 @@ class DataSheetTransfer extends AbstractETLPrototype
      * {@inheritDoc}
      * @see \axenox\ETL\Interfaces\ETLStepInterface::run()
      */
-    public function run(string $stepRunUid, ETLStepResultInterface $previousStepResult = null, ETLStepResultInterface $lastResult = null) : \Generator
+    public function run(string $flowRunUid, string $stepRunUid, ETLStepResultInterface $previousStepResult = null, ETLStepResultInterface $lastResult = null) : \Generator
     {
-        $baseSheet = $this->getFromDataSheet($this->getPlaceholders($stepRunUid, $lastResult));
+        $baseSheet = $this->getFromDataSheet($this->getPlaceholders($flowRunUid, $stepRunUid, $lastResult));
         $mapper = $this->getMapper();
         $result = new IncrementalEtlStepResult($stepRunUid);
         
@@ -106,10 +106,15 @@ class DataSheetTransfer extends AbstractETLPrototype
                 $toSheet = $mapper->map($fromSheet, true);
                 $rowsToCreate = $toSheet->countRows();
                 if ($rowsToCreate > 0) {
-                    if ($this->getStepRunUidAttributeAlias()) {
+                    if (null !== $this->getStepRunUidAttributeAlias()) {
                         $toSheet->getColumns()
                             ->addFromAttribute($this->getToObject()->getAttribute($this->getStepRunUidAttributeAlias()))
                             ->setValueOnAllRows($stepRunUid);
+                    }
+                    if (null !== $this->getFlowRunUidAttributeAlias()) {
+                        $toSheet->getColumns()
+                            ->addFromAttribute($this->getToObject()->getAttribute($this->getFlowRunUidAttributeAlias()))
+                            ->setValueOnAllRows($flowRunUid);
                     }
                     $toSheet->dataCreate(false, $transaction);
                 }

@@ -72,7 +72,7 @@ SQL;
      * {@inheritDoc}
      * @see \axenox\ETL\ETLPrototypes\SQLRunner::getPlaceholders()
      */
-    protected function getPlaceholders(string $stepRunUid, ETLStepResultInterface $lastResult = null) : array
+    protected function getPlaceholders(string $flowRunUid, string $stepRunUid, ETLStepResultInterface $lastResult = null) : array
     {
         $targetCols = '';
         $sourceCols = '';
@@ -86,12 +86,17 @@ SQL;
             throw new RuntimeException('Cannot run ETL step "' . $this->getName() . '": no `column_mappings` defined!');
         }
         
-        if ($runUidAlias = $this->getStepRunUidAttributeAlias()) {
+        if (null !== $runUidAlias = $this->getStepRunUidAttributeAlias()) {
             $targetCols .= ', ' . $this->getToObject()->getAttribute($runUidAlias)->getDataAddress();
             $sourceCols .= ', [#step_run_uid#]';
         }
         
-        return array_merge(parent::getPlaceholders($stepRunUid, $lastResult), [
+        if (null !== $flowRunUidAlias = $this->getFlowRunUidAttributeAlias()) {
+            $targetCols .= ', ' . $this->getToObject()->getAttribute($flowRunUidAlias)->getDataAddress();
+            $sourceCols .= ', [#flow_run_uid#]';
+        }
+        
+        return array_merge(parent::getPlaceholders($flowRunUid, $stepRunUid, $lastResult), [
             'columns' => $targetCols,
             'selects' => $sourceCols,
             'incremental_where' => $this->getSqlIncrementalWhere() ?? '(1=1)'

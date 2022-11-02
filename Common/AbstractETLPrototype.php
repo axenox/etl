@@ -18,6 +18,8 @@ abstract class AbstractETLPrototype implements ETLStepInterface
     
     private $stepRunUidAttributeAlias = null;
     
+    private $flowRunUidAttribtueAlias = null;
+    
     private $fromObject = null;
     
     private $toObject = null;
@@ -90,6 +92,10 @@ abstract class AbstractETLPrototype implements ETLStepInterface
         return $this->uxon->hasProperty($name);
     }
     
+    /**
+     * 
+     * @return string|NULL
+     */
     protected function getStepRunUidAttributeAlias() : ?string
     {
         return $this->stepRunUidAttributeAlias;
@@ -107,6 +113,30 @@ abstract class AbstractETLPrototype implements ETLStepInterface
     protected function setStepRunUidAttribute(string $value) : AbstractETLPrototype
     {
         $this->stepRunUidAttributeAlias = $value;
+        return $this;
+    }
+    
+    /**
+     * 
+     * @return string|NULL
+     */
+    protected function getFlowRunUidAttributeAlias() : ?string
+    {
+        return $this->flowRunUidAttribtueAlias;
+    }
+    
+    /**
+     * Alias of the attribute of the to-object where the UID of the flow run is to be saved (same value for all steps in a flow)
+     * 
+     * @uxon-property flow_run_uid_attribute
+     * @uxon-type metamodel:attribute
+     * 
+     * @param string $value
+     * @return AbstractETLPrototype
+     */
+    protected function setFlowRunUidAttribute(string $value) : AbstractETLPrototype
+    {
+        $this->flowRunUidAttribtueAlias = $value;
         return $this;
     }
     
@@ -192,9 +222,10 @@ abstract class AbstractETLPrototype implements ETLStepInterface
      * @param ETLStepResultInterface $lastResult
      * @return string[]
      */
-    protected function getPlaceholders(string $stepRunUid, ETLStepResultInterface $lastResult = null) : array
+    protected function getPlaceholders(string $flowRunUid, string $stepRunUid, ETLStepResultInterface $lastResult = null) : array
     {
         $phs = [
+            'flow_run_uid' => $flowRunUid,
             'step_run_uid' => $stepRunUid
         ];
         

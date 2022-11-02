@@ -28,6 +28,7 @@ use exface\Core\Widgets\DebugMessage;
  * 
  * - `[#from_object_address#]`
  * - `[#to_object_address#]`
+ * - `[#flow_run_uid#]`
  * - `[#step_run_uid#]`
  * - `[#last_run_uid#]`
  * - `[#last_run_increment_value#]`
@@ -65,7 +66,7 @@ class SQLRunner extends AbstractETLPrototype
      * {@inheritDoc}
      * @see \axenox\ETL\Interfaces\ETLStepInterface::run()
      */
-    public function run(string $stepRunUid, ETLStepResultInterface $previousStepResult = null, ETLStepResultInterface $lastResult = null) : \Generator
+    public function run(string $flowRunUid, string $stepRunUid, ETLStepResultInterface $previousStepResult = null, ETLStepResultInterface $lastResult = null) : \Generator
     {
         $sql = $this->getSql();
         $connection = $this->getSqlConnection();
@@ -75,7 +76,7 @@ class SQLRunner extends AbstractETLPrototype
             $connection->transactionStart();
         }
         
-        $phs = $this->getPlaceholders($stepRunUid, $lastResult);
+        $phs = $this->getPlaceholders($flowRunUid, $stepRunUid, $lastResult);
         // Handle incremental logic
         if ($this->isIncremental()) {
             if (! array_key_exists('last_run_increment_value', $phs)) {
@@ -157,6 +158,7 @@ class SQLRunner extends AbstractETLPrototype
      * 
      * - `[#from_object_address#]`
      * - `[#to_object_address#]`
+     * - `[#flow_run_uid#]`
      * - `[#step_run_uid#]`
      * - `[#last_run_uid#]`
      * - `[#last_run_increment_value#]`
@@ -186,9 +188,9 @@ class SQLRunner extends AbstractETLPrototype
         return $this->getToObject()->getDataConnection();
     }
     
-    protected function getPlaceholders(string $stepRunUid, ETLStepResultInterface $lastResult = null) : array
+    protected function getPlaceholders(string $flowRunUid, string $stepRunUid, ETLStepResultInterface $lastResult = null) : array
     {
-        return array_merge(parent::getPlaceholders($stepRunUid, $lastResult),[
+        return array_merge(parent::getPlaceholders($flowRunUid, $stepRunUid, $lastResult),[
             'from_object_address' => $this->getFromObject()->getDataAddress(),
             'to_object_address' => $this->getToObject()->getDataAddress()
         ]);

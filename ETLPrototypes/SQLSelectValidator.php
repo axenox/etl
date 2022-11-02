@@ -63,9 +63,9 @@ SQL;
      * {@inheritDoc}
      * @see \axenox\ETL\ETLPrototypes\SQLRunner::getPlaceholders()
      */
-    protected function getPlaceholders(string $stepRunUid, ETLStepResultInterface $lastResult = null) : array
+    protected function getPlaceholders(string $flowRunUid, string $stepRunUid, ETLStepResultInterface $lastResult = null) : array
     {
-        return array_merge(parent::getPlaceholders($stepRunUid, $lastResult), [
+        return array_merge(parent::getPlaceholders($flowRunUid, $stepRunUid, $lastResult), [
             'incremental_where' => $this->getSqlIncrementalWhere() ?? '(1=1)'
         ]);
     }      
