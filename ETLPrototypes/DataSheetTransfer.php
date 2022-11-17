@@ -207,6 +207,7 @@ class DataSheetTransfer extends AbstractETLPrototype
      * Placeholders can be used anywhere in the data sheet model:
      * 
      * - `step_run_uid`
+     * - `flow_run_uid`
      * - `last_run_uid`
      * - `last_run_increment_value`
      * - `laxt_run_xxx` - any property of the result data of the last run of this step (replace `xxx`

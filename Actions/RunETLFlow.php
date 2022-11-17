@@ -30,6 +30,10 @@ use axenox\ETL\Events\Flow\OnBeforeETLStepRun;
 use exface\Core\Factories\WidgetFactory;
 use axenox\ETL\Common\IncrementalEtlStepResult;
 use exface\Core\Interfaces\Actions\iModifyData;
+use exface\Core\DataTypes\ArrayDataType;
+use exface\Core\Interfaces\Model\MetaAttributeInterface;
+use exface\Core\Interfaces\Model\ExpressionInterface;
+use exface\Core\Factories\ExpressionFactory;
 
 /**
  * 
@@ -45,6 +49,12 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI, 
     private $flowStoppers = [];
     
     private $flowToRun = null;
+    
+    private $flowRunUid = null;
+    
+    private $inputFlowAliasExpr = null;
+    
+    private $inputFlowRunUidExpr = null;
     
     /**
      *
@@ -63,8 +73,8 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI, 
      */
     protected function performDeferred(array $flows = []) : \Generator
     {
-        foreach ($flows as $alias) {
-            yield from $this->runFlow($alias);
+        foreach ($flows as $uid => $alias) {
+            yield from $this->runFlow($alias, $uid);
         }
     }
     
@@ -74,9 +84,8 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI, 
      * @throws null
      * @return \Generator|string[]
      */
-    protected function runFlow(string $alias) : \Generator
+    protected function runFlow(string $alias, string $flowRunUid) : \Generator
     {
-        $flowRunUid = UUIDDataType::generateSqlOptimizedUuid();
         $indent = '  ';
         
         yield 'Running ETL flow "' . $alias . '" (run-UID ' . $flowRunUid . ').' . PHP_EOL;
@@ -142,6 +151,12 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI, 
         yield PHP_EOL . '✓ Finished successfully' . PHP_EOL;
     }
     
+    /**
+     * 
+     * @param OnBeforeETLStepRun $event
+     * @param array $row
+     * @return \exface\Core\Interfaces\DataSheets\DataSheetInterface
+     */
     protected function logRunDebug(OnBeforeETLStepRun $event, array $row)
     {
         $ds = DataSheetFactory::createFromObjectIdOrAlias($this->getWorkbench(), 'axenox.ETL.step_run');
@@ -159,6 +174,13 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI, 
         return $ds;
     }
     
+    /**
+     * 
+     * @param array $row
+     * @param string $output
+     * @param ETLStepResultInterface $result
+     * @return DataSheetInterface
+     */
     protected function logRunSuccess(array $row, string $output, ETLStepResultInterface $result = null) : DataSheetInterface
     {
         $time = DateTimeDataType::now();
@@ -181,6 +203,13 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI, 
         return $ds;
     }
     
+    /**
+     * 
+     * @param array $row
+     * @param ExceptionInterface $exception
+     * @param string $output
+     * @return DataSheetInterface
+     */
     protected function logRunError(array $row, ExceptionInterface $exception, string $output = '') : DataSheetInterface
     {
         $time = DateTimeDataType::now();
@@ -202,6 +231,14 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI, 
         return $ds;
     }
     
+    /**
+     * 
+     * @param ETLStepInterface $step
+     * @param string $flowRunUid
+     * @param int $position
+     * @param ETLStepResultInterface $lastResult
+     * @return DataSheetInterface
+     */
     protected function logRunStart(ETLStepInterface $step, string $flowRunUid, int $position, ETLStepResultInterface $lastResult = null) : DataSheetInterface
     {
         $time = DateTimeDataType::now();
@@ -234,6 +271,12 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI, 
         return $ds;
     }
     
+    /**
+     * 
+     * @param ETLStepInterface $step
+     * @throws ActionRuntimeError
+     * @return string
+     */
     protected function getStepUid(ETLStepInterface $step) : string
     {
         $uid = array_search($step, $this->stepsLoaded);
@@ -243,6 +286,12 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI, 
         return $uid;
     }
     
+    /**
+     * 
+     * @param ETLStepInterface $step
+     * @throws ActionRuntimeError
+     * @return string
+     */
     protected function getFlowUid(ETLStepInterface $step) : string
     {
         foreach ($this->stepsPerFlowUid as $uid => $steps) {
@@ -417,20 +466,60 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI, 
         return $stepsPlanned;
     }
     
+    /**
+     * Returns an array of flows to run with flow run UIDs for keys and aliases for values.
+     * 
+     * @param TaskInterface $task
+     * @throws ActionInputMissingError
+     * @return array
+     */
     protected function getFlowAliases(TaskInterface $task) : array
     {
         switch (true) {
             case $this->getFlowAlias():
-                return $this->getFlowAlias();
+                $aliases = [$this->getFlowAlias()];
+                break;
             case $task->hasParameter('flow'):
-                return explode(',', $task->getParameter('flow'));
-            default:
+                $aliases = explode(',', $task->getParameter('flow'));
+                break;
+            case $task->hasInputData():
                 $inputData = $this->getInputDataSheet($task);
-                if ($inputData->getMetaObject()->is('axenox.ETL.flow') && $col = $inputData->getColumns()->get('host')) {
-                    return $col->getValues();
+                $aliases = [];
+                if ($inputData->getMetaObject()->is('axenox.ETL.flow') && $col = $inputData->getColumns()->get('alias')) {
+                    $aliases = $col->getValues();
                 }
+                break;
         }
-        throw new ActionInputMissingError($this, 'No ETL flow to run: please provide `flow` parameter or input data based on the flow object (axenox.ETL.flow)!');
+        
+        if (empty($aliases)) {
+            throw new ActionInputMissingError($this, 'No ETL flow to run: please provide `flow` parameter or input data based on the flow object (axenox.ETL.flow)!');
+        }
+        
+        $uidExpr = $this->getInputFlowRunUidExpression();
+        switch (true) {
+            case $task->hasInputData() && $uidExpr !== null:
+                $inputData = $inputData ?? $this->getInputDataSheet($task);
+                $aliasesWithUids = [];
+                if ($uidCol = $inputData->getColumns()->getByExpression($uidExpr)) {
+                    foreach ($aliases as $rowNo => $alias) {
+                        $aliasesWithUids[$uidCol->getValue($rowNo)] = $alias;
+                    }
+                    return $aliasesWithUids;
+                } else {
+                    foreach ($aliases as $alias) {
+                        $aliasesWithUids[$this->generateFlowRunUid()] = $alias;
+                    }
+                    return $aliasesWithUids;
+                }
+            case $uidExpr !== null && count($aliases) === 1:
+                return [$uidExpr->evaluate() => $aliases[0]];
+            default:
+                $aliasesWithUids = [];
+                foreach ($aliases as $alias) {
+                    $aliasesWithUids[$this->generateFlowRunUid()] = $alias;
+                }
+                return $aliasesWithUids;
+        }
     }
     
     /**
@@ -457,11 +546,21 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI, 
         }
     }
     
+    /**
+     * 
+     * @param ETLStepInterface $step
+     * @return bool
+     */
     protected function getStopFlowOnError(ETLStepInterface $step) : bool
     {
         return in_array($step, $this->flowStoppers);
     }
     
+    /**
+     * 
+     * {@inheritDoc}
+     * @see \exface\Core\Interfaces\Actions\iCanBeCalledFromCLI::getCliArguments()
+     */
     public function getCliArguments(): array
     {
         return [
@@ -471,6 +570,11 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI, 
         ];
     }
 
+    /**
+     * 
+     * {@inheritDoc}
+     * @see \exface\Core\Interfaces\Actions\iCanBeCalledFromCLI::getCliOptions()
+     */
     public function getCliOptions(): array
     {
         return [];
@@ -490,10 +594,10 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI, 
      * 
      * If not set, the flow alias will be determined from the task provided:
      * - task parameter `flow` or
-     * - values from the `alias` column in the input data sheet
+     * - values from the `alias` column in the input data sheet if that contains flow data
      * 
-     * @uxon-property flow
-     * @uxon-type string
+     * @uxon-property flow_alias
+     * @uxon-type metamodel:axenox.ETL.flow:alias
      * 
      * @param string $value
      * @return RunETLFlow
@@ -501,6 +605,63 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI, 
     public function setFlowAlias(string $value) : RunETLFlow
     {
         $this->flowToRun = $value;
+        return $this;
+    }
+    
+    /**
+     * 
+     * @return string
+     */
+    protected function generateFlowRunUid() : string
+    {
+        return UUIDDataType::generateSqlOptimizedUuid();
+    }
+    
+    /**
+     * 
+     * @return ExpressionInterface
+     */
+    protected function getInputFlowAliasExpression() : ?ExpressionInterface
+    {
+        return $this->inputFlowAliasExpr;
+    }
+    
+    /**
+     * Column of the input data containing the aliases of the flows to run
+     * 
+     * @uxon-property input_flow_alias
+     * @uxon-type metamodel:expression
+     * 
+     * @param string $value
+     * @return RunETLFlow
+     */
+    public function setInputFlowAlias(string $value) : RunETLFlow
+    {
+        $this->inputFlowAliasExpr = ExpressionFactory::createForObject($this->getMetaObject(), $value);
+        return $this;
+    }
+    
+    /**
+     * 
+     * @return ExpressionInterface
+     */
+    protected function getInputFlowRunUidExpression() : ?ExpressionInterface
+    {
+        return $this->inputFlowRunUidExpr;
+    }
+    
+    /**
+     * Column of the input data containing the UIDs for the flow runs (e.g. to reference the runs from outside)
+     * 
+     * @uxon-property input_flow_run_uid
+     * @uxon-type metamodel:expression
+     * 
+     * @param string $value
+     * @return RunETLFlow
+     */
+    public function setInputFlowRunUid(string $value) : RunETLFlow
+    {
+        $this->inputFlowRunUidExpr = ExpressionFactory::createForObject($this->getMetaObject(), $value);
         return $this;
     }
 }
