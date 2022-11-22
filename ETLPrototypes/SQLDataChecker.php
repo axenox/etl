@@ -42,7 +42,11 @@ use exface\Core\CommonLogic\DataSheets\DataColumn;
  * 
  * - `[#current_increment_value#]`
  * 
- * If you want, you can configure a `result_action` to deal with the resulting messages: e.g. save or send them somewhare.
+ * If you want, you can configure a `result_action` to deal with the resulting messages: e.g. save or send 
+ * them somewhare. This action will get an input data sheet based on the object `exface.Core.DUMMY`, 
+ * that will contain all the rows returned by the checks. Using an `input_mapper` for the action, you
+ * can deal with error data very flexibly - see examples below. The granularity of the errors can easily
+ * be controlled using `GROUP BY` clauses in your SQL to decrease the number of error rows.
  * 
  * ## Examples
  * 
