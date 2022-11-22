@@ -22,7 +22,7 @@ use exface\Core\CommonLogic\DataSheets\DataColumn;
 /**
  * Runs one or more SQL SELECTs to check for issues in the data, producing errors if the SELECTs return at least one row
  * 
- * Each check has 
+ * Each of the `checks` has 
  * 
  * - `sql` script (possible multiple statements) - this script is expected to return some rows if the
  * examined data is NOT OK. 
