@@ -20,7 +20,14 @@ use exface\Core\Factories\DataSheetFactory;
 use exface\Core\CommonLogic\DataSheets\DataColumn;
 
 /**
- * Runs one or more SQL SELECTs to check for issues in the data, producing errors if the SELECTs return at least one row
+ * Runs one or more SQL SELECTs to check for issues in the data, producing errors if the SELECTs return at least one row.
+ * 
+ * All checks are performed on each step run - regardless of whether some of them hit or not. However,
+ * if at leas one critical check with `stop_flow_on_hit` (see below) has a hit, the step will result
+ * in an error in the end. This way, it will block the flow, but the log will include information about
+ * all errors found, not just the one that triggered the stop. 
+ * 
+ * ## Checks
  * 
  * Each of the `checks` has 
  * 
@@ -42,11 +49,24 @@ use exface\Core\CommonLogic\DataSheets\DataColumn;
  * 
  * - `[#current_increment_value#]`
  * 
+ * ## Errors and messages
+ * 
+ * Each hit produces as many messages as rows returned by its SQL. The message template is defined
+ * in `message_text` and can contain placeholders:
+ * 
+ * - The global placeholders listed above
+ * - Values returned by the checks SELECT statement - e.g. `SELECT myCol AS cnt FROM t` would provide 
+ * the placeholder `[#cnt#]` for each row.
+ * 
+ * The granularity of the errors can easily be controlled using `GROUP BY` clauses in your SQL to 
+ * decrease the number of error rows (= messages).
+ * 
+ * ## Result action to save messages
+ * 
  * If you want, you can configure a `result_action` to deal with the resulting messages: e.g. save or send 
  * them somewhare. This action will get an input data sheet based on the object `exface.Core.DUMMY`, 
  * that will contain all the rows returned by the checks. Using an `input_mapper` for the action, you
- * can deal with error data very flexibly - see examples below. The granularity of the errors can easily
- * be controlled using `GROUP BY` clauses in your SQL to decrease the number of error rows.
+ * can deal with error data very flexibly - see examples below.
  * 
  * ## Examples
  * 
@@ -118,9 +138,8 @@ class SQLDataChecker extends AbstractETLPrototype
             $result->setIncrementValue($currentIncrement);
         }
         
-        $this->getWorkbench()->eventManager()->dispatch(new OnBeforeETLStepRun($this));
-        
-        foreach ($this->getChecks() as $check) {
+        // Prepare all SQL queries
+        foreach ($this->getChecks() as $i => $check) {
             $sql = $check->getSql();
             $sql = StringDataType::replacePlaceholders($sql, $phs, true, true);
         
@@ -128,8 +147,18 @@ class SQLDataChecker extends AbstractETLPrototype
             $query = new SqlDataQuery();
             $query->setSql($sql);
             $query->forceMultipleStatements(true);
-            $this->queries[] = $query;
+            $this->queries[$i] = $query;
+        }
         
+        // Fire OnBeforeETLStepRun event once all SQL queries are calculated to make sure, the
+        // createDebugWidget() method has access to the queries and the any logging/debugging
+        // listeners can use it.
+        $this->getWorkbench()->eventManager()->dispatch(new OnBeforeETLStepRun($this));
+        
+        // Perform SQL queries and store results. Perform all of them even if some produce hits
+        // We want to see all check results at once!
+        foreach ($this->getChecks() as $i => $check) {
+            $query = $this->queries[$i];
             $query = $connection->query($query);
             $rows = $query->getResultArray($query);
             if (! empty($rows)) {
@@ -139,11 +168,14 @@ class SQLDataChecker extends AbstractETLPrototype
             $query->freeResult();
         }
         
+        // If no hits, simply return the empty result
         if (empty($hitChecks)) {
             yield "SQL checks performed: " . count($this->getChecks()) . '. No hits.' . PHP_EOL;
+            return $result;
         } 
         
-        // Now we know, there were hits
+        // If there are hits, render their messages (replace placeholders, etc.)
+        // One message per row returned by each check
         yield "SQL checks hit:" . PHP_EOL;
         $messages = [];
         $rows = [];
@@ -165,7 +197,9 @@ class SQLDataChecker extends AbstractETLPrototype
             }
         }
         
-        // Perform action on messages
+        $result->setProcessedRowsCounter(count($messages));
+        
+        // Perform action on messages if required
         if (null !== $actionUxon = $this->getResultActionUxon()) {
             $actionPhs = array_merge($phs, ['message_text' => '[#message_text#]']);
             $actionUxon = UxonObject::fromJson(StringDataType::replacePlaceholders($actionUxon->toJson(), $actionPhs, false, false));
