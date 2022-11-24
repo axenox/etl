@@ -92,7 +92,8 @@ class DataSheetTransfer extends AbstractETLPrototype
         
         $transaction = $this->getWorkbench()->data()->startTransaction();
         
-        $cnt = 0;
+        $cntFrom = 0;
+        $cntTo = 0;
         $offset = 0;
         try {
             do {
@@ -100,10 +101,10 @@ class DataSheetTransfer extends AbstractETLPrototype
                 $fromSheet->setRowsOffset($offset);
                 yield 'Reading ' 
                     . ($limit ? 'rows ' . ($offset+1) . ' - ' . ($offset+$limit) : 'all rows') 
-                    . ($lastResultIncrement !== null ? ' starting from "' . $lastResultIncrement . '"' : '')
-                    . '...' . PHP_EOL;
+                    . ($lastResultIncrement !== null ? ' starting from "' . $lastResultIncrement . '"' : '');
                 
                 $toSheet = $mapper->map($fromSheet, true);
+                yield "... found {$fromSheet->countRows()}, mappted to {$toSheet->countRows()} rows..." . PHP_EOL;
                 $rowsToCreate = $toSheet->countRows();
                 if ($rowsToCreate > 0) {
                     if (null !== $this->getStepRunUidAttributeAlias()) {
@@ -119,7 +120,8 @@ class DataSheetTransfer extends AbstractETLPrototype
                     $toSheet->dataCreate(false, $transaction);
                 }
                 
-                $cnt += $fromSheet->countRows();
+                $cntFrom += $fromSheet->countRows();
+                $cntTo += $toSheet->countRows();
                 $offset = $offset + $limit;
             } while ($limit !== null && $rowsToCreate > 0 && $fromSheet->isPaged() && $fromSheet->countRows() >= $limit);
         } catch (\Throwable $e) {
@@ -128,9 +130,9 @@ class DataSheetTransfer extends AbstractETLPrototype
         }
         $transaction->commit();
         
-        yield '...processed ' . $cnt . ' rows in total' . PHP_EOL;
+        yield "... mapped {$cntFrom} rows to {$cntTo} in total." . PHP_EOL;
         
-        return $result->setProcessedRowsCounter($cnt);
+        return $result->setProcessedRowsCounter($cntFrom);
     }
 
     public function validate(): \Generator
