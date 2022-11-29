@@ -1,3 +1,4 @@
 {
-	"ACTION.RUNETLFLOW.NAME": "Flow starten"
+	"ACTION.RUNETLFLOW.NAME": "Flow starten",
+	"SQLDATACHECKER.ERRORS_IN_DATA": "Fehler in Daten:"
 }

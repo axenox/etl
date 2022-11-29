@@ -212,7 +212,8 @@ class SQLDataChecker extends AbstractETLPrototype
         }
         
         if ($stop === true) {
-            throw new DataQueryFailedError($this->getCombinedQuery(), 'Data checks failed: ' . implode('; ', $messages));
+            $translator = $this->getWorkbench()->getApp('axenox.ETL')->getTranslator();
+            throw new DataQueryFailedError($this->getCombinedQuery(), $translator->translate('SQLDATACHECKER.ERRORS_IN_DATA') . ' ' . implode('; ', $messages), '7O4OM8F');
         }
         
         return $result;
