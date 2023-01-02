@@ -279,7 +279,7 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI, 
      */
     protected function getStepUid(ETLStepInterface $step) : string
     {
-        $uid = array_search($step, $this->stepsLoaded);
+        $uid = array_search($step, $this->stepsLoaded, true);
         if (! $uid) {
             throw new ActionRuntimeError($this, 'No UID found for ETL step "' . $step->__toString() . '": step not loaded/planned properly?');
         }
@@ -295,7 +295,7 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI, 
     protected function getFlowUid(ETLStepInterface $step) : string
     {
         foreach ($this->stepsPerFlowUid as $uid => $steps) {
-            if (! in_array($step, $steps)) {
+            if (! in_array($step, $steps, true)) {
                 $uid = null;
             }
         }
@@ -402,7 +402,7 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI, 
         for ($i = 0; $i < $stepsCnt; $i++) {
             foreach ($stepsToPlan as $stepUid => $step) {
                 // If the step was already planned, skip it
-                if (in_array($step, $stepsPlanned)) {
+                if (in_array($step, $stepsPlanned, true)) {
                     continue;
                 }
                 // If the step is an immediate follower of another step - skip it as it
@@ -553,7 +553,7 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI, 
      */
     protected function getStopFlowOnError(ETLStepInterface $step) : bool
     {
-        return in_array($step, $this->flowStoppers);
+        return in_array($step, $this->flowStoppers, true);
     }
     
     /**
