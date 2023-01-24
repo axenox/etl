@@ -18,6 +18,8 @@ use exface\Core\Factories\ActionFactory;
 use exface\Core\Factories\TaskFactory;
 use exface\Core\Factories\DataSheetFactory;
 use exface\Core\CommonLogic\DataSheets\DataColumn;
+use exface\Core\DataTypes\LogLevelDataType;
+use exface\Core\Interfaces\Log\LoggerInterface;
 
 /**
  * Runs one or more SQL SELECTs to check for issues in the data, producing errors if the SELECTs return at least one row.
@@ -106,6 +108,8 @@ class SQLDataChecker extends AbstractETLPrototype
     
     private $resultActionUxon = null;
     
+    private $logLevel = LoggerInterface::CRITICAL;
+    
     /**
      * 
      * {@inheritDoc}
@@ -157,6 +161,7 @@ class SQLDataChecker extends AbstractETLPrototype
         
         // Perform SQL queries and store results. Perform all of them even if some produce hits
         // We want to see all check results at once!
+        $logLevel = $this->getLogLevel();
         foreach ($this->getChecks() as $i => $check) {
             $query = $this->queries[$i];
             $query = $connection->query($query);
@@ -164,6 +169,10 @@ class SQLDataChecker extends AbstractETLPrototype
             if (! empty($rows)) {
                 $hitChecks[] = $check;
                 $hitData[] = $rows;
+                
+                if ($check->getLogLevel() !== null && LogLevelDataType::compareLogLevels($logLevel, $check->getLogLevel()) < 0) {
+                    $logLevel = $check->getLogLevel();
+                }
             }
             $query->freeResult();
         }
@@ -181,9 +190,11 @@ class SQLDataChecker extends AbstractETLPrototype
         $rows = [];
         $stop = false;
         foreach ($hitChecks as $i => $check) {
+            /* @var $check \axenox\ETL\Common\SqlDataCheck */
             if ($check->getStopFlowOnHit()) {
                 $stop = true;
             }
+            
             $hitRows = $hitData[$i];
             foreach ($hitRows as $row) {
                 $msgPhs = $phs;
@@ -213,7 +224,9 @@ class SQLDataChecker extends AbstractETLPrototype
         
         if ($stop === true) {
             $translator = $this->getWorkbench()->getApp('axenox.ETL')->getTranslator();
-            throw new DataQueryFailedError($this->getCombinedQuery(), $translator->translate('SQLDATACHECKER.ERRORS_IN_DATA') . ' ' . implode('; ', $messages), '7O4OM8F');
+            $e = new DataQueryFailedError($this->getCombinedQuery(), $translator->translate('SQLDATACHECKER.ERRORS_IN_DATA') . ' ' . implode('; ', $messages), '7O4OM8F');
+            $e->setLogLevel($logLevel ?? LoggerInterface::CRITICAL);
+            throw $e;
         }
         
         return $result;
@@ -355,6 +368,31 @@ class SQLDataChecker extends AbstractETLPrototype
     protected function setResultAction(UxonObject $value) : SQLDataChecker
     {
         $this->resultActionUxon = $value;
+        return $this;
+    }
+    
+    /**
+     *
+     * @return string
+     */
+    protected function getLogLevel() : ?string
+    {
+        return $this->logLevel;
+    }
+    
+    /**
+     * Specifiy a log level to use if one of the checks fails
+     *
+     * @uxon-property log_level
+     * @uxon-type [debug,info,notice,warning,error,critical,alert,emergency]
+     * @uxon-default critical
+     *
+     * @param string $level
+     * @return SqlDataChecker
+     */
+    protected function setLogLevel(string $level) : SQLDataChecker
+    {
+        $this->logLevel = LogLevelDataType::cast($level);
         return $this;
     }
 }

@@ -4,6 +4,7 @@ namespace axenox\ETL\Common;
 use exface\Core\Interfaces\iCanBeConvertedToUxon;
 use exface\Core\CommonLogic\Traits\ImportUxonObjectTrait;
 use exface\Core\CommonLogic\UxonObject;
+use exface\Core\DataTypes\LogLevelDataType;
 
 class SqlDataCheck implements iCanBeConvertedToUxon
 {
@@ -16,6 +17,8 @@ class SqlDataCheck implements iCanBeConvertedToUxon
     private $messageText = null;
     
     private $stopFlowOnHit = true;
+    
+    private $logLevel;
     
     public function __construct(UxonObject $uxon)
     {
@@ -49,7 +52,7 @@ class SqlDataCheck implements iCanBeConvertedToUxon
      * @uxon-required true
      *
      * @param string $value
-     * @return SQLDataChecker
+     * @return SqlDataCheck
      */
     protected function setSql(string $value) : SQLDataCheck
     {
@@ -108,6 +111,32 @@ class SqlDataCheck implements iCanBeConvertedToUxon
     protected function setStopFlowOnHit(bool $value) : SqlDataCheck
     {
         $this->stopFlowOnHit = $value;
+        return $this;
+    }
+    
+    /**
+     * 
+     * @return string|NULL
+     */
+    public function getLogLevel() : ?string
+    {
+        return $this->logLevel;
+    }
+    
+    /**
+     * Specifiy a custom log level for a hit of this check.
+     * 
+     * If not set, the `log_level` of the checker flow step will be used.
+     * 
+     * @uxon-property log_level
+     * @uxon-type [debug,info,notice,warning,error,critical,alert,emergency]
+     * 
+     * @param string $level
+     * @return SqlDataCheck
+     */
+    protected function setLogLevel(string $level) : SqlDataCheck
+    {
+        $this->logLevel = LogLevelDataType::cast($level);
         return $this;
     }
 }
