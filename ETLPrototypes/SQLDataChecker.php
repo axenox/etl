@@ -170,7 +170,7 @@ class SQLDataChecker extends AbstractETLPrototype
                 $hitChecks[] = $check;
                 $hitData[] = $rows;
                 
-                if ($check->getLogLevel() !== null && LogLevelDataType::compareLogLevels($logLevel, $check->getLogLevel()) < 0) {
+                if ($check->getLogLevel() !== null) {
                     $logLevel = $check->getLogLevel();
                 }
             }
@@ -381,7 +381,7 @@ class SQLDataChecker extends AbstractETLPrototype
     }
     
     /**
-     * Specifiy a log level to use if one of the checks fails
+     * Specifiy a log level to use if one of the checks fails (unless the check has its own level defined)
      *
      * @uxon-property log_level
      * @uxon-type [debug,info,notice,warning,error,critical,alert,emergency]
