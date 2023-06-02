@@ -219,7 +219,7 @@ class SQLDataChecker extends AbstractETLPrototype
             $inputSheet->addRows($rows);
             $task = TaskFactory::createFromDataSheet($inputSheet);
             $actionResult = $action->handle($task);
-            yield '  ' . $actionResult->getMessage();
+            yield '  ' . $actionResult->getMessage() . PHP_EOL;
         }
         
         if ($stop === true) {
