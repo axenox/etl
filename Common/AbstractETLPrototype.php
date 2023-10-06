@@ -32,7 +32,7 @@ abstract class AbstractETLPrototype implements ETLStepInterface
     
     public function __construct(string $name, MetaObjectInterface $toObject, MetaObjectInterface $fromObject = null, UxonObject $uxon = null)
     {
-        $this->workbench = $fromObject->getWorkbench();
+        $this->workbench = $toObject->getWorkbench();
         $this->uxon = $uxon;
         $this->fromObject = $fromObject;
         $this->toObject = $toObject;
