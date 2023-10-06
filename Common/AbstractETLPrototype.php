@@ -28,7 +28,7 @@ abstract class AbstractETLPrototype implements ETLStepInterface
     
     private $disabled = null;
     
-    private $timeout = (60 * 5);
+    private $timeout = 30;
     
     public function __construct(string $name, MetaObjectInterface $toObject, MetaObjectInterface $fromObject = null, UxonObject $uxon = null)
     {
@@ -205,6 +205,7 @@ abstract class AbstractETLPrototype implements ETLStepInterface
      * 
      * @uxon-property timeout
      * @uxon-type integer
+     * @uxon-default 30
      * 
      * @param int $seconds
      * @return ETLStepInterface

@@ -97,6 +97,15 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI, 
         yield from $planner;
         $plan = $planner->getReturn();
         
+        $timeout = 0;
+        foreach ($plan as $step) {
+            $timeout += $step->getTimeout();
+        }
+        if ($timeout > (ini_get('max_execution_time') ?? 30)) {
+            yield PHP_EOL . 'Increasing PHP max execution time to ' . $timeout . ' seconds.';
+            set_time_limit($timeout);
+        }
+        
         yield PHP_EOL . 'Starting now...' . PHP_EOL . PHP_EOL;
         foreach ($plan as $pos => $step) {
             $nr = $pos+1;
