@@ -24,7 +24,9 @@ use exface\Core\DataTypes\PhpClassDataType;
 /**
  * Reads a data sheet from the from-object and generates an SQL query from its rows.
  * 
- * Example
+ * ## Examples
+ * 
+ * ### Import an entire data sheet as SQL INSERTs
  * 
  * ```
  *  {
@@ -35,7 +37,41 @@ use exface\Core\DataTypes\PhpClassDataType;
  *          ]
  *      },
  *      "sql": "INSERT INTO [#from_object_address#] (col1, col2, etlRunUID) VALUES [#rows#]",
- *      "sql_row_template": "('[#attr1#]', '[#attr2#]', [#flow_run_uid#])"
+ *      "sql_row_templates": {
+ *          "rows": "('[#attr1#]', '[#attr2#]', [#flow_run_uid#])"
+ *      }
+ *  }
+ * 
+ * ```
+ * 
+ * ### Multiple SQL statements for a large data sheet
+ * 
+ * By default this step will read all data from the data sheet and perform an SQL statement
+ * for every set of 500 rows wrapped in a single transaction. If you need more rows per statement,
+ * increase `sql_rows_max_per_query` or set it to `null` to place all rows in a single statement.
+ * 
+ * ```
+ *  {
+ *      "from_data_sheet": {"columns": []},
+ *      "sql": "INSERT INTO [#from_object_address#] (col1, col2, etlRunUID) VALUES [#rows#]",
+ *      "sql_rows_max_per_query": 1000,
+ *      "sql_row_templates": {"rows": "('[#attr1#]', '[#attr2#]', [#flow_run_uid#])"}
+ *  }
+ * 
+ * ```
+ * 
+ * ### Paged reading
+ * 
+ * You can also limit the number of rows to read at a time by setting a `page_size`. The following example
+ * will read 1000 rows at a time and put them into 4 SQL statements of 250 rows each.
+ * 
+ * ```
+ *  {
+ *      "page_size": 1000,
+ *      "from_data_sheet": {"columns":[]},
+ *      "sql": "INSERT INTO [#from_object_address#] (col1, col2, etlRunUID) VALUES [#rows#]",
+ *      "sql_rows_max_per_query": 250,
+ *      "sql_row_templates": {"rows": "('[#attr1#]', '[#attr2#]', [#flow_run_uid#])"}
  *  }
  * 
  * ```
@@ -57,7 +93,9 @@ class DataSheetToSQL extends AbstractETLPrototype
     
     private $sqlTpl = null;
     
-    private $sqlRowTpl = null;
+    private $sqlRowTpls = null;
+    
+    private $sqlRowsMax = 500;
     
     private $sqlRowDelimiter = "\n,";
     
@@ -98,8 +136,9 @@ class DataSheetToSQL extends AbstractETLPrototype
             $lastResultForSqlRunner = null;
         }
         
-        $cntFrom = 0;
+        $totalCnt = 0;
         $offset = 0;
+        $maxSqlRows = $this->getSqlRowsMaxPerQuery();
         do {
             $fromSheet = $baseSheet->copy();
             $fromSheet->setRowsOffset($offset);
@@ -108,24 +147,38 @@ class DataSheetToSQL extends AbstractETLPrototype
                 . ($lastResultIncrement !== null ? ' starting from "' . $lastResultIncrement . '"' : '');
             
             $fromSheet->dataRead();
-            
-            if ($fromSheet->countRows() > 0) {
-                $sqlRunner = new SQLRunner($this->getName(), $this->getToObject(), $this->getFromObject(), new UxonObject([
-                    'sql' => $this->buildSql($fromSheet)
-                ]));
-                $sqlRunner->setTimeout($this->getTimeout());
-                yield from $sqlRunner->run($flowRunUid, $stepRunUid, $previousStepResult, $lastResultForSqlRunner);
+            $fromSheetCnt = $fromSheet->countRows();
+            $maxSqlRows = min($fromSheetCnt, $maxSqlRows);
+            if ($maxSqlRows > $fromSheetCnt) {
+                $sqlTimeout = round($this->getTimeout() / ($fromSheetCnt / $maxSqlRows), 0);
+            } else {
+                $sqlTimeout = $this->getTimeout();
+            }
+            if ($fromSheetCnt > 0) {
+                $processedCnt = 0;
+                while ($processedCnt < $fromSheetCnt) {
+                    $sqlRunner = new SQLRunner($this->getName(), $this->getToObject(), $this->getFromObject(), new UxonObject([
+                        'sql' => $this->buildSql($fromSheet, $maxSqlRows, $processedCnt)
+                    ]));
+                    // Each SQL gets a longer timeout
+                    $sqlRunner->setTimeout($sqlTimeout);
+                    // Do not use own transaction in the SQL runner. Commit here further below
+                    // only if all SQLs succeed.
+                    $sqlRunner->setWrapInTransaction(false);
+                    $processedCnt += $maxSqlRows;
+                    yield from $sqlRunner->run($flowRunUid, $stepRunUid, $previousStepResult, $lastResultForSqlRunner);
+                }
             }
             
-            $cntFrom += $fromSheet->countRows();
-            $offset = $offset + $limit;
-        } while ($limit !== null && $fromSheet->isPaged() && $fromSheet->countRows() >= $limit);
+            $totalCnt += $fromSheetCnt;
+            $offset += $limit;
+        } while ($limit !== null && $fromSheet->isPaged() && $fromSheetCnt >= $limit);
         
         $transaction->commit();
         
-        yield "... mapped {$cntFrom} rows SQL." . PHP_EOL;
+        yield "... mapped {$totalCnt} rows SQL." . PHP_EOL;
         
-        return $result->setProcessedRowsCounter($cntFrom);
+        return $result->setProcessedRowsCounter($totalCnt);
     }
 
     public function validate(): \Generator
@@ -138,24 +191,28 @@ class DataSheetToSQL extends AbstractETLPrototype
      * @param DataSheetInterface $sheet
      * @return string
      */
-    protected function buildSql(DataSheetInterface $sheet) : string
+    protected function buildSql(DataSheetInterface $sheet, int $limit, int $offset) : string
     {
         $sql = $this->getSql();
-        $sqlRowTpl = $this->getSqlRowTemplate();
-        $rowPhs = StringDataType::findPlaceholders($sqlRowTpl);
-        $sqlRows = [];
-        foreach ($sheet->getRows() as $row) {
-            $rowPhVals = [];
-            foreach ($rowPhs as $ph) {
-                if (array_key_exists($ph, $row)) {
-                    $rowPhVals[$ph] = $row[$ph];
-                } else {
-                    $rowPhVals[$ph] = '[#' . $ph . '#]';
+        $firstRow = $offset;
+        $lastRow = min($limit + $offset, $sheet->countRows());
+        foreach ($this->getSqlRowTemplates() as $tplPh => $sqlRowTpl) {
+            $rowPhs = StringDataType::findPlaceholders($sqlRowTpl);
+            $sqlRows = [];
+            for ($i = $firstRow; $i < $lastRow; $i++) {
+                $row = $sheet->getRow($i);
+                $rowPhVals = [];
+                foreach ($rowPhs as $ph) {
+                    if (array_key_exists($ph, $row)) {
+                        $rowPhVals[$ph] = $row[$ph];
+                    } else {
+                        $rowPhVals[$ph] = '[#' . $ph . '#]';
+                    }
                 }
+                $sqlRows[] = StringDataType::replacePlaceholders($sqlRowTpl, $rowPhVals);
             }
-            $sqlRows[] = StringDataType::replacePlaceholders($sqlRowTpl, $rowPhVals);
+            $sql = str_replace('[#' . $tplPh . '#]', implode($this->getSqlRowDelimiter(), $sqlRows), $sql);
         }
-        $sql = str_replace('[#rows#]', implode($this->getSqlRowDelimiter(), $sqlRows), $sql);
         return $sql;
     }
 
@@ -357,6 +414,7 @@ class DataSheetToSQL extends AbstractETLPrototype
      * @uxon-property sql
      * @uxon-type string
      * @uxon-required true
+     * @uxon-template INSERT INTO [#to_object_address#] (col1, col2, ETLFlowRunUID) VALUES [#rows#]
      * 
      * @param string $value
      * @return DataSheetToSQL
@@ -369,11 +427,11 @@ class DataSheetToSQL extends AbstractETLPrototype
     
     /**
      * 
-     * @return string
+     * @return string[]
      */
-    protected function getSqlRowTemplate() : string
+    protected function getSqlRowTemplates() : array
     {
-        return $this->sqlRowTpl;
+        return $this->sqlRowTpls;
     }
     
     /**
@@ -386,15 +444,16 @@ class DataSheetToSQL extends AbstractETLPrototype
      * does not work, look into the debug output of this step to find all the column names of the
      * data sheet.
      * 
-     * @uxon-property sql_row_template
-     * @uxon-type string
+     * @uxon-property sql_row_templates
+     * @uxon-type object
+     * @uxon-template {"rows":"('[#attr1#]', '[#attr1#]', [#flow_run_uid#])"}
      * 
-     * @param string $value
+     * @param string $arrayOfSqlStrings
      * @return DataSheetToSQL
      */
-    protected function setSqlRowTemplate(string $value) : DataSheetToSQL
+    protected function setSqlRowTemplates(UxonObject $arrayOfSqlStrings) : DataSheetToSQL
     {
-        $this->sqlRowTpl = $value;
+        $this->sqlRowTpls = $arrayOfSqlStrings->toArray();
         return $this;
     }
     
@@ -420,6 +479,33 @@ class DataSheetToSQL extends AbstractETLPrototype
     protected function setSqlRowDelimiter(string $value) : DataSheetToSQL
     {
         $this->sqlRowDelimiter = $value;
+        return $this;
+    }
+    
+    /**
+     * 
+     * @return int|NULL
+     */
+    protected function getSqlRowsMaxPerQuery() : ?int
+    {
+        return $this->sqlRowsMax;
+    }
+    
+    /**
+     * Maximum number of rows to put into a single SQL query.
+     * 
+     * Larger data sheets will produce multiple SQL statement
+     * 
+     * @uxon-property sql_rows_max_per_query
+     * @uxon-type number
+     * @uxon-default 500
+     * 
+     * @param int|NULL $value
+     * @return DataSheetToSQL
+     */
+    protected function setSqlRowsMaxPerQuery(?int $value) : DataSheetToSQL
+    {
+        $this->sqlRowsMax = $value;
         return $this;
     }
 }
