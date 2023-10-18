@@ -80,25 +80,25 @@
     ],
     "rows": [
         {
-            "CREATED_ON": "2021-04-26 11:16:33",
-            "MODIFIED_ON": "2023-10-18 16:08:28",
+            "CREATED_ON": "2023-10-18 16:06:50",
+            "MODIFIED_ON": "2023-10-18 17:56:25",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
             "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
-            "UID": "0x11ebb8ae1819104cb8ae025041000001",
+            "UID": "0x11eeae4695964d78ae46025041000001",
             "READABLE_FLAG": 1,
             "WRITABLE_FLAG": 1,
             "COMMENTS": "",
             "DOCS": "",
-            "NAME": "Flow preset",
+            "NAME": "Web request",
             "INHERIT_DATA_SOURCE_BASE_OBJECT": 1,
             "DATA_SOURCE": "0x32000000000000000000000000000000",
             "APP": "0x11ebbc50679eacdabc50025041000001",
             "SHORT_DESCRIPTION": "",
-            "PARENT_OBJECT": "0x11e9a23da60d78a6949f106530e7aff7",
-            "DATA_ADDRESS_PROPS": "{\"SQL_SELECT_WHERE\":\"uxon_schema = '\\\\\\\\axenox\\\\\\\\ETL\\\\\\\\Uxon\\\\\\\\ETLPrototypeSchema'\"}",
+            "PARENT_OBJECT": "",
+            "DATA_ADDRESS_PROPS": null,
             "DEFAULT_EDITOR_UXON": null,
-            "ALIAS": "etl_uxon_preset",
-            "DATA_ADDRESS": "exf_uxon_preset"
+            "ALIAS": "webservice_request",
+            "DATA_ADDRESS": "etl_webservice_request"
         }
     ],
     "totals_rows": [],

@@ -81,7 +81,7 @@
     "rows": [
         {
             "CREATED_ON": "2021-03-10 11:00:07",
-            "MODIFIED_ON": "2021-03-10 11:00:29",
+            "MODIFIED_ON": "2023-10-18 16:08:37",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
             "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
             "UID": "0x11ebb73764a04de4b737025041000001",
@@ -89,7 +89,7 @@
             "WRITABLE_FLAG": 1,
             "COMMENTS": "",
             "DOCS": "",
-            "NAME": "ETL prototype",
+            "NAME": "Flow prototype",
             "INHERIT_DATA_SOURCE_BASE_OBJECT": 1,
             "DATA_SOURCE": "0x11e6afd8d2fa47e78943e4b318306b9a",
             "APP": "0x11ebbc50679eacdabc50025041000001",

@@ -44,6 +44,14 @@
         {
             "name": "DESCRIPTION",
             "attribute_alias": "DESCRIPTION"
+        },
+        {
+            "name": "DISABLED_FLAG",
+            "attribute_alias": "DISABLED_FLAG"
+        },
+        {
+            "name": "PRIORITY",
+            "attribute_alias": "PRIORITY"
         }
     ],
     "rows": [
@@ -65,7 +73,9 @@
             "OBJECT": "0x11eb90858867906c9085025041000001",
             "APP": "0x11ebbc50679eacdabc50025041000001",
             "NAME": "Generate alias from name",
-            "DESCRIPTION": ""
+            "DESCRIPTION": "",
+            "DISABLED_FLAG": 0,
+            "PRIORITY": null
         }
     ],
     "totals_rows": [],

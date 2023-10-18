@@ -4,6 +4,9 @@ namespace axenox\ETL;
 use exface\Core\Interfaces\InstallerInterface;
 use exface\Core\CommonLogic\Model\App;
 use exface\Core\CommonLogic\AppInstallers\AbstractSqlDatabaseInstaller;
+use exface\Core\Facades\AbstractHttpFacade\HttpFacadeInstaller;
+use axenox\ETL\Facades\DataFlowFacade;
+use exface\Core\Factories\FacadeFactory;
 
 class ETLApp extends App
 {
@@ -16,6 +19,12 @@ class ETLApp extends App
     {
         $installer = parent::getInstaller($injected_installer);
         
+        // Facade
+        $tplInstaller = new HttpFacadeInstaller($this->getSelector());
+        $tplInstaller->setFacade(FacadeFactory::createFromString(DataFlowFacade::class, $this->getWorkbench()));
+        $installer->addInstaller($tplInstaller);
+        
+        // SQL schema
         $modelLoader = $this->getWorkbench()->model()->getModelLoader();
         $modelDataSource = $modelLoader->getDataConnection();
         $installerClass = get_class($modelLoader->getInstaller()->getInstallers()[0]);

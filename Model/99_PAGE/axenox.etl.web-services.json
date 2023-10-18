@@ -1,0 +1,276 @@
+{
+    "uid": "0x11eeb3542b6c77feb354025041000001",
+    "alias_with_namespace": "axenox.etl.web-services",
+    "menu_parent_page_selector": "0x11ebbc9afc222912bc9a025041000001",
+    "menu_index": 0,
+    "menu_visible": true,
+    "name": "Web services",
+    "description": "",
+    "intro": "",
+    "replaces_page_selector": null,
+    "created_by_user_selector": "0x31000000000000000000000000000000",
+    "created_on": "2023-10-18 16:18:11",
+    "modified_by_user_selector": "0x31000000000000000000000000000000",
+    "modified_on": "2023-10-18 17:04:12",
+    "contents": {
+        "widget_type": "SplitVertical",
+        "object_alias": "axenox.ETL.webservice_route",
+        "panels": [
+            {
+                "height": "50%",
+                "widgets": [
+                    {
+                        "widget_type": "DataTable",
+                        "caption": "Routes",
+                        "filters": [
+                            {
+                                "attribute_alias": "name"
+                            },
+                            {
+                                "attribute_alias": "app"
+                            },
+                            {
+                                "attribute_alias": "in_url"
+                            },
+                            {
+                                "attribute_alias": "out_connection"
+                            }
+                        ],
+                        "columns": [
+                            {
+                                "attribute_alias": "name"
+                            },
+                            {
+                                "attribute_alias": "app__ALIAS"
+                            },
+                            {
+                                "attribute_alias": "alias"
+                            },
+                            {
+                                "calculation": "=Concatenate(WorkbenchUrl(), 'api\/dataflow\/', in_url)"
+                            }
+                        ],
+                        "sorters": [
+                            {
+                                "attribute_alias": "app__ALIAS",
+                                "direction": "asc"
+                            },
+                            {
+                                "attribute_alias": "alias",
+                                "direction": "asc"
+                            }
+                        ],
+                        "buttons": [
+                            {
+                                "action_alias": "exface.Core.ShowObjectCreateDialog"
+                            },
+                            {
+                                "action_alias": "exface.Core.ShowObjectEditDialog",
+                                "bind_to_double_click": true
+                            },
+                            {
+                                "action_alias": "exface.Core.ShowObjectCopyDialog"
+                            },
+                            {
+                                "action_alias": "exface.Core.DeleteObject",
+                                "visibility": "optional"
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "widgets": [
+                    {
+                        "widget_type": "SplitHorizontal",
+                        "panels": [
+                            {
+                                "caption": "Users",
+                                "width": "40%",
+                                "widgets": [
+                                    {
+                                        "widget_type": "DataTable",
+                                        "object_alias": "exface.Core.USER",
+                                        "filters": [
+                                            {
+                                                "attribute_alias": "USER_POLICY__POLICY__TARGET_FACADE",
+                                                "value": "axenox\/proxy\/Facades\/DataFlowFacade.php",
+                                                "hidden": true
+                                            }
+                                        ],
+                                        "columns": [
+                                            {
+                                                "attribute_alias": "USERNAME"
+                                            },
+                                            {
+                                                "attribute_alias": "DISABLED_FLAG"
+                                            },
+                                            {
+                                                "attribute_alias": "USER_ROLE_USERS__USER_ROLE__LABEL:LIST_DISTINCT"
+                                            },
+                                            {
+                                                "attribute_alias": "USER_CREDENTIALS__UID:COUNT",
+                                                "caption": "=Translate('exface.Core', 'PAGE.USERS.CREDENTIALS')"
+                                            },
+                                            {
+                                                "attribute_alias": "USER_AUTHENTICATOR__LAST_AUTHENTICATED_ON:MAX",
+                                                "caption": "=Translate('exface.Core', 'PAGE.USERS.LAST_LOGIN')"
+                                            }
+                                        ],
+                                        "sorters": [
+                                            {
+                                                "attribute_alias": "USERNAME",
+                                                "direction": "asc"
+                                            }
+                                        ],
+                                        "buttons": [
+                                            {
+                                                "action_alias": "exface.Core.ShowObjectCreateDialog"
+                                            },
+                                            {
+                                                "action_alias": "exface.Core.ShowObjectEditDialog",
+                                                "bind_to_double_click": true
+                                            },
+                                            {
+                                                "action_alias": "exface.Core.ShowObjectCopyDialog"
+                                            },
+                                            {
+                                                "action_alias": "exface.Core.DeleteObject",
+                                                "visibility": "optional"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                "caption": "Roles",
+                                "widgets": [
+                                    {
+                                        "widget_type": "DataTable",
+                                        "object_alias": "exface.Core.USER_ROLE",
+                                        "filters": [
+                                            {
+                                                "attribute_alias": "AUTHORIZATION_POLICY__TARGET_FACADE",
+                                                "value": "axenox\/proxy\/Facades\/DataFlowFacade.php",
+                                                "hidden": true
+                                            }
+                                        ],
+                                        "columns": [
+                                            {
+                                                "attribute_alias": "NAME"
+                                            },
+                                            {
+                                                "attribute_alias": "AUTHORIZATION_POLICY__UID:COUNT",
+                                                "caption": "Policies"
+                                            }
+                                        ],
+                                        "sorters": [
+                                            {
+                                                "attribute_alias": "NAME",
+                                                "direction": "asc"
+                                            }
+                                        ],
+                                        "buttons": [
+                                            {
+                                                "action_alias": "exface.Core.ShowObjectCreateDialog"
+                                            },
+                                            {
+                                                "action_alias": "exface.Core.ShowObjectEditDialog",
+                                                "bind_to_double_click": true
+                                            },
+                                            {
+                                                "action_alias": "exface.Core.ShowObjectCopyDialog"
+                                            },
+                                            {
+                                                "action_alias": "exface.Core.DeleteObject",
+                                                "visibility": "optional"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                "caption": "Policies",
+                                "width": "40%",
+                                "widgets": [
+                                    {
+                                        "widget_type": "DataTable",
+                                        "object_alias": "exface.Core.AUTHORIZATION_POLICY",
+                                        "filters": [
+                                            {
+                                                "attribute_alias": "TARGET_FACADE",
+                                                "hidden": true,
+                                                "value": "axenox\/proxy\/Facades\/DataFlowFacade.php"
+                                            }
+                                        ],
+                                        "columns": [
+                                            {
+                                                "attribute_alias": "EFFECT"
+                                            },
+                                            {
+                                                "attribute_alias": "NAME"
+                                            },
+                                            {
+                                                "attribute_alias": "DISABLED_FLAG"
+                                            },
+                                            {
+                                                "attribute_alias": "AUTHORIZATION_POINT__LABEL"
+                                            },
+                                            {
+                                                "attribute_alias": "TARGET_USER_ROLE__LABEL"
+                                            },
+                                            {
+                                                "attribute_alias": "TARGET_OBJECT__LABEL"
+                                            },
+                                            {
+                                                "attribute_alias": "TARGET_ACTION_PROTOTYPE__LABEL"
+                                            },
+                                            {
+                                                "attribute_alias": "TARGET_ACTION_MODEL__LABEL"
+                                            },
+                                            {
+                                                "attribute_alias": "TARGET_FACADE__LABEL"
+                                            },
+                                            {
+                                                "attribute_alias": "CONDITION_FLAG"
+                                            },
+                                            {
+                                                "attribute_alias": "APP__LABEL"
+                                            }
+                                        ],
+                                        "sorters": [
+                                            {
+                                                "attribute_alias": "TARGET_USER_ROLE__LABEL",
+                                                "direction": "asc"
+                                            },
+                                            {
+                                                "attribute_alias": "NAME",
+                                                "direction": "asc"
+                                            }
+                                        ],
+                                        "buttons": [
+                                            {
+                                                "action_alias": "exface.Core.ShowObjectCreateDialog"
+                                            },
+                                            {
+                                                "action_alias": "exface.Core.ShowObjectEditDialog",
+                                                "bind_to_double_click": true
+                                            },
+                                            {
+                                                "action_alias": "exface.Core.ShowObjectCopyDialog"
+                                            },
+                                            {
+                                                "action_alias": "exface.Core.DeleteObject",
+                                                "visibility": "optional"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    }
+}

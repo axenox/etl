@@ -35,5 +35,6 @@ class DataFlowInstaller extends MetaModelAdditionInstaller
         $modelFolder = 'ETL';
         $this->addModelDataSheet($modelFolder, $this->createModelDataSheet('axenox.ETL.flow', 'app', 'MODIFIED_ON'));
         $this->addModelDataSheet($modelFolder, $this->createModelDataSheet('axenox.ETL.step', 'flow__app', 'MODIFIED_ON'));
+        $this->addModelDataSheet($modelFolder, $this->createModelDataSheet('axenox.ETL.webservice_route', 'app', 'MODIFIED_ON'));
     }
 }

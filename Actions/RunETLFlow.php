@@ -516,7 +516,7 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI, 
                     return $aliasesWithUids;
                 } else {
                     foreach ($aliases as $alias) {
-                        $aliasesWithUids[$this->generateFlowRunUid()] = $alias;
+                        $aliasesWithUids[self::generateFlowRunUid()] = $alias;
                     }
                     return $aliasesWithUids;
                 }
@@ -525,7 +525,7 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI, 
             default:
                 $aliasesWithUids = [];
                 foreach ($aliases as $alias) {
-                    $aliasesWithUids[$this->generateFlowRunUid()] = $alias;
+                    $aliasesWithUids[self::generateFlowRunUid()] = $alias;
                 }
                 return $aliasesWithUids;
         }
@@ -621,7 +621,7 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI, 
      * 
      * @return string
      */
-    protected function generateFlowRunUid() : string
+    public static function generateFlowRunUid() : string
     {
         return UUIDDataType::generateSqlOptimizedUuid();
     }

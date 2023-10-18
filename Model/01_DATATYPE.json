@@ -83,6 +83,33 @@
             },
             "ALIAS": "EtlStepType",
             "SHORT_DESCRIPTION": ""
+        },
+        {
+            "CREATED_ON": "2023-10-18 17:37:21",
+            "MODIFIED_ON": "2023-10-18 17:49:46",
+            "CREATED_BY_USER": "0x31000000000000000000000000000000",
+            "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
+            "UID": "0x11eeb2033afcbe62b203025041000001",
+            "APP": "0x11ebbc50679eacdabc50025041000001",
+            "NAME": "Flow web request status",
+            "PROTOTYPE": "axenox\/etl\/DataTypes\/WebRequestStatusDataType.php",
+            "CONFIG_UXON": null,
+            "VALIDATION_ERROR": "",
+            "DEFAULT_DISPLAY_UXON": {
+                "widget_type": "ProgressBar",
+                "color_scale": {
+                    "10": "transparent",
+                    "20": "yellow",
+                    "70": "darkorange",
+                    "90": "lightgray",
+                    "99": "lightgreen"
+                }
+            },
+            "DEFAULT_EDITOR_UXON": {
+                "widget_type": "InputSelect"
+            },
+            "ALIAS": "WebRequestStatus",
+            "SHORT_DESCRIPTION": ""
         }
     ],
     "totals_rows": [],
