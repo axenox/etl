@@ -81,9 +81,9 @@
     "rows": [
         {
             "CREATED_ON": "2021-03-04 20:31:23",
-            "MODIFIED_ON": "2021-06-09 18:09:35",
+            "MODIFIED_ON": "2023-10-22 11:27:08",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
-            "MODIFIED_BY_USER": "0x11ea7e29e1126ef3a7eb0050568905af",
+            "MODIFIED_BY_USER": "0x11eca7f5b092f284a7f5005056bea39f",
             "UID": "0x11ebbb7534237cb0bb75025041000001",
             "READABLE_FLAG": 1,
             "WRITABLE_FLAG": 0,
@@ -119,7 +119,7 @@
                             "attribute_alias": "start_time"
                         },
                         {
-                            "attribute_alias": "end_time"
+                            "attribute_alias": "duration"
                         }
                     ]
                 },
