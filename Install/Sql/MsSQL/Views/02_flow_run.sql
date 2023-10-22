@@ -48,6 +48,8 @@ CREATE VIEW [dbo].[etl_flow_run] (
 		END) * SUM(r.result_count) AS 'valid_rows',
 		MIN(r.start_time) AS start_time,
 		MAX(r.end_time) AS end_time,
+		DATEDIFF(SECOND, MIN(r.start_time), MAX(r.end_time)) AS duration_seconds,
+		CONVERT(VARCHAR, DATEADD(SECOND, DATEDIFF(SECOND, MIN(r.start_time), MAX(r.end_time)), 0), 108) AS duration,
 		MAX(r.error_message) AS error_message,
 		MAX(r.error_log_id) AS error_log_id,
 		MIN(r.created_on) AS created_on,

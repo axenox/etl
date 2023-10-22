@@ -18,6 +18,8 @@ SELECT
 	IF (SUM(r.success_flag) + SUM(r.step_disabled_flag) + SUM(r.skipped_flag) - SUM(r.invalidated_flag) = COUNT(1), 1, 0) * SUM(r.result_count) AS 'valid_rows',
 	MIN(r.start_time) AS start_time,
 	MAX(r.end_time) AS end_time,
+	TIMESTAMPDIFF(SECOND, MIN(r.start_time), MAX(r.end_time)) AS duration_seconds,
+	TIMEDIFF(MIN(r.start_time), MAX(r.end_time)) AS duration,
 	MAX(r.error_message) AS error_message,
 	MAX(r.error_log_id) AS error_log_id,
 	MIN(r.created_on) AS created_on,
