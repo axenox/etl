@@ -95,7 +95,9 @@
             "APP": "0x11ebbc50679eacdabc50025041000001",
             "SHORT_DESCRIPTION": "",
             "PARENT_OBJECT": "0x11e6be0ad5666af88ddee4b318306b9a",
-            "DATA_ADDRESS_PROPS": "{\"finder_depth\":\"0\"}",
+            "DATA_ADDRESS_PROPS": {
+                "finder_depth": 0
+            },
             "DEFAULT_EDITOR_UXON": null,
             "ALIAS": "etl_prototype",
             "DATA_ADDRESS": "*\/*\/ETLPrototypes\/*.php"

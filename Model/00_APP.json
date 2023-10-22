@@ -37,13 +37,13 @@
     "rows": [
         {
             "CREATED_ON": "2021-02-26 16:43:42",
-            "MODIFIED_ON": "2021-09-10 14:02:53",
+            "MODIFIED_ON": "2023-10-22 11:38:14",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
-            "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
+            "MODIFIED_BY_USER": "0x11eca7f5b092f284a7f5005056bea39f",
             "UID": "0x11ebbc50679eacdabc50025041000001",
             "DEFAULT_LANGUAGE_CODE": "en",
             "ALIAS": "axenox.ETL",
-            "NAME": "axenox ETL Tools"
+            "NAME": "Data flows & ETL tools"
         }
     ],
     "totals_rows": [],
