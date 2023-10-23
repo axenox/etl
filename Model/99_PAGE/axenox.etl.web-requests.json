@@ -11,7 +11,7 @@
     "created_by_user_selector": "0x31000000000000000000000000000000",
     "created_on": "2023-10-18 17:03:02",
     "modified_by_user_selector": "0x31000000000000000000000000000000",
-    "modified_on": "2023-10-18 18:15:36",
+    "modified_on": "2023-10-23 11:30:47",
     "contents": {
         "widget_type": "DataTable",
         "object_alias": "axenox.ETL.webservice_request",
@@ -58,6 +58,10 @@
             {
                 "attribute_alias": "error_monitor__STATUS",
                 "caption": "Error Status"
+            },
+            {
+                "attribute_alias": "flow_run",
+                "caption": "Flow run UID"
             }
         ],
         "sorters": [
@@ -68,8 +72,61 @@
         ],
         "buttons": [
             {
+                "caption": "Open request",
                 "action_alias": "exface.Core.ShowObjectInfoDialog",
                 "bind_to_double_click": true
+            },
+            {
+                "caption": "Open flow run",
+                "action": {
+                    "alias": "exface.Core.ShowObjectInfoDialog",
+                    "object_alias": "axenox.ETL.flow_run",
+                    "disable_buttons": false,
+                    "input_mapper": {
+                        "column_to_column_mappings": [
+                            {
+                                "from": "flow_run",
+                                "to": "UID"
+                            }
+                        ]
+                    }
+                },
+                "disabled_if": {
+                    "operator": "AND",
+                    "conditions": [
+                        {
+                            "value_left": "=~input!flow_run",
+                            "comparator": "==",
+                            "value_right": ""
+                        }
+                    ]
+                }
+            },
+            {
+                "caption": "Monitor",
+                "icon": "bug",
+                "action": {
+                    "alias": "exface.Core.ShowObjectEditDialog",
+                    "object_alias": "exface.Core.MONITOR_ERROR",
+                    "input_mapper": {
+                        "column_to_column_mappings": [
+                            {
+                                "from": "error_monitor__UID",
+                                "to": "UID"
+                            }
+                        ]
+                    }
+                },
+                "disabled_if": {
+                    "operator": "AND",
+                    "conditions": [
+                        {
+                            "value_left": "=~input!error_monitor__STATUS",
+                            "comparator": "==",
+                            "value_right": ""
+                        }
+                    ]
+                }
             }
         ]
     }
