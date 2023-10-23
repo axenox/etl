@@ -81,7 +81,7 @@
     "rows": [
         {
             "CREATED_ON": "2023-10-18 16:06:50",
-            "MODIFIED_ON": "2023-10-18 17:56:25",
+            "MODIFIED_ON": "2023-10-23 11:54:00",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
             "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
             "UID": "0x11eeae4695964d78ae46025041000001",
@@ -96,7 +96,106 @@
             "SHORT_DESCRIPTION": "",
             "PARENT_OBJECT": "",
             "DATA_ADDRESS_PROPS": null,
-            "DEFAULT_EDITOR_UXON": null,
+            "DEFAULT_EDITOR_UXON": {
+                "widget_type": "Dialog",
+                "readonly": true,
+                "widgets": [
+                    {
+                        "widget_type": "Tabs",
+                        "tabs": [
+                            {
+                                "caption": "HTTP",
+                                "widgets": [
+                                    {
+                                        "widget_type": "WidgetGroup",
+                                        "caption": "Request",
+                                        "widgets": [
+                                            {
+                                                "attribute_alias": "url_path"
+                                            },
+                                            {
+                                                "attribute_alias": "http_method"
+                                            },
+                                            {
+                                                "attribute_alias": "http_content_type"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "widget_type": "WidgetGroup",
+                                        "caption": "Response",
+                                        "widgets": [
+                                            {
+                                                "attribute_alias": "http_response_code"
+                                            },
+                                            {
+                                                "attribute_alias": "status"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "widget_type": "WidgetGroup",
+                                        "caption": "Flow",
+                                        "widgets": [
+                                            {
+                                                "attribute_alias": "flow_run__flow__LABEL"
+                                            },
+                                            {
+                                                "attribute_alias": "flow_run",
+                                                "caption": "Flow run UID"
+                                            },
+                                            {
+                                                "attribute_alias": "flow_run__duration"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "widget_type": "WidgetGroup",
+                                        "caption": "Error",
+                                        "widgets": [
+                                            {
+                                                "attribute_alias": "error_logid"
+                                            },
+                                            {
+                                                "attribute_alias": "error_message"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "widget_type": "WidgetGroup",
+                                        "caption": "Headers",
+                                        "width": "100%",
+                                        "height": "max",
+                                        "widgets": [
+                                            {
+                                                "attribute_alias": "http_headers",
+                                                "widget_type": "InputJson",
+                                                "disabled": true,
+                                                "height": "100%",
+                                                "width": "100%",
+                                                "hide_caption": true
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                "caption": "Request body",
+                                "widgets": [
+                                    {
+                                        "attribute_alias": "http_body",
+                                        "widget_type": "InputJson",
+                                        "disabled": true,
+                                        "height": "100%",
+                                        "width": "100%",
+                                        "hide_caption": true
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
             "ALIAS": "webservice_request",
             "DATA_ADDRESS": "etl_webservice_request"
         }

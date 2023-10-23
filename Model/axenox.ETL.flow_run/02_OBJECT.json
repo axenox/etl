@@ -81,7 +81,7 @@
     "rows": [
         {
             "CREATED_ON": "2021-03-04 20:31:23",
-            "MODIFIED_ON": "2023-10-22 19:41:17",
+            "MODIFIED_ON": "2023-10-23 11:41:07",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
             "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
             "UID": "0x11ebbb7534237cb0bb75025041000001",
@@ -135,7 +135,9 @@
                         "filters": [
                             {
                                 "attribute_alias": "flow_run",
-                                "hidden": true
+                                "hidden": true,
+                                "required": true,
+                                "comparator": "=="
                             }
                         ],
                         "columns": [
