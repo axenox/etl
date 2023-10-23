@@ -34,8 +34,67 @@ use exface\Core\DataTypes\ArrayDataType;
 use exface\Core\Interfaces\Model\MetaAttributeInterface;
 use exface\Core\Interfaces\Model\ExpressionInterface;
 use exface\Core\Factories\ExpressionFactory;
+use exface\Core\Exceptions\Actions\ActionInputError;
 
 /**
+ * Runs one or multiple ETL flows
+ * 
+ * ## Examples for buttons
+ * 
+ * ### Run a single flow
+ * 
+ * ```
+ *  {
+ *      "alias": "axenox.ETL.RunETLFlow",
+ *      "flow_alias": "..."
+ *  }
+ * 
+ * ```
+ * 
+ * ### Run a flow defined in the input data
+ * 
+ * ```
+ *  {
+ *      "alias": "axenox.ETL.RunETLFlow",
+ *      "input_flow_alias": "<attribute_alias>"
+ *  }
+ * 
+ * ```
+ * 
+ * ### Run a flow with a custom generated UID
+ * 
+ * ```
+ *  {
+ *    "alias": "exface.Core.ActionChain",
+ *    "actions": [
+ *      {
+ *        "alias": "exface.Core.UpdateData",
+ *        "input_mapper": {
+ *          "inherit_columns": "own_system_attributes",
+ *          "column_to_column_mappings": [
+ *            {
+ *              "from": "=UniqueId()",
+ *              "to": "flow_run"
+ *            }
+ *          ]
+ *        }
+ *      },
+ *      {
+ *        "alias": "axenox.etl.RunETLFlow",
+ *        "flow_alias": "...",
+ *        "input_flow_run_uid": "flow_run"
+ *      }
+ *    ]
+ *  }
+ *  
+ * ```
+ * 
+ * ## CLI examples
+ * 
+ * ```
+ *  vendor/bin/action axenox.ETL:RunETLFLow my_flow_alias
+ *  
+ * ```
  * 
  * @author andrej.kabachnik
  *
@@ -52,7 +111,7 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI, 
     
     private $flowRunUid = null;
     
-    private $inputFlowAliasExpr = null;
+    private $inputFlowAlias = null;
     
     private $inputFlowRunUidExpr = null;
     
@@ -494,9 +553,18 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI, 
             case $task->hasInputData():
                 $inputData = $this->getInputDataSheet($task);
                 $aliases = [];
-                if ($inputData->getMetaObject()->is('axenox.ETL.flow') && $col = $inputData->getColumns()->get('alias')) {
-                    $aliases = $col->getValues();
+                $aliasExpr = $this->getInputFlowAliasExpression($inputData);
+                if (! $col = $inputData->getColumns()->getByExpression($aliasExpr)) {
+                    if (! $inputData->hasUidColumn(true)) {
+                        throw new ActionInputMissingError($this, 'Cannot determine data flow from input data!');
+                    }
+                    // TODO #DataPattern use DataPattern to load missing data here
+                    $flowSheet = $inputData->copy()->extractSystemColumns();
+                    $col = $flowSheet->getColumns()->addFromExpression($aliasExpr);
+                    $flowSheet->getFilters()->addConditionFromColumnValues($flowSheet->getUidColumn());
+                    $flowSheet->dataRead();
                 }
+                $aliases = $col->getValues();
                 break;
         }
         
@@ -513,22 +581,31 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI, 
                     foreach ($aliases as $rowNo => $alias) {
                         $aliasesWithUids[$uidCol->getValue($rowNo)] = $alias;
                     }
-                    return $aliasesWithUids;
                 } else {
                     foreach ($aliases as $alias) {
                         $aliasesWithUids[self::generateFlowRunUid()] = $alias;
                     }
-                    return $aliasesWithUids;
                 }
+                break;
+            case $task->hasParameter('run_uid'):
+                $uids = explode(',', $task->getParameter('run_uid'));
+                if (count($uids) !== count($aliases)) {
+                    throw new ActionInputError($this, 'The number of provided flow aliases (' . count($aliases) . ') does not match the number number of run UIDs (' . count($uids) . ')!');
+                }
+                $aliasesWithUids = array_combine($uids, $aliases);
+                break;
             case $uidExpr !== null && count($aliases) === 1:
-                return [$uidExpr->evaluate() => $aliases[0]];
+                $aliasesWithUids = [$uidExpr->evaluate() => $aliases[0]];
+                break;
             default:
                 $aliasesWithUids = [];
                 foreach ($aliases as $alias) {
                     $aliasesWithUids[self::generateFlowRunUid()] = $alias;
                 }
-                return $aliasesWithUids;
+                break;
         }
+        
+        return $aliasesWithUids;
     }
     
     /**
@@ -575,7 +652,8 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI, 
         return [
             (new ServiceParameter($this))
             ->setName('flow')
-            ->setDescription('Namespaced alias of the ETL flow to run.')
+            ->setDescription('Namespaced alias of the ETL flow to run or comma-separated list to run multiple flows')
+            ->setRequired(true)
         ];
     }
 
@@ -586,7 +664,11 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI, 
      */
     public function getCliOptions(): array
     {
-        return [];
+        return [
+            (new ServiceParameter($this))
+            ->setName('run_uid')
+            ->setDescription('UID for the flow run if not to be generated automatically. Use comma-separated list in case of multiple flow aliases.')
+        ];
     }
     
     /**
@@ -630,9 +712,18 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI, 
      * 
      * @return ExpressionInterface
      */
-    protected function getInputFlowAliasExpression() : ?ExpressionInterface
+    protected function getInputFlowAliasExpression(DataSheetInterface $inputData) : ?ExpressionInterface
     {
-        return $this->inputFlowAliasExpr;
+        if ($this->inputFlowAlias === null) {
+            if ($inputData->getMetaObject()->is('axenox.ETL.flow')) {
+                return ExpressionFactory::createForObject($inputData->getMetaObject(), 'alias');
+            } elseif ($inputData->getMetaObject()->is('axenox.ETL.webservice_request')) {
+                return ExpressionFactory::createForObject($inputData->getMetaObject(), 'route__flow__alias');
+            } else {
+                throw new ActionConfigurationError($this, 'Cannot determine data flow to run!');
+            }
+        }
+        return ExpressionFactory::createForObject($inputData->getMetaObject(), $this->inputFlowAlias);
     }
     
     /**
@@ -646,7 +737,7 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI, 
      */
     public function setInputFlowAlias(string $value) : RunETLFlow
     {
-        $this->inputFlowAliasExpr = ExpressionFactory::createForObject($this->getMetaObject(), $value);
+        $this->inputFlowAlias = $value;
         return $this;
     }
     
