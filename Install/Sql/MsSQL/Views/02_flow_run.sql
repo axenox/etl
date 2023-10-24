@@ -16,6 +16,8 @@ CREATE VIEW [dbo].[etl_flow_run] (
 	valid_rows,
 	start_time,
 	end_time,
+	duration_seconds,
+	duration,
 	error_message,
 	error_log_id,
 	created_on,
