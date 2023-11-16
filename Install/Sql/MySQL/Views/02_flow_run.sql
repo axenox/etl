@@ -10,6 +10,12 @@ SELECT
 	SUM(r.invalidated_flag) AS `steps_invalidated`,
 	SUM(
 		CASE
+			WHEN r.success_flag = 0 AND r.end_time IS NULL AND DATE_ADD(r.start_time, INTERVAL r.timeout_seconds SECOND) >= NOW() THEN 1 
+			ELSE 0 
+		END
+	) AS steps_running,
+	SUM(
+		CASE
 			WHEN r.success_flag = 0 AND r.end_time IS NULL AND DATE_ADD(r.start_time, INTERVAL r.timeout_seconds SECOND) < NOW() THEN 1 
 			ELSE 0 
 		END
