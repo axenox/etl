@@ -1,30 +1,25 @@
 <?php
 namespace axenox\ETL\Facades;
 
-use Psr\Http\Message\ServerRequestInterface;
-use Psr\Http\Message\ResponseInterface;
-use function GuzzleHttp\Psr7\stream_for;
 use GuzzleHttp\Psr7\Response;
-use GuzzleHttp\Psr7\Request;
-use exface\Core\Facades\AbstractHttpFacade\AbstractHttpFacade;
-use exface\Core\Factories\DataSheetFactory;
-use exface\Core\DataTypes\StringDataType;
-use exface\Core\Facades\AbstractHttpFacade\Middleware\AuthenticationMiddleware;
-use exface\Core\Exceptions\Facades\FacadeRoutingError;
-use axenox\Proxy\Facades\RequestHandlers\DefaultProxy;
-use exface\Core\Interfaces\DataSheets\DataSheetInterface;
-use exface\Core\DataTypes\JsonDataType;
-use exface\Core\Interfaces\Exceptions\ExceptionInterface;
-use exface\Core\DataTypes\UUIDDataType;
-use exface\Core\Interfaces\Tasks\ResultInterface;
-use exface\Core\Interfaces\Tasks\TaskInterface;
-use exface\Core\CommonLogic\Tasks\HttpTask;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use axenox\ETL\Actions\RunETLFlow;
-use exface\Core\Factories\ActionFactory;
-use exface\Core\CommonLogic\UxonObject;
-use exface\Core\CommonLogic\Selectors\ActionSelector;
-use exface\Core\Exceptions\InternalError;
 use axenox\ETL\DataTypes\WebRequestStatusDataType;
+use exface\Core\CommonLogic\Selectors\ActionSelector;
+use exface\Core\CommonLogic\Tasks\HttpTask;
+use exface\Core\DataTypes\JsonDataType;
+use exface\Core\DataTypes\StringDataType;
+use exface\Core\Exceptions\InternalError;
+use exface\Core\Exceptions\Facades\FacadeRoutingError;
+use exface\Core\Facades\AbstractHttpFacade\AbstractHttpFacade;
+use exface\Core\Facades\AbstractHttpFacade\Middleware\AuthenticationMiddleware;
+use exface\Core\Factories\ActionFactory;
+use exface\Core\Factories\DataSheetFactory;
+use exface\Core\Interfaces\DataSheets\DataSheetInterface;
+use exface\Core\Interfaces\Exceptions\ExceptionInterface;
+use exface\Core\Interfaces\Tasks\ResultInterface;
+use JsonSchema\Validator;
 
 /**
  * 
@@ -43,10 +38,12 @@ class DataFlowFacade extends AbstractHttpFacade
      */
     protected function createResponse(ServerRequestInterface $request) : ResponseInterface
     {
-        $requestLogData = $this->logRequestReceived($request);
-        
+    	$requestLogData = $this->logRequestReceived($request);
+    	$headers = $this->buildHeadersCommon();
+                
         try {
             $path = $request->getUri()->getPath();
+           
             $path = StringDataType::substringAfter($path, $this->getUrlRouteDefault() . '/', '');
             $routeModel = $this->getRouteData($path);
             
@@ -54,8 +51,14 @@ class DataFlowFacade extends AbstractHttpFacade
             $flowAlias = $routeModel['flow__alias'];
             $flowRunUID = RunETLFlow::generateFlowRunUid();
             
-            $requestLogData = $this->logRequestProcessing($requestLogData, $routeUID, $flowRunUID);
+            $validator = $this->validateRouteSwagger($routeModel);
+            if (!$validator->isValid()){
+            	$response = $this->createSwaggerErrorResponse($headers, $validator->getErrors());
+            	$requestLogData = $this->logRequestFailed($requestLogData, new \InvalidArgumentException('Invalid swagger json.'), $response);
+            	return $response;
+            }
             
+            $requestLogData = $this->logRequestProcessing($requestLogData, $routeUID, $flowRunUID);            
             $flowResult = $this->runFlow($flowAlias, $request, $requestLogData);
             $flowOutput = $flowResult->getMessage();
         } catch (\Throwable $e) {
@@ -64,7 +67,6 @@ class DataFlowFacade extends AbstractHttpFacade
             return $response;
         }
         
-        $headers = $this->buildHeadersCommon();
         $headers['Content-Type'] = 'application/json';
         $response = new Response(200, $headers, 'Data flow successfull');
         
@@ -158,10 +160,12 @@ class DataFlowFacade extends AbstractHttpFacade
         }
         $this->getWorkbench()->getLogger()->logException($e);
         $ds = $requestLogData->extractSystemColumns();
-        $ds->setCellValue('status', 0,WebRequestStatusDataType::ERROR);
+        $ds->setCellValue('status', 0, WebRequestStatusDataType::ERROR);
         $ds->setCellValue('error_message', 0, $e->getMessage());
         $ds->setCellValue('error_logid', 0, $e->getId());
         $ds->setCellValue('http_response_code', 0, $response !== null ? $response->getStatusCode() : $e->getStatusCode());
+        $ds->setCellValue('response_header', 0, json_encode($response->getHeaders()));
+        $ds->setCellValue('response_body', 0, $response->getBody()->__toString());        
         $ds->dataUpdate(false);
         return $ds;
     }
@@ -178,6 +182,8 @@ class DataFlowFacade extends AbstractHttpFacade
         $ds->setCellValue('status', 0, WebRequestStatusDataType::DONE);
         $ds->setCellValue('result_text', 0, $output);
         $ds->setCellValue('http_response_code', 0, $response->getStatusCode());
+        $ds->setCellValue('response_header', 0, json_encode($response->getHeaders()));
+        $ds->setCellValue('response_body', 0, $response->getBody()->__toString());        
         $ds->dataUpdate(false);
         return $ds;
     }
@@ -196,7 +202,9 @@ class DataFlowFacade extends AbstractHttpFacade
                 'UID',
                 'flow',
                 'flow__alias',
-                'in_url'
+                'in_url',
+            	'type__schema_json',
+            	'swagger_json'
             ]);
             $ds->dataRead();
             $this->routesData = $ds;
@@ -227,5 +235,34 @@ class DataFlowFacade extends AbstractHttpFacade
         );
         
         return $middleware;
+    }
+    
+    /** Validating swagger json agains the corresonding schema json from the route type.
+     *
+     * @param array $routeModel
+     */
+    private function validateRouteSwagger(array $routeModel) : Validator
+    {
+    	$validator = (new Validator);
+    	$validator->validate(json_decode($routeModel['swagger_json']), json_decode($routeModel['type__schema_json']));
+    	return $validator;
+    }
+    
+    
+    /**
+     * @param array $headers
+     * @param array $errors
+     */
+    private function createSwaggerErrorResponse(array $headers, array $validatorErrors) : ResponseInterface
+    {
+    	$headers['Content-Type'] = 'application/json';
+    	$errors = ['Invalid Swagger' => []];
+    	foreach ($validatorErrors as $error){
+    		array_push(
+    			$errors['Invalid Swagger'],
+    			array('source' => $error['property'], 'message' => $error['message']));
+    	}
+    	
+    	return new Response(400, $headers, json_encode($errors));
     }
 }
