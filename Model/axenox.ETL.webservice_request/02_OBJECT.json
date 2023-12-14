@@ -81,9 +81,9 @@
     "rows": [
         {
             "CREATED_ON": "2023-10-18 16:06:50",
-            "MODIFIED_ON": "2023-10-23 11:54:00",
+            "MODIFIED_ON": "2023-12-05 16:26:35",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
-            "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
+            "MODIFIED_BY_USER": "0x11e8fe1c902c8ebea23ee4b318306b9a",
             "UID": "0x11eeae4695964d78ae46025041000001",
             "READABLE_FLAG": 1,
             "WRITABLE_FLAG": 1,
@@ -160,22 +160,37 @@
                                                 "attribute_alias": "error_message"
                                             }
                                         ]
+                                    }
+                                ]
+                            },
+                            {
+                                "caption": "Headers",
+                                "widgets": [
+                                    {
+                                        "value": "Request Header",
+                                        "widget_type": "TextHeading",
+                                        "heading_level": 3
                                     },
                                     {
-                                        "widget_type": "WidgetGroup",
-                                        "caption": "Headers",
-                                        "width": "100%",
-                                        "height": "max",
-                                        "widgets": [
-                                            {
-                                                "attribute_alias": "http_headers",
-                                                "widget_type": "InputJson",
-                                                "disabled": true,
-                                                "height": "100%",
-                                                "width": "100%",
-                                                "hide_caption": true
-                                            }
-                                        ]
+                                        "height": "50%",
+                                        "width": "max",
+                                        "attribute_alias": "http_headers",
+                                        "widget_type": "InputJson",
+                                        "disabled": true,
+                                        "hide_caption": true
+                                    },
+                                    {
+                                        "value": "Response Header",
+                                        "widget_type": "TextHeading",
+                                        "heading_level": 3
+                                    },
+                                    {
+                                        "attribute_alias": "response_header",
+                                        "width": "max",
+                                        "height": "35%",
+                                        "widget_type": "InputJson",
+                                        "disabled": true,
+                                        "hide_caption": true
                                     }
                                 ]
                             },
@@ -184,6 +199,19 @@
                                 "widgets": [
                                     {
                                         "attribute_alias": "http_body",
+                                        "widget_type": "InputJson",
+                                        "disabled": true,
+                                        "height": "100%",
+                                        "width": "100%",
+                                        "hide_caption": true
+                                    }
+                                ]
+                            },
+                            {
+                                "caption": "Response body",
+                                "widgets": [
+                                    {
+                                        "attribute_alias": "response_body",
                                         "widget_type": "InputJson",
                                         "disabled": true,
                                         "height": "100%",
