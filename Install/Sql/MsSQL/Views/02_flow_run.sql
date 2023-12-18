@@ -2,29 +2,7 @@ IF OBJECT_ID('dbo.etl_flow_run', 'V') IS NOT NULL
     DROP VIEW [dbo].[etl_flow_run];
 GO
 
-CREATE VIEW [dbo].[etl_flow_run] (
-	oid,
-	flow_oid,
-	steps_started,
-	steps_run,
-	errors,
-	steps_disabled,
-	steps_skipped,
-	steps_invalidated,
-	steps_timed_out,
-	valid_flag,
-	valid_rows,
-	start_time,
-	end_time,
-	duration_seconds,
-	duration,
-	error_message,
-	error_log_id,
-	created_on,
-	modified_on,
-	created_by_user_oid,
-	modified_by_user_oid
-) AS
+CREATE VIEW [dbo].[etl_flow_run] AS
 	SELECT 
 		r.flow_run_oid AS oid,
 		r.flow_oid,
@@ -34,6 +12,12 @@ CREATE VIEW [dbo].[etl_flow_run] (
 		SUM(r.step_disabled_flag) AS steps_disabled,
 		SUM(r.skipped_flag) AS steps_skipped,
 		SUM(r.invalidated_flag) AS steps_invalidated,
+		SUM(
+			CASE
+				WHEN r.success_flag = 0 AND r.end_time IS NULL AND DATEADD(second, r.timeout_seconds, r.start_time) >= GETDATE() THEN 1 
+				ELSE 0 
+			END
+		) AS steps_running,
 		SUM(
 			CASE
 				WHEN r.success_flag = 0 AND r.end_time IS NULL AND DATEADD(second, r.timeout_seconds, r.start_time) < GETDATE() THEN 1 

@@ -22,6 +22,8 @@ use exface\Core\Interfaces\Tasks\ResultInterface;
 use JsonSchema\Validator;
 use exface\Core\Exceptions\RuntimeException;
 use Flow\JSONPath\JSONPath;
+use exface\Core\DataTypes\MimeTypeDataType;
+
 
 /**
  * 
@@ -49,18 +51,23 @@ class DataFlowFacade extends AbstractHttpFacade
             $routeModel = $this->getRouteData($path);
 
             // validate webservice swagger
-            $response = $this->getSwaggerValidatorResponse($routeModel, $requestLogData, $headers);
+            // $response = $this->getSwaggerValidatorResponse($routeModel, $requestLogData, $headers);
             if ($response !== null){
             	return $response;
             }
 
             // handle route requests
             switch(true){
+                case mb_stripos($path, '/swaggerui') !== false:
+                    $webserviceBase = StringDataType::substringBefore($path, '/', '', true, true) . '/';
+                    $content = $this->buildHtmlSwaggerUI($webserviceBase . 'openapi.json');
+                    return new Response(200, $this->buildHeadersCommon(), $content);
             	// webservice maintenance requests
             	case mb_stripos($path, '/openapi') !== false:
             		// get swagger
             		if ($request->getMethod() == 'GET'){
-            			$response = new Response(200, $headers, $routeModel['swagger_json']);
+            		    $headers = array_merge($headers, ['Content-Type' => 'application/json']);
+                        $response = new Response(200, $headers, $routeModel['swagger_json']);
             			$requestLogData = $this->logRequestDone($requestLogData, 'Web service swagger json has been provided.', $response);
             			return $response;
             		}
@@ -391,5 +398,53 @@ class DataFlowFacade extends AbstractHttpFacade
      	$requestLogData->getFilters()->addConditionFromColumnValues($requestLogData->getUidColumn());
      	$requestLogData->getColumns()->addFromExpression('response_body');
      	$requestLogData->dataRead();
+
+    protected function buildHtmlSwaggerUI(string $openapiUrl) : string
+    {
+        $siteRoot = '../../../';
+        $swaggerUI = $siteRoot . 'vendor/npm-asset/swagger-ui-dist';
+        
+        return <<<HTML
+        <!-- HTML for static distribution bundle build -->
+        <!DOCTYPE html>
+        <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <title>Swagger UI</title>
+            <link rel="stylesheet" type="text/css" href="{$swaggerUI}/swagger-ui.css" />
+            <link rel="stylesheet" type="text/css" href="{$swaggerUI}/index.css" />
+            <link rel="icon" type="image/png" href="{$swaggerUI}/favicon-32x32.png" sizes="32x32" />
+            <link rel="icon" type="image/png" href="{$swaggerUI}/favicon-16x16.png" sizes="16x16" />
+          </head>
+
+          <body>
+            <div id="swagger-ui"></div>
+            <script src="{$swaggerUI}/swagger-ui-bundle.js" charset="UTF-8"> </script>
+            <script src="{$swaggerUI}/swagger-ui-standalone-preset.js" charset="UTF-8"> </script>
+            <script>
+                window.onload = function() {
+                //<editor-fold desc="Changeable Configuration Block">
+
+                // the following lines will be replaced by docker/configurator, when it runs in a docker-container
+                window.ui = SwaggerUIBundle({
+                    url: "{$openapiUrl}",
+                    dom_id: '#swagger-ui',
+                    deepLinking: true,
+                    presets: [
+                        SwaggerUIBundle.presets.apis,
+                        SwaggerUIStandalonePreset
+                    ],
+                    plugins: [
+                        SwaggerUIBundle.plugins.DownloadUrl
+                    ],
+                        layout: "StandaloneLayout"
+                    });
+
+                    //</editor-fold>
+                };
+            </script>
+          </body>
+        </html>
+        HTML;
     }
 }
