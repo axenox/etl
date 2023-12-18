@@ -120,7 +120,15 @@ class DataFlowFacade extends AbstractHttpFacade
 
         } catch (\Throwable $e) {
         	// get changes by flow
-        	$this->reloadRequestData($requestLogData);
+            if ($requestLogData === null) {
+                $requestLogData = $this->logRequestReceived($request);
+            }
+            $this->reloadRequestData($requestLogData);
+            
+            if (! $e instanceof ExceptionInterface){
+                $e = new InternalError($e->getMessage(), null, $e);
+            }
+            
         	$response = $this->createResponseFromError($e, $request, $requestLogData);
         	$requestLogData = $this->logRequestFailed($requestLogData, $e, $response);
             return $response;
@@ -379,14 +387,10 @@ class DataFlowFacade extends AbstractHttpFacade
      */
     protected function createResponseFromError(\Throwable $exception, ServerRequestInterface $request = null) : ResponseInterface
     {
-    	$code = ($exception instanceof ExceptionInterface) ? $exception->getStatusCode() : 500;
+    	$code = $exception->getStatusCode();
     	$headers = $this->buildHeadersCommon();
     	if ($this->getWorkbench()->getSecurity()->getAuthenticatedToken()->isAnonymous()) {
     		return new Response($code, $headers);
-    	}
-
-    	if (!$exception instanceof ExceptionInterface){
-    		new RuntimeException($exception->getMessage());
     	}
 
     	$headers['Content-Type'] = 'application/json';
