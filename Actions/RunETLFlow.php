@@ -400,7 +400,7 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI, 
         $ds->dataRead();
         
         if ($ds->isEmpty()) {
-            throw new ActionRuntimeError($this, 'ETL flow "' . $flowAlias . '" not found!');
+            return;
         }
         
         /* 
