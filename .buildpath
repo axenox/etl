@@ -5,6 +5,10 @@
 	<buildpathentry external="true" kind="lib" path="C:/wamp/www/exface/exface/vendor/exface/core"/>
 	<buildpathentry external="true" kind="lib" path="C:/wamp/www/exface/exface/vendor/exface/UrlDataConnector"/>
 	<buildpathentry external="true" kind="lib" path="C:/wamp/www/exface/exface/vendor/guzzlehttp/guzzle/src"/>
+	<buildpathentry external="true" kind="lib" path="C:/wamp/www/exface/exface/vendor/guzzlehttp/psr7/src"/>
 	<buildpathentry external="true" kind="lib" path="C:/wamp/www/exface/exface/vendor/psr"/>
 	<buildpathentry external="true" kind="lib" path="C:/wamp/www/exface/exface/vendor/sabre"/>
+	<buildpathentry external="true" kind="lib" path="C:/wamp/www/exface/exface/vendor/galbar/jsonpath/src"/>
+	<buildpathentry external="true" kind="lib" path="C:/wamp/www/exface/exface/vendor/softcreatr/jsonpath/src"/>
+	<buildpathentry external="true" kind="lib" path="C:/wamp/www/exface/exface/vendor/justinrainbow/json-schema/src"/>
 </buildpath>

@@ -81,7 +81,7 @@
     "rows": [
         {
             "CREATED_ON": "2023-12-11 09:45:32",
-            "MODIFIED_ON": "2023-12-11 11:09:05",
+            "MODIFIED_ON": "2023-12-15 09:10:45",
             "CREATED_BY_USER": "0x11e8fe1c902c8ebea23ee4b318306b9a",
             "MODIFIED_BY_USER": "0x11e8fe1c902c8ebea23ee4b318306b9a",
             "UID": "0x11ee9c1ba539d1529c1b025041000001",
@@ -113,6 +113,10 @@
                             },
                             {
                                 "attribute_alias": "version"
+                            },
+                            {
+                                "widget_type": "InputText",
+                                "attribute_alias": "default_response_path"
                             }
                         ]
                     },
