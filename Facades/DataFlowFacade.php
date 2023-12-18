@@ -20,19 +20,20 @@ use exface\Core\Interfaces\DataSheets\DataSheetInterface;
 use exface\Core\Interfaces\Exceptions\ExceptionInterface;
 use exface\Core\Interfaces\Tasks\ResultInterface;
 use JsonSchema\Validator;
+use exface\Core\Exceptions\RuntimeException;
+use Flow\JSONPath\JSONPath;
 
 /**
- *
- *
+ * 
+ * 
  * @author Andrej Kabachnik
- *
+ * 
  */
 class DataFlowFacade extends AbstractHttpFacade
 {
     private $serviceData = null;
 
     /**
-     *
      * {@inheritDoc}
      * @see \exface\Core\Facades\AbstractHttpFacade\AbstractHttpFacade::createResponse()
      */
@@ -43,8 +44,8 @@ class DataFlowFacade extends AbstractHttpFacade
 
         try {
             $path = $request->getUri()->getPath();
-
             $path = StringDataType::substringAfter($path, $this->getUrlRouteDefault() . '/', '');
+            $routePath = rtrim(strstr($path, '/'), '/');
             $routeModel = $this->getRouteData($path);
 
             // validate webservice swagger
@@ -53,17 +54,18 @@ class DataFlowFacade extends AbstractHttpFacade
             	return $response;
             }
 
-
             // handle route requests
             switch(true){
             	// webservice maintenance requests
             	case mb_stripos($path, '/openapi') !== false:
+            		// get swagger
             		if ($request->getMethod() == 'GET'){
             			$response = new Response(200, $headers, $routeModel['swagger_json']);
             			$requestLogData = $this->logRequestDone($requestLogData, 'Web service swagger json has been provided.', $response);
             			return $response;
             		}
-            		else if ($request->getMethod() == 'POST'){
+            		// set swagger only in debug
+            		else if ($request->getMethod() == 'POST' && str_contains($request->getUri(), "localhost")){
             			$routeModel['swagger_json'] = $request->getBody();
             			$response = $this->getSwaggerValidatorResponse($routeModel, $requestLogData, $headers);
             			if ($response !== null){
@@ -84,19 +86,29 @@ class DataFlowFacade extends AbstractHttpFacade
             		$requestLogData = $this->logRequestProcessing($requestLogData, $routeUID, $flowRunUID); // flow data update
             		$flowResult = $this->runFlow($flowAlias, $request, $requestLogData); // flow data update
             		$flowOutput = $flowResult->getMessage();
-
+            		
             		// get changes by flow
-            		$requestLogData->getFilters()->addConditionFromColumnValues($requestLogData->getUidColumn());
-            		$requestLogData->getColumns()->addFromExpression('response_body');
-            		$requestLogData->dataRead();
+            		$this->reloadRequestData($requestLogData);
 
             		if ($requestLogData->countRows() == 1){
-            			$response = $this->createRequestSuccessResponse($requestLogData, $headers, $routeModel);
+            			$headers['Content-Type'] = 'application/json';
+            			if (empty($requestLogData->getRow()['response_body'])){
+            				$methodType =strtolower($request->getMethod());
+            				$jsonPath = $routeModel['type__default_response_path'];
+            				$body = $this->createEmptyRequestBodyFromSwaggerJson($routePath, $methodType, $jsonPath, $routeModel['swagger_json']);}
+             			else {
+	            			$body = $requestLogData->getRow()['response_body'];
+            			}
+
+            			$response = new Response(200, $headers, $body);
             		}
             }
+
         } catch (\Throwable $e) {
+        	// get changes by flow
+        	$this->reloadRequestData($requestLogData);
         	$response = $this->createResponseFromError($e, $request, $requestLogData);
-            $requestLogData = $this->logRequestFailed($requestLogData, $e, $response);
+        	$requestLogData = $this->logRequestFailed($requestLogData, $e, $response);
             return $response;
         }
 
@@ -107,65 +119,6 @@ class DataFlowFacade extends AbstractHttpFacade
         $requestLogData = $this->logRequestDone($requestLogData, $flowOutput, $response);
         return $response;
     }
-
-	/**
-	 * @param DataSheetInterface $requestLogData
-	 * @param array $headers
-	 * @param array $routeModel
-	 * @return ResponseInterface
-	 */
-	 private function createRequestSuccessResponse(DataSheetInterface $requestLogData, array $headers, array $routeModel) : ResponseInterface
-	{
-		$headers['Content-Type'] = 'application/json';
-
-		if (empty($requestLogData->getRow()['response_body'])){
-			$emptyResponse = "";
-			$swaggerObject = json_decode($routeModel['swagger_json'] , true);
-			$this->searchArrayTree("defaultResponse", $swaggerObject, $emptyResponse);
-			return new Response(200, $headers, json_encode($emptyResponse["value"]));
-		}
-
-		return new Response(200, $headers, $requestLogData->getRow()['response_body']);
-	}
-
-	/**
-	 * @param mixed $needle
-	 * @param array $haysack
-	 * @param mixed $value
-	 */
-    private function searchArrayTree(mixed $needle, array $haysack, mixed &$value) : void
-    {
-    	if (!empty($value)){
-    		return;
-    	}
-
-    	if(array_key_exists($needle, $haysack) ) {
-    		$value = $haysack[$needle];
-    		return;
-    	}
-
-    	foreach($haysack as $child) {
-    		if(gettype($child) === 'array') {
-    			$this->searchArrayTree($needle, $child, $value);
-    		}
-    	}
-    }
-
-	/**
-	 * @param string path
-	 * @param array routeModel
-	 * @param string response
-	 */
-	private function updateRouteParameter(string $path, array $routeModel, string $parameter)
-	{
-		$rows = $this->serviceData->getRows();
-		for ($i = 0; count($rows) > $i; $i++) {
-			if ($rows[$i]['in_url'] && StringDataType::startsWith($path, $rows[$i]['in_url'])) {
-				$this->serviceData->setCellValue($parameter, $i, $routeModel[$parameter]);
-				$this->serviceData->dataUpdate();
-			}
-		}
-	}
 
 
 	/**
@@ -187,7 +140,6 @@ class DataFlowFacade extends AbstractHttpFacade
 
 
     /**
-     *
      * {@inheritDoc}
      * @see \exface\Core\Facades\AbstractHttpFacade\AbstractHttpFacade::getUrlRouteDefault()
      */
@@ -197,7 +149,6 @@ class DataFlowFacade extends AbstractHttpFacade
     }
 
     /**
-     *
      * @param string $flowAlias
      * @param ServerRequestInterface $request
      * @param DataSheetInterface $requestLogData
@@ -219,7 +170,6 @@ class DataFlowFacade extends AbstractHttpFacade
     }
 
     /**
-     *
      * @param string $routeUID
      * @param string $flowRunUID
      * @param ServerRequestInterface $request
@@ -242,7 +192,6 @@ class DataFlowFacade extends AbstractHttpFacade
     }
 
     /**
-     *
      * @param string $routeUID
      * @param string $flowRunUID
      * @param ServerRequestInterface $request
@@ -259,7 +208,6 @@ class DataFlowFacade extends AbstractHttpFacade
     }
 
     /**
-     *
      * @param string $requestLogUID
      * @param ExceptionInterface $e
      * @return DataSheetInterface
@@ -282,7 +230,6 @@ class DataFlowFacade extends AbstractHttpFacade
     }
 
     /**
-     *
      * @param string $requestLogUID
      * @param string $output
      * @return DataSheetInterface
@@ -300,7 +247,6 @@ class DataFlowFacade extends AbstractHttpFacade
     }
 
     /**
-     *
      * @param string $route
      * @throws FacadeRoutingError
      * @return string[]
@@ -315,6 +261,7 @@ class DataFlowFacade extends AbstractHttpFacade
                 'flow__alias',
                 'in_url',
             	'type__schema_json',
+            	'type__default_response_path',
             	'swagger_json'
             ]);
             $ds->dataRead();
@@ -331,7 +278,6 @@ class DataFlowFacade extends AbstractHttpFacade
     }
 
     /**
-     *
      * {@inheritDoc}
      * @see \exface\Core\Facades\AbstractHttpFacade\AbstractHttpFacade::getMiddleware()
      */
@@ -348,9 +294,10 @@ class DataFlowFacade extends AbstractHttpFacade
         return $middleware;
     }
 
-    /** Validating swagger json agains the corresonding schema json from the route type.
-     *
+    /** Validating swagger json against the corresonding schema json from the route type.
+     * 
      * @param array $routeModel
+     * @return Validator
      */
     private function validateRouteSwagger(array $routeModel) : Validator
     {
@@ -375,5 +322,74 @@ class DataFlowFacade extends AbstractHttpFacade
     	}
 
     	return new Response(400, $headers, json_encode($errors));
+    }
+    
+    /**
+     * @param string path
+     * @param array routeModel
+     * @param string response
+     */
+    private function updateRouteParameter(string $path, array $routeModel, string $parameter)
+    {
+    	$rows = $this->serviceData->getRows();
+    	for ($i = 0; count($rows) > $i; $i++) {
+    		if ($rows[$i]['in_url'] && StringDataType::startsWith($path, $rows[$i]['in_url'])) {
+    			$this->serviceData->setCellValue($parameter, $i, $routeModel[$parameter]);
+    			$this->serviceData->dataUpdate();
+    		}
+    	}
+    }
+    
+    /**
+     * @param string $routePath
+     * @param string $methodType
+     * @param string $jsonPath
+     * @param string $swaggerJson
+     * @return string
+     */
+    private function createEmptyRequestBodyFromSwaggerJson(
+    	string $routePath,
+    	string $methodType,
+    	string $jsonPath,
+    	string $swaggerJson) : string
+    	{
+    		$jsonPath = str_replace('[#routePath#]', $routePath, $jsonPath);
+    		$jsonPath = str_replace('[#methodType#]', $methodType, $jsonPath);
+    		$body = (new JSONPath(json_decode($swaggerJson, false)))->find($jsonPath)->getData();
+    		return json_encode($body);
+    }
+
+    /**
+     * {@inheritDoc}
+     * @see \exface\Core\Facades\AbstractHttpFacade\AbstractHttpFacade::createResponseFromError()
+     */
+    protected function createResponseFromError(\Throwable $exception, ServerRequestInterface $request = null) : ResponseInterface
+    {
+    	$code = ($exception instanceof ExceptionInterface) ? $exception->getStatusCode() : 500;
+    	$headers = $this->buildHeadersCommon();
+    	if ($this->getWorkbench()->getSecurity()->getAuthenticatedToken()->isAnonymous()) {
+    		return new Response($code, $headers);
+    	}
+
+    	if (!$exception instanceof ExceptionInterface){
+    		new RuntimeException($exception->getMessage());
+    	}
+
+    	$headers['Content-Type'] = 'application/json';
+    	$errorData = json_encode(["Error" =>
+    		["Message" => $exception->getMessage(),
+    			"Log-Id" => $exception->getId()]]);
+    	
+    	return new Response($code, $headers, $errorData);
+    }
+    
+    /**
+     * @param DataSheetInterface $requestLogData
+     */
+    private function reloadRequestData(DataSheetInterface $requestLogData)
+     {
+     	$requestLogData->getFilters()->addConditionFromColumnValues($requestLogData->getUidColumn());
+     	$requestLogData->getColumns()->addFromExpression('response_body');
+     	$requestLogData->dataRead();
     }
 }
