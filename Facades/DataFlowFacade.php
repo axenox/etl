@@ -50,7 +50,7 @@ class DataFlowFacade extends AbstractHttpFacade
             $routeModel = $this->getRouteData($path);
 
             // validate webservice swagger
-            // $response = $this->getSwaggerValidatorResponse($routeModel, $requestLogData, $headers);
+            $response = $this->getSwaggerValidatorResponse($routeModel, $requestLogData, $headers);
             if ($response !== null){
             	return $response;
             }
