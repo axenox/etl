@@ -398,6 +398,7 @@ class DataFlowFacade extends AbstractHttpFacade
      	$requestLogData->getFilters()->addConditionFromColumnValues($requestLogData->getUidColumn());
      	$requestLogData->getColumns()->addFromExpression('response_body');
      	$requestLogData->dataRead();
+     }
 
     protected function buildHtmlSwaggerUI(string $openapiUrl) : string
     {
