@@ -39,7 +39,6 @@ class DataFlowFacade extends AbstractHttpFacade
      */
     protected function createResponse(ServerRequestInterface $request) : ResponseInterface
     {
-    	$requestLogData = $this->logRequestReceived($request);
     	$headers = $this->buildHeadersCommon();
 
         try {
@@ -58,33 +57,43 @@ class DataFlowFacade extends AbstractHttpFacade
             // handle route requests
             switch(true){
                 case mb_stripos($path, '/swaggerui') !== false:
-                    $webserviceBase = StringDataType::substringBefore($path, '/', '', true, true) . '/';
-                    $content = $this->buildHtmlSwaggerUI($webserviceBase . 'openapi.json');
+                    $content = $this->buildHtmlSwaggerUI('openapi.json');
                     return new Response(200, $this->buildHeadersCommon(), $content);
+                    
             	// webservice maintenance requests
-            	case mb_stripos($path, '/openapi') !== false:
-            		if ($request->getMethod() == 'GET'){
-            		    $headers = array_merge($headers, ['Content-Type' => 'application/json']);
-                        $response = new Response(200, $headers, $routeModel['swagger_json']);
-            			$requestLogData = $this->logRequestDone($requestLogData, 'Web service swagger json has been provided.', $response);
-            			return $response;
-            		}
-            		else if ($request->getMethod() == 'POST'){
-            			$routeModel['swagger_json'] = $request->getBody();
-            			$response = $this->getSwaggerValidatorResponse($routeModel, $requestLogData, $headers);
-            			if ($response !== null){
-            				return $response;
-            			}
+            	case mb_stripos($path, '/openapi') !== false && $request->getMethod() === 'GET':
+        		    $basePath = $this->getUrlRouteDefault();
+        		    $webserviceBase = StringDataType::substringBefore($path, '/', '', true, true) . '/';
+        		    $basePath .= '/' . $webserviceBase;
+        		    $swaggerArray = json_decode($routeModel['swagger_json'], true);
+        		    foreach ($this->getWorkbench()->getConfig()->getOption('SERVER.BASE_URLS') as $baseUrl) {
+        		        $swaggerArray['servers'][] = ['url' => $baseUrl . '/' . $basePath];
+        		    }
+        		    $swaggerJson = json_encode($swaggerArray, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+                    $headers = array_merge($headers, ['Content-Type' => 'application/json']);
+        		    $response = new Response(200, $headers, $swaggerJson);
+        			return $response;
+            		
+            	case mb_stripos($path, '/openapi') !== false && $request->getMethod() === 'POST':
+        		    $requestLogData = $this->logRequestReceived($request);
+        		    
+        		    $routeModel['swagger_json'] = $request->getBody();
+        			$response = $this->getSwaggerValidatorResponse($routeModel, $requestLogData, $headers);
+        			if ($response !== null){
+        				return $response;
+        			}
 
-            			$this->updateRouteParameter($path, $routeModel, 'swagger_json');
-            			$headers['Path'] = 'GET ' . $this->getUrlRouteDefault();
-            			$response = new Response(201, $headers, $routeModel['swagger_json']);
-            			$requestLogData = $this->logRequestDone($requestLogData, 'Web service swagger json has been updated', $response);
-            			return $response;
-            		}
+        			$this->updateRouteParameter($path, $routeModel, 'swagger_json');
+        			$headers['Path'] = 'GET ' . $this->getUrlRouteDefault();
+        			$response = new Response(201, $headers, $routeModel['swagger_json']);
+        			$requestLogData = $this->logRequestDone($requestLogData, 'Web service swagger json has been updated', $response);
+        			return $response;
+        			
             	// webservice dataflow request
             	default:
-            		$routeUID = $routeModel['UID'];
+            	    $requestLogData = $this->logRequestReceived($request);
+            	    
+            	    $routeUID = $routeModel['UID'];
             		$flowAlias = $routeModel['flow__alias'];
             		$flowRunUID = RunETLFlow::generateFlowRunUid();
             		$requestLogData = $this->logRequestProcessing($requestLogData, $routeUID, $flowRunUID); // flow data update
