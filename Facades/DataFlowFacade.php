@@ -389,14 +389,18 @@ class DataFlowFacade extends AbstractHttpFacade
     {
     	$code = $exception->getStatusCode();
     	$headers = $this->buildHeadersCommon();
+    	
     	if ($this->getWorkbench()->getSecurity()->getAuthenticatedToken()->isAnonymous()) {
     		return new Response($code, $headers);
     	}
 
     	$headers['Content-Type'] = 'application/json';
-    	$errorData = json_encode(["Error" =>
-    		["Message" => $exception->getMessage(),
-    			"Log-Id" => $exception->getId()]]);
+    	$errorData = json_encode([
+	        "Error" => [
+    		    "Message" => $exception->getMessage(),
+    			"Log-Id" => $exception->getId()
+    		]
+        ]);
     	
     	return new Response($code, $headers, $errorData);
     }
