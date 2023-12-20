@@ -19,7 +19,7 @@ IF COL_LENGTH('dbo.etl_webservice_route', 'type_oid') IS NULL
 ALTER TABLE dbo.etl_webservice_route
 	ADD type_oid binary(16) NULL;
 
--- for validation of schema:
+-- store validation response
 IF COL_LENGTH('dbo.etl_webservice_request', 'response_body') IS NULL
 ALTER TABLE dbo.etl_webservice_request
 	ADD response_body nvarchar(max) NULL;
@@ -39,8 +39,6 @@ ALTER TABLE etl_webservice_request
 IF COL_LENGTH('dbo.etl_webservice_route','type_oid') IS NOT NULL
 ALTER TABLE dbo.etl_webservice_route
 DROP COLUMN type_oid;
-
-/* DROP TABLE etl_webservice_type */
 
 DECLARE @table NVARCHAR(max) = 'etl_webservice_type';
 DECLARE @schema NVARCHAR(max) = 'dbo';
