@@ -20,9 +20,7 @@ use exface\Core\Interfaces\DataSheets\DataSheetInterface;
 use exface\Core\Interfaces\Exceptions\ExceptionInterface;
 use exface\Core\Interfaces\Tasks\ResultInterface;
 use JsonSchema\Validator;
-use exface\Core\Exceptions\RuntimeException;
 use Flow\JSONPath\JSONPath;
-use exface\Core\DataTypes\MimeTypeDataType;
 
 
 /**
@@ -54,6 +52,7 @@ class DataFlowFacade extends AbstractHttpFacade
             if ($response !== null){
             	return $response;
             }
+            
 
             // handle route requests
             switch(true){
@@ -73,21 +72,6 @@ class DataFlowFacade extends AbstractHttpFacade
         		    $swaggerJson = json_encode($swaggerArray, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
                     $headers = array_merge($headers, ['Content-Type' => 'application/json']);
         		    $response = new Response(200, $headers, $swaggerJson);
-        			return $response;
-            		
-            	case mb_stripos($path, '/openapi') !== false && $request->getMethod() === 'POST':
-        		    $requestLogData = $this->logRequestReceived($request);
-        		    
-        		    $routeModel['swagger_json'] = $request->getBody();
-        			$response = $this->getSwaggerValidatorResponse($routeModel, $requestLogData, $headers);
-        			if ($response !== null){
-        				return $response;
-        			}
-
-        			$this->updateRouteParameter($path, $routeModel, 'swagger_json');
-        			$headers['Path'] = 'GET ' . $this->getUrlRouteDefault();
-        			$response = new Response(201, $headers, $routeModel['swagger_json']);
-        			$requestLogData = $this->logRequestDone($requestLogData, 'Web service swagger json has been updated', $response);
         			return $response;
         			
             	// webservice dataflow request
@@ -344,22 +328,6 @@ class DataFlowFacade extends AbstractHttpFacade
     	}
 
     	return new Response(400, $headers, json_encode($errors));
-    }
-    
-    /**
-     * @param string path
-     * @param array routeModel
-     * @param string response
-     */
-    private function updateRouteParameter(string $path, array $routeModel, string $parameter)
-    {
-    	$rows = $this->serviceData->getRows();
-    	for ($i = 0; count($rows) > $i; $i++) {
-    		if ($rows[$i]['in_url'] && StringDataType::startsWith($path, $rows[$i]['in_url'])) {
-    			$this->serviceData->setCellValue($parameter, $i, $routeModel[$parameter]);
-    			$this->serviceData->dataUpdate();
-    		}
-    	}
     }
     
     /**
