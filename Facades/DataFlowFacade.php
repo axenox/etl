@@ -46,13 +46,13 @@ class DataFlowFacade extends AbstractHttpFacade
             $path = StringDataType::substringAfter($path, $this->getUrlRouteDefault() . '/', '');
             $routePath = rtrim(strstr($path, '/'), '/');
             $routeModel = $this->getRouteData($path);
+            $requestLogData = $this->logRequestReceived($request);
 
             // validate webservice swagger
             $response = $this->getSwaggerValidatorResponse($routeModel, $requestLogData, $headers);
             if ($response !== null){
             	return $response;
             }
-            
 
             // handle route requests
             switch(true){
@@ -75,9 +75,7 @@ class DataFlowFacade extends AbstractHttpFacade
         			return $response;
         			
             	// webservice dataflow request
-            	default:
-            	    $requestLogData = $this->logRequestReceived($request);
-            	    
+            	default:            	    
             	    $routeUID = $routeModel['UID'];
             		$flowAlias = $routeModel['flow__alias'];
             		$flowRunUID = RunETLFlow::generateFlowRunUid();
