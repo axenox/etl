@@ -11,11 +11,17 @@
     "created_by_user_selector": "0x31000000000000000000000000000000",
     "created_on": "2023-10-18 17:03:02",
     "modified_by_user_selector": "0x31000000000000000000000000000000",
-    "modified_on": "2023-12-18 08:40:44",
+    "modified_on": "2023-12-19 21:20:27",
     "contents": {
         "widget_type": "DataTable",
         "object_alias": "axenox.ETL.webservice_request",
         "filters": [
+            {
+                "attribute_alias": "date",
+                "widget_type": "SpinnerFilter",
+                "value": 0,
+                "value_step": "1d"
+            },
             {
                 "attribute_alias": "route__flow"
             },
