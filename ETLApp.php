@@ -42,8 +42,8 @@ class ETLApp extends App
             $this->getWorkbench()->getLogger()->error('Cannot initialize DB installer for app "' . $this->getSelector()->toString() . '": the cores model loader installer must be compatible with AbstractSqlDatabaseInstaller!');
         }
         
-        $dataInstaller = new MetaModelAdditionInstaller($this->getSelector(), $installer, 'masterdata');
-        $dataInstaller->addDataToMerge('axenox.ETL.webservice_type', 'MODIFIED_ON');
+        //$dataInstaller = new MetaModelAdditionInstaller($this->getSelector(), $installer, 'masterdata');
+        //$dataInstaller->addDataToMerge('axenox.ETL.webservice_type', 'MODIFIED_ON');
         
         return $installer;
     }
