@@ -905,7 +905,7 @@
         },
         {
             "CREATED_ON": "2023-12-19 15:35:44",
-            "MODIFIED_ON": "2023-12-19 15:37:52",
+            "MODIFIED_ON": "2024-01-09 12:38:24",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
             "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
             "UID": "0x11eea677e54a6fc4a677025041000001",
@@ -928,7 +928,7 @@
             "COPYABLEFLAG": 0,
             "ALIAS": "date",
             "DATATYPE": "0x32000000000000000000000000000000",
-            "DATA_ADDRESS": "@MySQL: DATE([#CREATED_ON#])\n@M-SQL: CAST([#CREATED_ON#] AS Date)",
+            "DATA_ADDRESS": "@MySQL: DATE([#CREATED_ON#])\n@T-SQL: CAST([#CREATED_ON#] AS Date)\n@OTHER: TO_DATE([#CREATED_ON#])",
             "OBJECT": "0x11eeae4695964d78ae46025041000001",
             "FORMATTER": "",
             "DISPLAYORDER": null,
