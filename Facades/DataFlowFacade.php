@@ -161,11 +161,11 @@ class DataFlowFacade extends AbstractHttpFacade
 	}
 
 	/**
-	 * @param $routeModel
-	 * @param requestLogData
-	 * @param $headers
+	 * @param array $routeModel
+	 * @param ServerRequestInterface $requestLogData
+	 * @param array $headers
 	 */
-    private function getSwaggerValidatorResponse($routeModel, $requestLogData, $headers) : mixed
+	private function getSwaggerValidatorResponse(array $routeModel, DataSheetInterface $requestLogData, array $headers) : mixed
 	{
 		$validator = $this->validateRouteSwagger($routeModel);
 		if (!$validator->isValid()){
