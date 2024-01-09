@@ -21,6 +21,7 @@ use exface\Core\Interfaces\Exceptions\ExceptionInterface;
 use exface\Core\Interfaces\Tasks\ResultInterface;
 use JsonSchema\Validator;
 use Flow\JSONPath\JSONPath;
+use exface\Core\Interfaces\Selectors\FacadeSelectorInterface;
 
 
 /**
@@ -89,10 +90,14 @@ class DataFlowFacade extends AbstractHttpFacade
             		if ($requestLogData->countRows() == 1){
             			$headers['Content-Type'] = 'application/json';
             			if (empty($requestLogData->getRow()['response_body'])){
-            				$methodType =strtolower($request->getMethod());
+            				$methodType = strtolower($request->getMethod());
             				$jsonPath = $routeModel['type__default_response_path'];
-            				$body = $this->createEmptyRequestBodyFromSwaggerJson($routePath, $methodType, $jsonPath, $routeModel['swagger_json']);}
-             			else {
+            				if ($jsonPath) {
+            				    $body = $this->createEmptyRequestBodyFromSwaggerJson($routePath, $methodType, $jsonPath, $routeModel['swagger_json']);
+            				} else {
+            				    $body = null;
+            				}
+            			} else {
 	            			$body = $requestLogData->getRow()['response_body'];
             			}
 
@@ -341,7 +346,14 @@ class DataFlowFacade extends AbstractHttpFacade
     	string $jsonPath,
     	string $swaggerJson) : string
     	{
-    		$jsonPath = str_replace('[#routePath#]', $routePath, $jsonPath);
+    	    require_once '..' . DIRECTORY_SEPARATOR 
+        	    . '..' . DIRECTORY_SEPARATOR
+        	    . 'axenox' . DIRECTORY_SEPARATOR
+        	    . 'etl' . DIRECTORY_SEPARATOR
+        	    . 'Common' . DIRECTORY_SEPARATOR
+        	    . 'JSONPath' . DIRECTORY_SEPARATOR
+        	    . 'JSONPathLexer.php';
+    	    $jsonPath = str_replace('[#routePath#]', $routePath, $jsonPath);
     		$jsonPath = str_replace('[#methodType#]', $methodType, $jsonPath);
     		$body = (new JSONPath(json_decode($swaggerJson, false)))->find($jsonPath)->getData();
     		return json_encode($body);
