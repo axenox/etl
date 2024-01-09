@@ -3,7 +3,8 @@
 	"require" : {
 		"exface/core" : "^1.0",
 		"justinrainbow/json-schema" : "^5.2",
-		"npm-asset/swagger-ui-dist" : "^5"
+		"npm-asset/swagger-ui-dist" : "^5",
+		"softcreatr/jsonpath": "^0.5 || ^0.7 || ^0.8",
 	},
 	"autoload" : {
 		"psr-4" : {
