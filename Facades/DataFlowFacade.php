@@ -16,13 +16,22 @@ use exface\Core\Facades\AbstractHttpFacade\AbstractHttpFacade;
 use exface\Core\Facades\AbstractHttpFacade\Middleware\AuthenticationMiddleware;
 use exface\Core\Factories\ActionFactory;
 use exface\Core\Factories\DataSheetFactory;
+use exface\Core\Factories\MetaObjectFactory;
 use exface\Core\Interfaces\DataSheets\DataSheetInterface;
 use exface\Core\Interfaces\Exceptions\ExceptionInterface;
 use exface\Core\Interfaces\Tasks\ResultInterface;
 use JsonSchema\Validator;
 use Flow\JSONPath\JSONPath;
-use exface\Core\Interfaces\Selectors\FacadeSelectorInterface;
-
+use exface\Core\Interfaces\Model\MetaObjectInterface;
+use exface\Core\Exceptions\InvalidArgumentException;
+use exface\Core\DataTypes\IntegerDataType;
+use exface\Core\DataTypes\NumberDataType;
+use exface\Core\DataTypes\ArrayDataType;
+use exface\Core\Interfaces\DataTypes\EnumDataTypeInterface;
+use exface\Core\DataTypes\DateTimeDataType;
+use exface\Core\DataTypes\BooleanDataType;
+use exface\Core\DataTypes\BinaryDataType;
+use exface\Core\DataTypes\DateDataType;
 
 /**
  * 
@@ -63,18 +72,15 @@ class DataFlowFacade extends AbstractHttpFacade
                     
             	// webservice maintenance requests
             	case mb_stripos($path, '/openapi') !== false && $request->getMethod() === 'GET':
-        		    $basePath = $this->getUrlRouteDefault();
-        		    $webserviceBase = StringDataType::substringBefore($path, '/', '', true, true) . '/';
-        		    $basePath .= '/' . $webserviceBase;
+            		// building functional OpenApi
         		    $swaggerArray = json_decode($routeModel['swagger_json'], true);
-        		    foreach ($this->getWorkbench()->getConfig()->getOption('SERVER.BASE_URLS') as $baseUrl) {
-        		        $swaggerArray['servers'][] = ['url' => $baseUrl . '/' . $basePath];
-        		    }
-        		    $swaggerJson = json_encode($swaggerArray, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        		    $this->addServerPaths($path, $swaggerArray);                    
+        		    $this->autogenerateMetamodelSchemas($swaggerArray);                    
+                    $swaggerJson = json_encode($swaggerArray, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+                    
                     $headers = array_merge($headers, ['Content-Type' => 'application/json']);
         		    $response = new Response(200, $headers, $swaggerJson);
-        			return $response;
-        			
+        			return $response;        			
             	// webservice dataflow request
             	default:            	    
             	    $routeUID = $routeModel['UID'];
@@ -128,14 +134,41 @@ class DataFlowFacade extends AbstractHttpFacade
         $requestLogData = $this->logRequestDone($requestLogData, $flowOutput, $response);
         return $response;
     }
-
+    
+	/**
+	 * @param string $path
+	 * @param array $swaggerArray
+	 */
+	 private function addServerPaths(string &$path, array &$swaggerArray)
+	 {
+	 	$basePath = $this->getUrlRouteDefault();
+	 	$webserviceBase = StringDataType::substringBefore($path, '/', '', true, true) . '/';
+	 	$basePath .= '/' . $webserviceBase;
+		foreach ($this->getWorkbench()->getConfig()->getOption('SERVER.BASE_URLS') as $baseUrl) {
+		    $swaggerArray['servers'][] = ['url' => $baseUrl . '/' . $basePath];
+		}
+	 }
 
 	/**
-	 * @param $routeModel
-	 * @param requestLogData
-	 * @param $headers
+	 * @param array $swaggerArray
 	 */
-    private function getSwaggerValidatorResponse($routeModel, $requestLogData, $headers) : mixed
+	private function autogenerateMetamodelSchemas(array &$swaggerArray)
+	{
+		$swaggerSchema = &$swaggerArray["components"]["schemas"];
+		if (array_key_exists("Metamodel Informationen", $swaggerSchema)){
+			foreach (array_keys($swaggerSchema["Metamodel Informationen"]["properties"]) as $metaobjectAlias){
+				$metaObjectSchema = $this->transformIntoJsonSchema(MetaObjectFactory::createFromString($this->getWorkbench(), $metaobjectAlias));
+				$swaggerSchema["Metamodel Informationen"]["properties"][$metaobjectAlias] = $metaObjectSchema[$metaobjectAlias];
+			}
+		}
+	}
+
+	/**
+	 * @param array $routeModel
+	 * @param ServerRequestInterface $requestLogData
+	 * @param array $headers
+	 */
+	private function getSwaggerValidatorResponse(array $routeModel, DataSheetInterface $requestLogData, array $headers)
 	{
 		$validator = $this->validateRouteSwagger($routeModel);
 		if (!$validator->isValid()){
@@ -431,7 +464,10 @@ class DataFlowFacade extends AbstractHttpFacade
                     plugins: [
                         SwaggerUIBundle.plugins.DownloadUrl
                     ],
-                        layout: "StandaloneLayout"
+                    layout: "StandaloneLayout",
+					onComplete: () => {
+					      document.querySelectorAll("#swagger-ui section.models button.model-box-control").forEach(btn => btn.click())
+					    }
                     });
 
                     //</editor-fold>
@@ -440,5 +476,62 @@ class DataFlowFacade extends AbstractHttpFacade
           </body>
         </html>
 HTML;
+    }
+    
+    /**
+     * @param MetaObjectInterface $metaobject
+     */
+    protected function transformIntoJsonSchema(MetaObjectInterface $metaobject) : array
+    {
+		$objectName = strtolower($metaobject->getAliasWithNamespace());
+		$jsonSchema = [$objectName => ["type" => "object", "properties" => []]];
+
+		foreach ($metaobject->getAttributes() as $attribute) {
+			$dataType = $attribute->getDataType();
+			switch (true) {
+				case $attribute->isRelation():
+					$schema = ["type" => "object"];
+					break;
+				case $dataType instanceof IntegerDataType:
+					$schema = ["type" => "integer"];
+					break;
+				case $dataType instanceof NumberDataType:
+					$schema = ["type" => "number"];
+					break;
+				case $dataType instanceof BooleanDataType:
+					$schema = ["type" => "boolean"];
+					break;
+				case $dataType instanceof ArrayDataType:
+					$schema = ["type" => "array"];
+					break;
+				case $dataType instanceof EnumDataTypeInterface:
+					$schema = ["type" => "string", "enum" => $dataType->getValues()];
+					break;
+				case $dataType instanceof DateTimeDataType:
+					$schema = ["type" => "string", "format" => "datetime"];
+					break;
+				case $dataType instanceof DateDataType:
+					$schema = ["type" => "string", "format" => "date"];
+					break;
+				case $dataType instanceof BinaryDataType:
+					if ($dataType->getEncoding() == 'base64') {
+
+						$schema = ["type" => "string", "format" => "byte"];
+					} else {
+						$schema = ["type" => "string", "format" => "binary"];
+					}
+					break;
+				case $dataType instanceof StringDataType:
+					$schema = ["type" => "string"];
+					break;
+				default:
+					throw new InvalidArgumentException("Datatype: " . $dataType . " not recognized.");
+			}
+
+			$schema["description"] = $attribute->getHint();
+			$jsonSchema[$objectName]["properties"][$attribute->getAlias()] = $schema;
+		}
+
+		return $jsonSchema;
     }
 }
