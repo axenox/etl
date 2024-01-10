@@ -128,7 +128,7 @@ class DataFlowFacade extends AbstractHttpFacade
         }
 
         if ($response === null) {
-			$response = new Response(200, $headers, "Dataflow successfull.");
+			$response = new Response(200, $headers, 'Dataflow successfull.');
         }
 
         $requestLogData = $this->logRequestDone($requestLogData, $flowOutput, $response);
@@ -410,9 +410,9 @@ class DataFlowFacade extends AbstractHttpFacade
 
     	$headers['Content-Type'] = 'application/json';
     	$errorData = json_encode([
-	        "Error" => [
-    		    "Message" => $exception->getMessage(),
-    			"Log-Id" => $exception->getId()
+	        'Error' => [
+    		    'Message' => $exception->getMessage(),
+    			'Log-Id' => $exception->getId()
     		]
         ]);
     	
@@ -437,27 +437,27 @@ class DataFlowFacade extends AbstractHttpFacade
         return <<<HTML
         <!-- HTML for static distribution bundle build -->
         <!DOCTYPE html>
-        <html lang="en">
+        <html lang='en'>
           <head>
-            <meta charset="UTF-8">
+            <meta charset='UTF-8'>
             <title>Swagger UI</title>
-            <link rel="stylesheet" type="text/css" href="{$swaggerUI}/swagger-ui.css" />
-            <link rel="stylesheet" type="text/css" href="{$swaggerUI}/index.css" />
-            <link rel="icon" type="image/png" href="{$swaggerUI}/favicon-32x32.png" sizes="32x32" />
-            <link rel="icon" type="image/png" href="{$swaggerUI}/favicon-16x16.png" sizes="16x16" />
+            <link rel='stylesheet' type='text/css' href='{$swaggerUI}/swagger-ui.css' />
+            <link rel='stylesheet' type='text/css' href='{$swaggerUI}/index.css' />
+            <link rel='icon' type='image/png' href='{$swaggerUI}/favicon-32x32.png' sizes='32x32' />
+            <link rel='icon' type='image/png' href='{$swaggerUI}/favicon-16x16.png' sizes='16x16' />
           </head>
 
           <body>
-            <div id="swagger-ui"></div>
-            <script src="{$swaggerUI}/swagger-ui-bundle.js" charset="UTF-8"> </script>
-            <script src="{$swaggerUI}/swagger-ui-standalone-preset.js" charset="UTF-8"> </script>
+            <div id='swagger-ui'></div>
+            <script src='{$swaggerUI}/swagger-ui-bundle.js' charset='UTF-8'> </script>
+            <script src='{$swaggerUI}/swagger-ui-standalone-preset.js' charset='UTF-8'> </script>
             <script>
                 window.onload = function() {
-                //<editor-fold desc="Changeable Configuration Block">
+                //<editor-fold desc='Changeable Configuration Block'>
 
                 // the following lines will be replaced by docker/configurator, when it runs in a docker-container
                 window.ui = SwaggerUIBundle({
-                    url: "{$openapiUrl}",
+                    url: '{$openapiUrl}',
                     dom_id: '#swagger-ui',
                     deepLinking: true,
                     presets: [
@@ -467,9 +467,9 @@ class DataFlowFacade extends AbstractHttpFacade
                     plugins: [
                         SwaggerUIBundle.plugins.DownloadUrl
                     ],
-                    layout: "StandaloneLayout",
+                    layout: 'StandaloneLayout',
 					onComplete: () => {
-					      document.querySelectorAll("#swagger-ui section.models button.model-box-control").forEach(btn => btn.click())
+					      document.querySelectorAll('#swagger-ui section.models button.model-box-control').forEach(btn => btn.click())
 					    }
                     });
 
@@ -488,7 +488,7 @@ HTML;
     protected function transformIntoJsonSchema(MetaObjectInterface $metaobject, array $attributeAliasesToAdd) : array
     {
 		$objectName = strtolower($metaobject->getAliasWithNamespace());
-		$jsonSchema = [$objectName => ["type" => "object", "properties" => []]];
+		$jsonSchema = [$objectName => ['type' => 'object', 'properties' => []]];
 
 		foreach ($metaobject->getAttributes() as $attribute) {
 			$dataType = $attribute->getDataType();
@@ -501,43 +501,43 @@ HTML;
 						continue;
 					}
 				case $dataType instanceof IntegerDataType:
-					$schema = ["type" => "integer"];
+					$schema = ['type' => 'integer'];
 					break;
 				case $dataType instanceof NumberDataType:
-					$schema = ["type" => "number"];
+					$schema = ['type' => 'number'];
 					break;
 				case $dataType instanceof BooleanDataType:
-					$schema = ["type" => "boolean"];
+					$schema = ['type' => 'boolean'];
 					break;
 				case $dataType instanceof ArrayDataType:
-					$schema = ["type" => "array"];
+					$schema = ['type' => 'array'];
 					break;
 				case $dataType instanceof EnumDataTypeInterface:
-					$schema = ["type" => "string", "enum" => $dataType->getValues()];
+					$schema = ['type' => 'string', 'enum' => $dataType->getValues()];
 					break;
 				case $dataType instanceof DateTimeDataType:
-					$schema = ["type" => "string", "format" => "datetime"];
+					$schema = ['type' => 'string', 'format' => 'datetime'];
 					break;
 				case $dataType instanceof DateDataType:
-					$schema = ["type" => "string", "format" => "date"];
+					$schema = ['type' => 'string', 'format' => 'date'];
 					break;
 				case $dataType instanceof BinaryDataType:
 					if ($dataType->getEncoding() == 'base64') {
 
-						$schema = ["type" => "string", "format" => "byte"];
+						$schema = ['type' => 'string', 'format' => 'byte'];
 					} else {
-						$schema = ["type" => "string", "format" => "binary"];
+						$schema = ['type' => 'string', 'format' => 'binary'];
 					}
 					break;
 				case $dataType instanceof StringDataType:
-					$schema = ["type" => "string"];
+					$schema = ['type' => 'string'];
 					break;
 				default:
-					throw new InvalidArgumentException("Datatype: " . $dataType . " not recognized.");
+					throw new InvalidArgumentException('Datatype: ' . $dataType . ' not recognized.');
 			}
 
-			$schema["description"] = $attribute->getHint();
-			$jsonSchema[$objectName]["properties"][$attribute->getAlias()] = $schema;
+			$schema['description'] = $attribute->getHint();
+			$jsonSchema[$objectName]['properties'][$attribute->getAlias()] = $schema;
 		}
 
 		return $jsonSchema;
