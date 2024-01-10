@@ -154,11 +154,14 @@ class DataFlowFacade extends AbstractHttpFacade
 	 */
 	private function autogenerateMetamodelSchemas(array &$swaggerArray)
 	{
-		$swaggerSchema = &$swaggerArray["components"]["schemas"];
-		if (array_key_exists("Metamodel Informationen", $swaggerSchema)){
-			foreach (array_keys($swaggerSchema["Metamodel Informationen"]["properties"]) as $metaobjectAlias){
-				$metaObjectSchema = $this->transformIntoJsonSchema(MetaObjectFactory::createFromString($this->getWorkbench(), $metaobjectAlias));
-				$swaggerSchema["Metamodel Informationen"]["properties"][$metaobjectAlias] = $metaObjectSchema[$metaobjectAlias];
+		$swaggerSchema = &$swaggerArray['components']['schemas'];
+		if (array_key_exists('Metamodel Informationen', $swaggerSchema)){
+			$attribtueAliasesToAdd = array_keys($swaggerSchema['Metamodel Informationen']['properties']);
+			foreach ($attribtueAliasesToAdd as $metaobjectAlias){
+				$metaObjectSchema = $this->transformIntoJsonSchema(
+					MetaObjectFactory::createFromString($this->getWorkbench(), $metaobjectAlias),
+					$attribtueAliasesToAdd);
+				$swaggerSchema['Metamodel Informationen']['properties'][$metaobjectAlias] = $metaObjectSchema[$metaobjectAlias];
 			}
 		}
 	}
@@ -480,8 +483,9 @@ HTML;
     
     /**
      * @param MetaObjectInterface $metaobject
+     * @param array $attributeAliasesToAdd
      */
-    protected function transformIntoJsonSchema(MetaObjectInterface $metaobject) : array
+    protected function transformIntoJsonSchema(MetaObjectInterface $metaobject, array $attributeAliasesToAdd) : array
     {
 		$objectName = strtolower($metaobject->getAliasWithNamespace());
 		$jsonSchema = [$objectName => ["type" => "object", "properties" => []]];
@@ -490,8 +494,12 @@ HTML;
 			$dataType = $attribute->getDataType();
 			switch (true) {
 				case $attribute->isRelation():
-					$schema = ["type" => "object"];
-					break;
+					$relatedObjectAlias =  strtolower($attribute->getRelation()->getRightObject()->getAliasWithNamespace());
+					if (in_array($relatedObjectAlias, $attributeAliasesToAdd)){
+						$schema = ['$ref' => '#/components/schemas/Metamodel Informationen/properties/' . $relatedObjectAlias];
+						$jsonSchema[$objectName]['properties'][$attribute->getAlias()] = $schema;
+						continue;
+					}
 				case $dataType instanceof IntegerDataType:
 					$schema = ["type" => "integer"];
 					break;
