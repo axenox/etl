@@ -4,14 +4,14 @@
     "menu_parent_page_selector": "0x11ebbc9afc222912bc9a025041000001",
     "menu_index": 2,
     "menu_visible": true,
-    "name": "Webservice types",
+    "name": "Web service types",
     "description": "Types of ETL web services",
     "intro": "",
     "replaces_page_selector": null,
     "created_by_user_selector": "0x11e8fe1c902c8ebea23ee4b318306b9a",
     "created_on": "2023-12-11 10:07:50",
     "modified_by_user_selector": "0x31000000000000000000000000000000",
-    "modified_on": "2023-12-18 08:40:44",
+    "modified_on": "2024-01-11 18:53:58",
     "contents": {
         "widget_type": "DataTable",
         "object_alias": "axenox.ETL.webservice_type",
@@ -34,10 +34,14 @@
                 "attribute_alias": "version"
             },
             {
+                "attribute_alias": "webservice_route__UID:COUNT",
+                "caption": "Services"
+            },
+            {
                 "attribute_alias": "app__ALIAS"
             },
             {
-                "attribute_alias": "schema_json"
+                "attribute_alias": "default_response_path"
             }
         ],
         "sorters": [
