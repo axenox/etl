@@ -487,18 +487,18 @@ HTML;
      */
     protected function transformIntoJsonSchema(MetaObjectInterface $metaobject, array $attributeAliasesToAdd) : array
     {
-		$objectName = strtolower($metaobject->getAliasWithNamespace());
+		$objectName = $metaobject->getAliasWithNamespace();
 		$jsonSchema = [$objectName => ['type' => 'object', 'properties' => []]];
 
 		foreach ($metaobject->getAttributes() as $attribute) {
 			$dataType = $attribute->getDataType();
 			switch (true) {
 				case $attribute->isRelation():
-					$relatedObjectAlias =  strtolower($attribute->getRelation()->getRightObject()->getAliasWithNamespace());
+					$relatedObjectAlias =  $attribute->getRelation()->getRightObject()->getAliasWithNamespace();
 					if (in_array($relatedObjectAlias, $attributeAliasesToAdd)){
 						$schema = ['$ref' => '#/components/schemas/Metamodel Informationen/properties/' . $relatedObjectAlias];
 						$jsonSchema[$objectName]['properties'][$attribute->getAlias()] = $schema;
-						continue;
+						continue 2;
 					}
 				case $dataType instanceof IntegerDataType:
 					$schema = ['type' => 'integer'];
@@ -535,8 +535,11 @@ HTML;
 				default:
 					throw new InvalidArgumentException('Datatype: ' . $dataType . ' not recognized.');
 			}
-
-			$schema['description'] = $attribute->getHint();
+		
+			if ($attribute->getHint() !== $attribute->getName()){			
+				$schema['description'] = $attribute->getHint();
+			}
+			
 			$jsonSchema[$objectName]['properties'][$attribute->getAlias()] = $schema;
 		}
 
