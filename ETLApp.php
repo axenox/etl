@@ -7,6 +7,7 @@ use exface\Core\CommonLogic\AppInstallers\AbstractSqlDatabaseInstaller;
 use exface\Core\Facades\AbstractHttpFacade\HttpFacadeInstaller;
 use axenox\ETL\Facades\DataFlowFacade;
 use exface\Core\Factories\FacadeFactory;
+use exface\Core\CommonLogic\AppInstallers\MetaModelAdditionInstaller;
 
 class ETLApp extends App
 {
@@ -40,6 +41,9 @@ class ETLApp extends App
         } else {
             $this->getWorkbench()->getLogger()->error('Cannot initialize DB installer for app "' . $this->getSelector()->toString() . '": the cores model loader installer must be compatible with AbstractSqlDatabaseInstaller!');
         }
+        
+        //$dataInstaller = new MetaModelAdditionInstaller($this->getSelector(), $installer, 'masterdata');
+        //$dataInstaller->addDataToMerge('axenox.ETL.webservice_type', 'MODIFIED_ON');
         
         return $installer;
     }

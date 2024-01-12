@@ -63,8 +63,9 @@ class DataSheetTransfer extends AbstractETLPrototype
      */
     public function run(string $flowRunUid, string $stepRunUid, ETLStepResultInterface $previousStepResult = null, ETLStepResultInterface $lastResult = null) : \Generator
     {
-        $baseSheet = $this->getFromDataSheet($this->getPlaceholders($flowRunUid, $stepRunUid, $lastResult));
-        $mapper = $this->getMapper();
+    	$placeholders = $this->getPlaceholders($flowRunUid, $stepRunUid, $lastResult);
+    	$baseSheet = $this->getFromDataSheet($placeholders);
+    	$mapper = $this->getMapper($placeholders);
         $result = new IncrementalEtlStepResult($stepRunUid);
         
         if ($this->isUpdateIfMatchingAttributes()) {
@@ -216,6 +217,8 @@ class DataSheetTransfer extends AbstractETLPrototype
      * with the property name like `last_run_increment_value` for `increment_value` from the last runs
      * result)
      * 
+     * Also works for `mappers`.
+     * 
      * @uxon-property from_data_sheet
      * @uxon-type \exface\Core\CommonLogic\DataSheets\DataSheet
      * @uxon-template {"filters":{"operator": "AND","conditions":[{"expression": "","comparator": "=","value": ""}]},"sorters": [{"attribute_alias": "","direction": "ASC"}]}
@@ -235,12 +238,16 @@ class DataSheetTransfer extends AbstractETLPrototype
      * @param MetaObjectInterface $toObject
      * @return DataSheetMapperInterface
      */
-    protected function getMapper() : DataSheetMapperInterface
+    protected function getMapper(array $placeholders = []) : DataSheetMapperInterface
     {
         if (! $this->mapperUxon || $this->mapperUxon->isEmpty()) {
             throw new UxonParserError($this->exportUxonObject(), 'Missing `mapper` in property in configuration of ETL prototype ' . PhpClassDataType::findClassNameWithoutNamespace(get_class($this)));
         }
-        return DataSheetMapperFactory::createFromUxon($this->getWorkbench(), $this->mapperUxon, $this->getFromObject(), $this->getToObject()); 
+        
+       $json = $this->mapperUxon->toJson();
+       $json = StringDataType::replacePlaceholders($json, $placeholders);
+       
+       return DataSheetMapperFactory::createFromUxon($this->getWorkbench(), UxonObject::fromJson($json), $this->getFromObject(), $this->getToObject()); 
     }
     
     /**

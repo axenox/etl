@@ -2,7 +2,7 @@
     "uid": "0x11eb81f06d44440c81f0025041000001",
     "alias_with_namespace": "axenox.etl.presets",
     "menu_parent_page_selector": "0x11ebbc9afc222912bc9a025041000001",
-    "menu_index": 2,
+    "menu_index": 3,
     "menu_visible": true,
     "name": "Presets",
     "description": "Configuration presets for ETL prototypes",
@@ -11,77 +11,170 @@
     "created_by_user_selector": "0x31000000000000000000000000000000",
     "created_on": "2021-04-26 11:11:46",
     "modified_by_user_selector": "0x31000000000000000000000000000000",
-    "modified_on": "2023-10-18 17:03:08",
+    "modified_on": "2023-12-18 09:53:04",
     "contents": {
-        "widget_type": "DataTable",
+        "widget_type": "Tabs",
         "object_alias": "axenox.ETL.etl_uxon_preset",
-        "filters": [
+        "tabs": [
             {
-                "attribute_alias": "NAME"
+                "caption": "Flow steps",
+                "widgets": [
+                    {
+                        "widget_type": "DataTable",
+                        "row_grouper": {
+                            "group_by_attribute_alias": "PROTOTYPE__LABEL",
+                            "hide_caption": true
+                        },
+                        "filters": [
+                            {
+                                "attribute_alias": "NAME"
+                            },
+                            {
+                                "attribute_alias": "APP"
+                            },
+                            {
+                                "attribute_alias": "PROTOTYPE"
+                            },
+                            {
+                                "attribute_alias": "WRAP_FLAG"
+                            },
+                            {
+                                "attribute_alias": "UXON",
+                                "input_widget": {
+                                    "widget_type": "Input",
+                                    "height": 1,
+                                    "width": 1
+                                }
+                            }
+                        ],
+                        "columns": [
+                            {
+                                "attribute_alias": "NAME"
+                            },
+                            {
+                                "attribute_alias": "PROTOTYPE__LABEL"
+                            },
+                            {
+                                "attribute_alias": "=Left(DESCRIPTION, 200)"
+                            },
+                            {
+                                "attribute_alias": "WRAP_FLAG"
+                            },
+                            {
+                                "attribute_alias": "APP__LABEL"
+                            },
+                            {
+                                "attribute_alias": "CREATED_ON"
+                            }
+                        ],
+                        "sorters": [
+                            {
+                                "attribute_alias": "PROTOTYPE",
+                                "direction": "desc"
+                            }
+                        ],
+                        "buttons": [
+                            {
+                                "action_alias": "exface.Core.ShowObjectCreateDialog"
+                            },
+                            {
+                                "action_alias": "exface.Core.ShowObjectEditDialog",
+                                "bind_to_double_click": true
+                            },
+                            {
+                                "action_alias": "exface.Core.ShowObjectCopyDialog"
+                            },
+                            {
+                                "action_alias": "exface.Core.DeleteObject"
+                            }
+                        ]
+                    }
+                ]
             },
             {
-                "attribute_alias": "APP"
-            },
-            {
-                "attribute_alias": "PROTOTYPE"
-            },
-            {
-                "attribute_alias": "WRAP_FLAG"
-            },
-            {
-                "attribute_alias": "UXON",
-                "input_widget": {
-                    "widget_type": "Input",
-                    "height": 1,
-                    "width": 1
-                }
+                "caption": "OpenAPI",
+                "widgets": [
+                    {
+                        "widget_type": "DataTable",
+                        "object_alias": "axenox.ETL.openapi_uxon_preset",
+                        "row_grouper": {
+                            "\/*": "",
+                            "group_by_attribute_alias": "PROTOTYPE__LABEL",
+                            "hide_caption": true,
+                            "*\/": ""
+                        },
+                        "filters": [
+                            {
+                                "attribute_alias": "NAME"
+                            },
+                            {
+                                "attribute_alias": "APP"
+                            },
+                            {
+                                "\/*": "",
+                                "attribute_alias": "PROTOTYPE",
+                                "*\/": ""
+                            },
+                            {
+                                "attribute_alias": "WRAP_FLAG"
+                            },
+                            {
+                                "attribute_alias": "UXON",
+                                "input_widget": {
+                                    "widget_type": "Input",
+                                    "height": 1,
+                                    "width": 1
+                                }
+                            }
+                        ],
+                        "columns": [
+                            {
+                                "attribute_alias": "NAME"
+                            },
+                            {
+                                "\/*": "",
+                                "attribute_alias": "PROTOTYPE__LABEL",
+                                "*\/": ""
+                            },
+                            {
+                                "attribute_alias": "=Left(DESCRIPTION, 200)"
+                            },
+                            {
+                                "attribute_alias": "WRAP_FLAG"
+                            },
+                            {
+                                "attribute_alias": "APP__LABEL"
+                            },
+                            {
+                                "attribute_alias": "CREATED_ON"
+                            }
+                        ],
+                        "sorters": [
+                            {
+                                "\/*": "",
+                                "attribute_alias": "PROTOTYPE",
+                                "direction": "desc",
+                                "*\/": ""
+                            }
+                        ],
+                        "buttons": [
+                            {
+                                "action_alias": "exface.Core.ShowObjectCreateDialog"
+                            },
+                            {
+                                "action_alias": "exface.Core.ShowObjectEditDialog",
+                                "bind_to_double_click": true
+                            },
+                            {
+                                "action_alias": "exface.Core.ShowObjectCopyDialog"
+                            },
+                            {
+                                "action_alias": "exface.Core.DeleteObject"
+                            }
+                        ]
+                    }
+                ]
             }
-        ],
-        "columns": [
-            {
-                "attribute_alias": "NAME"
-            },
-            {
-                "attribute_alias": "PROTOTYPE__LABEL"
-            },
-            {
-                "attribute_alias": "=Left(DESCRIPTION, 200)"
-            },
-            {
-                "attribute_alias": "WRAP_FLAG"
-            },
-            {
-                "attribute_alias": "APP__LABEL"
-            },
-            {
-                "attribute_alias": "CREATED_ON"
-            }
-        ],
-        "sorters": [
-            {
-                "attribute_alias": "PROTOTYPE",
-                "direction": "desc"
-            }
-        ],
-        "buttons": [
-            {
-                "action_alias": "exface.Core.ShowObjectCreateDialog"
-            },
-            {
-                "action_alias": "exface.Core.ShowObjectEditDialog",
-                "bind_to_double_click": true
-            },
-            {
-                "action_alias": "exface.Core.ShowObjectCopyDialog"
-            },
-            {
-                "action_alias": "exface.Core.DeleteObject"
-            }
-        ],
-        "id": "table_widget_presets",
-        "row_grouper": {
-            "group_by_attribute_alias": "PROTOTYPE__LABEL",
-            "hide_caption": true
-        }
+        ]
     }
 }

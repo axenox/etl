@@ -219,7 +219,7 @@
         },
         {
             "CREATED_ON": "2021-02-26 16:46:30",
-            "MODIFIED_ON": "2021-04-23 11:44:52",
+            "MODIFIED_ON": "2024-01-11 12:55:51",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
             "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
             "UID": "0x11eb956ccb56a4bc956c025041000001",
@@ -232,7 +232,7 @@
             "WRITABLEFLAG": 1,
             "SYSTEMFLAG": 0,
             "DEFAULT_EDITOR_UXON": null,
-            "COPY_WITH_RELATED_OBJECT": 0,
+            "COPY_WITH_RELATED_OBJECT": 1,
             "DELETE_WITH_RELATED_OBJECT": 1,
             "DEFAULT_DISPLAY_UXON": null,
             "COMMENTS": "",

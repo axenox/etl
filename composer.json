@@ -1,22 +1,25 @@
 {
-    "name": "axenox/etl",
-    "require": {
-        "exface/core": "^1.0"
-    },
-    "autoload": {
-        "psr-4": {
-            "\\axenox\\ETL\\": ""
-        },
-        "exclude-from-classmap": [
-            "/Config/",
-            "/Translations/",
-            "/Model/"
-        ]
-    },
-    "extra": {
-        "app": {
-            "app_uid": "0x11ebbc50679eacdabc50025041000001",
-            "app_alias": "axenox.ETL"
-        }
-    }
+	"name" : "axenox/etl",
+	"require" : {
+		"exface/core" : "^1.0",
+		"justinrainbow/json-schema" : "^5.2",
+		"npm-asset/swagger-ui-dist" : "^5",
+		"softcreatr/jsonpath" : "~0.7"
+	},
+	"autoload" : {
+		"psr-4" : {
+			"\\axenox\\ETL\\" : ""
+		},
+		"exclude-from-classmap" : [
+			"/Config/",
+			"/Translations/",
+			"/Model/"
+		]
+	},
+	"extra" : {
+		"app" : {
+			"app_uid" : "0x11ebbc50679eacdabc50025041000001",
+			"app_alias" : "axenox.ETL"
+		}
+	}
 }

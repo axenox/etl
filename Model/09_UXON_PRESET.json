@@ -263,6 +263,133 @@
             "WRAP_PATH": "",
             "UXON_SCHEMA": "\\axenox\\ETL\\Uxon\\ETLPrototypeSchema",
             "THUMBNAIL": ""
+        },
+        {
+            "CREATED_ON": "2023-12-18 08:54:15",
+            "MODIFIED_ON": "2023-12-18 08:58:05",
+            "CREATED_BY_USER": "0x31000000000000000000000000000000",
+            "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
+            "UID": "0x11ee9c6fa41963409c6f025041000001",
+            "APP": "0x11ebbc50679eacdabc50025041000001",
+            "NAME": "OpenAPI 3.0.3 document",
+            "DESCRIPTION": "Base template for an OpenAPI.json with a single route",
+            "PROTOTYPE": "",
+            "UXON": {
+                "openapi": "3.0.3",
+                "info": {
+                    "title": "",
+                    "description": "",
+                    "version": "1.0.0"
+                },
+                "servers": [
+                    {
+                        "url": ""
+                    }
+                ],
+                "tags": [
+                    {
+                        "name": "",
+                        "description": ""
+                    }
+                ],
+                "paths": {
+                    "\/\/ REPLACE with your\/route": {
+                        "get": {
+                            "tags": [
+                                ""
+                            ],
+                            "description": "",
+                            "operationId": "\/\/ e.g. yourroute (without the slashes)",
+                            "parameters": [],
+                            "responses": {
+                                "200": {
+                                    "description": "",
+                                    "content": {
+                                        "application\/json": {
+                                            "schema": {
+                                                "$ref": "\/\/ name of the schema - see $.components.schemas"
+                                            },
+                                            "examples": {
+                                                "standard": {
+                                                    "summary": ""
+                                                },
+                                                "#defaultResponse": {
+                                                    "summary": "",
+                                                    "value": {
+                                                        "": ""
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "components": {
+                    "schemas": {
+                        "": {
+                            "type": "object",
+                            "properties": {
+                                "": ""
+                            }
+                        }
+                    }
+                }
+            },
+            "WRAP_PATH": "",
+            "UXON_SCHEMA": "\\axenox\\ETL\\Uxon\\OpenAPISchema",
+            "THUMBNAIL": ""
+        },
+        {
+            "CREATED_ON": "2023-12-18 08:57:28",
+            "MODIFIED_ON": "2023-12-18 08:58:41",
+            "CREATED_BY_USER": "0x31000000000000000000000000000000",
+            "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
+            "UID": "0x11ee966217b77db49662025041000001",
+            "APP": "0x11ebbc50679eacdabc50025041000001",
+            "NAME": "Query parameter - date",
+            "DESCRIPTION": "",
+            "PROTOTYPE": "",
+            "UXON": {
+                "name": "",
+                "in": "query",
+                "description": "",
+                "required": true,
+                "schema": {
+                    "type": "string",
+                    "format": "date",
+                    "example": "2023-01-30"
+                }
+            },
+            "WRAP_PATH": "",
+            "UXON_SCHEMA": "\\axenox\\ETL\\Uxon\\OpenAPISchema",
+            "THUMBNAIL": ""
+        },
+        {
+            "CREATED_ON": "2023-12-18 08:58:34",
+            "MODIFIED_ON": "2023-12-18 08:58:52",
+            "CREATED_BY_USER": "0x31000000000000000000000000000000",
+            "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
+            "UID": "0x11eea6063e51b714a606025041000001",
+            "APP": "0x11ebbc50679eacdabc50025041000001",
+            "NAME": "Query parameter - number",
+            "DESCRIPTION": "",
+            "PROTOTYPE": "",
+            "UXON": {
+                "name": "",
+                "in": "query",
+                "description": "",
+                "required": true,
+                "schema": {
+                    "type": "number",
+                    "example": 1.5
+                }
+            },
+            "WRAP_PATH": "",
+            "UXON_SCHEMA": "\\axenox\\ETL\\Uxon\\OpenAPISchema",
+            "THUMBNAIL": ""
         }
     ],
     "totals_rows": [],
