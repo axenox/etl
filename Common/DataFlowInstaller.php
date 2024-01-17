@@ -36,9 +36,9 @@ class DataFlowInstaller extends AbstractAppInstaller
     public function __construct(SelectorInterface $selectorToInstall, InstallerContainerInterface $installerContainer)
     {
         $this->additionInstaller = (new MetaModelAdditionInstaller($selectorToInstall, $installerContainer, 'ETL'))
-            ->addDataToReplace('axenox.ETL.flow', 'MODIFIED_ON', 'app')
-            ->addDataToReplace('axenox.ETL.step', 'MODIFIED_ON', 'flow__app')
-            ->addDataToReplace('axenox.ETL.webservice_route', 'MODIFIED_ON', 'app');
+            ->addDataToReplace('axenox.ETL.flow', 'CREATED_ON', 'app')
+            ->addDataToReplace('axenox.ETL.step', 'CREATED_ON', 'flow__app')
+            ->addDataToReplace('axenox.ETL.webservice_route', 'CREATED_ON', 'app');
     }
     
     /**
