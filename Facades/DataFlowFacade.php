@@ -14,6 +14,7 @@ use exface\Core\Exceptions\InternalError;
 use exface\Core\Exceptions\Facades\FacadeRoutingError;
 use exface\Core\Facades\AbstractHttpFacade\AbstractHttpFacade;
 use exface\Core\Facades\AbstractHttpFacade\Middleware\AuthenticationMiddleware;
+use exface\Core\Facades\AbstractHttpFacade\Middleware\RouteConfigLoader;
 use exface\Core\Factories\ActionFactory;
 use exface\Core\Factories\DataSheetFactory;
 use exface\Core\Factories\MetaObjectFactory;
@@ -41,7 +42,7 @@ use exface\Core\DataTypes\DateDataType;
  */
 class DataFlowFacade extends AbstractHttpFacade
 {
-    private $serviceData = null;
+    const REQUEST_ATTRIBUTE_NAME_ROUTE = 'route';
 
     /**
      * {@inheritDoc}
@@ -296,30 +297,9 @@ class DataFlowFacade extends AbstractHttpFacade
      * @throws FacadeRoutingError
      * @return string[]
      */
-    protected function getRouteData(string $route) : array
+    protected function getRouteData(ServerRequestInterface $request) : ?array
     {
-        if ($this->serviceData === null) {
-            $ds = DataSheetFactory::createFromObjectIdOrAlias($this->getWorkbench(), 'axenox.ETL.webservice_route');
-            $ds->getColumns()->addMultiple([
-                'UID',
-                'flow',
-                'flow__alias',
-                'in_url',
-            	'type__schema_json',
-            	'type__default_response_path',
-            	'swagger_json'
-            ]);
-            $ds->dataRead();
-            $this->serviceData = $ds;
-        }
-
-        foreach ($this->serviceData->getRows() as $row) {
-            if ($row['in_url'] && StringDataType::startsWith($route, $row['in_url'])) {
-                return $row;
-            }
-        }
-
-        throw new FacadeRoutingError('No route configuration found for "' . $route . '"');
+        return $request->getAttribute(self::REQUEST_ATTRIBUTE_NAME_ROUTE)
     }
 
     /**
@@ -329,11 +309,24 @@ class DataFlowFacade extends AbstractHttpFacade
     protected function getMiddleware() : array
     {
         $middleware = parent::getMiddleware();
-        $middleware[] = new AuthenticationMiddleware(
+        
+        $ds = DataSheetFactory::createFromObjectIdOrAlias($this->getWorkbench(), 'axenox.ETL.webservice_route');
+        $ds->getColumns()->addMultiple([
+            'UID',
+            'flow',
+            'flow__alias',
+            'in_url',
+            'type__schema_json',
+            'type__default_response_path',
+            'swagger_json',
+            'config_uxon'
+        ]);
+        $ds->dataRead();
+        $middleware[] = new RouteConfigLoader(
             $this,
-            [
-                [AuthenticationMiddleware::class, 'extractBasicHttpAuthToken']
-            ]
+            $ds,
+            'in_url',
+            'config_uxon'
         );
 
         return $middleware;
