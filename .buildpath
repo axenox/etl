@@ -10,5 +10,7 @@
 	<buildpathentry external="true" kind="lib" path="C:/wamp/www/exface/exface/vendor/sabre"/>
 	<buildpathentry external="true" kind="lib" path="C:/wamp/www/exface/exface/vendor/galbar/jsonpath/src"/>
 	<buildpathentry external="true" kind="lib" path="C:/wamp/www/exface/exface/vendor/softcreatr/jsonpath/src"/>
+	<buildpathentry external="true" kind="lib" path="C:/wamp/www/exface/exface/vendor/league/openapi-psr7-validator/src"/>
+	<buildpathentry external="true" kind="lib" path="C:/wamp/www/exface/exface/vendor/devizzent/cebe-php-openapi/src"/>
 	<buildpathentry external="true" kind="lib" path="C:/wamp/www/exface/exface/vendor/justinrainbow/json-schema/src"/>
 </buildpath>

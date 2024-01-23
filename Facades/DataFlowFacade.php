@@ -32,6 +32,8 @@ use exface\Core\DataTypes\DateTimeDataType;
 use exface\Core\DataTypes\BooleanDataType;
 use exface\Core\DataTypes\BinaryDataType;
 use exface\Core\DataTypes\DateDataType;
+use axenox\ETL\Interfaces\OpenApiFacadeInterface;
+use axenox\ETL\Facades\Middleware\OpenApiValidationMiddleware;
 
 /**
  * 
@@ -39,9 +41,11 @@ use exface\Core\DataTypes\DateDataType;
  * @author Andrej Kabachnik
  * 
  */
-class DataFlowFacade extends AbstractHttpFacade
+class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterface
 {
     const REQUEST_ATTRIBUTE_NAME_ROUTE = 'route';
+    
+    private $swaggerCache = [];
 
     /**
      * {@inheritDoc}
@@ -74,7 +78,7 @@ class DataFlowFacade extends AbstractHttpFacade
             	case mb_stripos($path, '/openapi') !== false && $request->getMethod() === 'GET':
             		// building functional OpenApi
         		    $swaggerArray = json_decode($routeModel['swagger_json'], true);
-        		    $this->addServerPaths($path, $swaggerArray);                    
+        		    $swaggerArray = $this->addServerPaths($path, $swaggerArray);                    
         		    $this->autogenerateMetamodelSchemas($swaggerArray);                    
                     $swaggerJson = json_encode($swaggerArray, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
                     
@@ -134,20 +138,6 @@ class DataFlowFacade extends AbstractHttpFacade
         $requestLogData = $this->logRequestDone($requestLogData, $flowOutput, $response);
         return $response;
     }
-    
-	/**
-	 * @param string $path
-	 * @param array $swaggerArray
-	 */
-	 private function addServerPaths(string &$path, array &$swaggerArray)
-	 {
-	 	$basePath = $this->getUrlRouteDefault();
-	 	$webserviceBase = StringDataType::substringBefore($path, '/', '', true, true) . '/';
-	 	$basePath .= '/' . $webserviceBase;
-		foreach ($this->getWorkbench()->getConfig()->getOption('SERVER.BASE_URLS') as $baseUrl) {
-		    $swaggerArray['servers'][] = ['url' => $baseUrl . '/' . $basePath];
-		}
-	 }
 
 	/**
 	 * @param array $swaggerArray
@@ -321,6 +311,7 @@ class DataFlowFacade extends AbstractHttpFacade
             'config_uxon'
         ]);
         $ds->dataRead();
+        
         $middleware[] = new RouteConfigLoader(
             $this,
             $ds,
@@ -328,8 +319,53 @@ class DataFlowFacade extends AbstractHttpFacade
             'config_uxon',
             self::REQUEST_ATTRIBUTE_NAME_ROUTE
         );
+        
+        $middleware[] = new OpenApiValidationMiddleware(
+            $this,
+            [
+                '/.*swaggerui$/',
+                '/.*openapi\\.json$/'
+            ]
+        );
 
         return $middleware;
+    }
+    
+    public function getOpenApiJson(ServerRequestInterface $request): ?array
+    {
+        $path = $request->getUri()->getPath();
+        if (array_key_exists($path, $this->swaggerCache)) {
+            return $this->swaggerCache[$path];
+        }
+        $routeData = $request->getAttribute(self::REQUEST_ATTRIBUTE_NAME_ROUTE);
+        if (empty($routeData)) {
+            throw new FacadeRoutingError('No route data found in request!');
+        }
+        $json = $routeData['swagger_json'];
+        if ($json === null || $json === '') {
+            return null;
+        }
+        
+        $jsonArray = json_decode($json, true);
+        $jsonArray = $this->addServerPaths($path, $jsonArray);
+        $this->swaggerCache[$path] = $jsonArray;
+        return $jsonArray;
+    }
+    
+    /**
+     * @param string $path
+     * @param array $swaggerArray
+     * @return array
+     */
+    private function addServerPaths(string $path, array $swaggerArray) : array
+    {
+        $basePath = $this->getUrlRouteDefault();
+        $webserviceBase = StringDataType::substringBefore(StringDataType::substringAfter($path, $basePath, $path), '/', '', true, true) . '/';
+        $basePath .= '/' . ltrim($webserviceBase, "/");
+        foreach ($this->getWorkbench()->getConfig()->getOption('SERVER.BASE_URLS') as $baseUrl) {
+            $swaggerArray['servers'][] = ['url' => $baseUrl . $basePath];
+        }
+        return $swaggerArray;
     }
 
     /** Validating swagger json against the corresonding schema json from the route type.
