@@ -13,7 +13,6 @@ use exface\Core\DataTypes\StringDataType;
 use exface\Core\Exceptions\InternalError;
 use exface\Core\Exceptions\Facades\FacadeRoutingError;
 use exface\Core\Facades\AbstractHttpFacade\AbstractHttpFacade;
-use exface\Core\Facades\AbstractHttpFacade\Middleware\AuthenticationMiddleware;
 use exface\Core\Facades\AbstractHttpFacade\Middleware\RouteConfigLoader;
 use exface\Core\Factories\ActionFactory;
 use exface\Core\Factories\DataSheetFactory;
@@ -56,7 +55,7 @@ class DataFlowFacade extends AbstractHttpFacade
             $path = $request->getUri()->getPath();
             $path = StringDataType::substringAfter($path, $this->getUrlRouteDefault() . '/', '');
             $routePath = rtrim(strstr($path, '/'), '/');
-            $routeModel = $this->getRouteData($path);
+            $routeModel = $this->getRouteData($request);
             $requestLogData = $this->logRequestReceived($request);
 
             // validate webservice swagger
@@ -299,7 +298,7 @@ class DataFlowFacade extends AbstractHttpFacade
      */
     protected function getRouteData(ServerRequestInterface $request) : ?array
     {
-        return $request->getAttribute(self::REQUEST_ATTRIBUTE_NAME_ROUTE)
+        return $request->getAttribute(self::REQUEST_ATTRIBUTE_NAME_ROUTE, null);
     }
 
     /**
@@ -326,7 +325,8 @@ class DataFlowFacade extends AbstractHttpFacade
             $this,
             $ds,
             'in_url',
-            'config_uxon'
+            'config_uxon',
+            self::REQUEST_ATTRIBUTE_NAME_ROUTE
         );
 
         return $middleware;
