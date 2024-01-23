@@ -61,7 +61,7 @@
     "rows": [
         {
             "CREATED_ON": "2024-01-09 12:47:29",
-            "MODIFIED_ON": "2024-01-09 13:06:21",
+            "MODIFIED_ON": "2024-01-23 12:24:42",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
             "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
             "UID": "0x11eeb5b6dde235f4b5b6025041000001",
@@ -95,6 +95,7 @@
                                         {
                                             "widget_type": "DataTable",
                                             "object_alias": "axenox.ETL.step",
+                                            "multi_select": true,
                                             "filters": [
                                                 {
                                                     "attribute_alias": "flow",
