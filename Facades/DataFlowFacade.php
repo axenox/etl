@@ -460,6 +460,8 @@ class DataFlowFacade extends AbstractHttpFacade
                     url: '{$openapiUrl}',
                     dom_id: '#swagger-ui',
                     deepLinking: true,
+     				defaultModelsExpandDepth: 4,
+     				showExtensions: true,
                     presets: [
                         SwaggerUIBundle.presets.apis,
                         SwaggerUIStandalonePreset
@@ -467,10 +469,7 @@ class DataFlowFacade extends AbstractHttpFacade
                     plugins: [
                         SwaggerUIBundle.plugins.DownloadUrl
                     ],
-                    layout: 'StandaloneLayout',
-					onComplete: () => {
-					      document.querySelectorAll('#swagger-ui section.models button.model-box-control').forEach(btn => btn.click())
-					    }
+                    layout: 'StandaloneLayout'
                     });
 
                     //</editor-fold>
