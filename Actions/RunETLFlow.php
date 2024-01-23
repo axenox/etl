@@ -431,6 +431,7 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI, 
          */
         $explicitFollowers = [];
         
+        $disabledCompletely = true;
         foreach ($ds->getRows() as $row) {
             $toObj = MetaObjectFactory::createFromString($this->getWorkbench(), $row['to_object']);
             if ($row['from_object']) {
@@ -447,6 +448,9 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI, 
                 UxonObject::fromAnything($row['etl_config_uxon'] ?? [])
             );
             $step->setDisabled(BooleanDataType::cast($row['disabled']));
+            if (! $step->isDisabled()) {
+                $disabledCompletely = false;
+            }
             $stepsToPlan[$row['UID']] = $step;
             $stepsForObject[$toObj->getAliasWithNamespace()][$row['UID']] = $step;
             $flowUId = $row['flow'];
@@ -461,6 +465,10 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI, 
                 }
                 $explicitFollowers[$predecessorUid] = $row['UID'];
             }
+        }
+        
+        if ($disabledCompletely === true) {
+            return [];
         }
         
         $this->stepsLoaded = $stepsToPlan;
