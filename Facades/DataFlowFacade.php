@@ -72,7 +72,8 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
             switch(true){
                 case mb_stripos($path, '/swaggerui') !== false:
                     $content = $this->buildHtmlSwaggerUI('openapi.json');
-                    return new Response(200, $this->buildHeadersCommon(), $content);
+                    $headers = array_merge($headers, ['Content-Type' => 'application/json']);
+        		    return new Response(200, $headers, $content);
                     
             	// webservice maintenance requests
             	case mb_stripos($path, '/openapi') !== false && $request->getMethod() === 'GET':

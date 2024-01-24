@@ -2,7 +2,6 @@
 namespace axenox\ETL\Facades\Middleware;
 
 use League\OpenAPIValidation\PSR15\Exception\InvalidResponseMessage;
-use League\OpenAPIValidation\PSR15\Exception\InvalidServerRequestMessage;
 use League\OpenAPIValidation\PSR7\Exception\ValidationFailed;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -14,7 +13,14 @@ use cebe\openapi\spec\OpenApi;
 use League\OpenAPIValidation\PSR7\ValidatorBuilder;
 use cebe\openapi\ReferenceContext;
 use exface\Core\Exceptions\Facades\HttpBadRequestError;
+use League\OpenAPIValidation\Schema\Exception\SchemaMismatch;
 
+/**
+ * This middleware adds request and response validation to facades implementing OpenApiFacadeInterface
+ * 
+ * @author andrej.kabachnik
+ *
+ */
 final class OpenApiValidationMiddleware implements MiddlewareInterface
 {
     private $facade = null;
@@ -51,18 +57,10 @@ final class OpenApiValidationMiddleware implements MiddlewareInterface
         if ($swaggerArray === null) {
             return $handler->handle($request);
         }
-        /*
-        $spec = new OpenApi($swaggerArray);
-        # (optional) reference resolving
-        $spec->resolveReferences(new ReferenceContext($spec, "/"));
-        $schema = new Schema($spec->schema);
-        */
+        
         $schema = new OpenApi($swaggerArray);
         $schema->resolveReferences(new ReferenceContext($schema, "/"));
-        /*
-        if ($schema instanceof \cebe\openapi\DocumentContextInterface) {
-            $schema->setDocumentContext($schema, new \cebe\openapi\json\JsonPointer(''));
-        }*/
+        
         $builder = (new ValidatorBuilder())->fromSchema($schema);
         $requestValidator = $builder->getRequestValidator();
         
@@ -70,9 +68,16 @@ final class OpenApiValidationMiddleware implements MiddlewareInterface
         try {
             $matchedOASOperation = $requestValidator->validate($request);
         } catch (ValidationFailed $e) {
-            $msg = 'Request validation failed in `$.' . implode('.', $e->getPrevious()->dataBreadCrumb()->buildChain()) . '`. ' .$e->getPrevious()->getMessage();
+            $prev = $e->getPrevious();
+            if ($prev) {
+                $msg = $prev->getMessage();
+                if ($prev instanceof SchemaMismatch) {
+                    $msg = 'Request validation failed in `$.' . implode('.', $prev->dataBreadCrumb()->buildChain()) . '`. ' . $msg;
+                }
+            } else {
+                $msg = $e->getMessage();
+            }
             throw new HttpBadRequestError($request, $msg, null, $e);
-            // throw InvalidServerRequestMessage::because($e);
         }
         
         // 2. Process request
@@ -82,6 +87,7 @@ final class OpenApiValidationMiddleware implements MiddlewareInterface
         $responseValidator = $builder->getResponseValidator();
         if ($response->getStatusCode() >= 200 && $response->getStatusCode() < 300) {
             try {
+                // TODO currently seems not po pass content-type validation for application/json
                 // $responseValidator->validate($matchedOASOperation, $response);
             } catch (ValidationFailed $e) {
                 throw InvalidResponseMessage::because($e);
