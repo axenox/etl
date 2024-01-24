@@ -1,0 +1,11 @@
+{
+	"FACADE.HEADERS.COMMON": {
+		"Access-Control-Allow-Origin": "",
+		"Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+		"Access-Control-Allow-Headers": "",
+		"Access-Control-Expose-Headers": "",
+		"Cache-Control": "no-cache, no-store, must-revalidate",
+        "Pragma": "no-cache",
+        "Expires": 0
+	}
+}

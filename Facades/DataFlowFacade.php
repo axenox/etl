@@ -574,4 +574,16 @@ HTML;
 
 		return $jsonSchema;
     }
+    
+    /**
+     * 
+     * {@inheritDoc}
+     * @see \exface\Core\Facades\AbstractHttpFacade\AbstractHttpFacade::buildHeadersCommon()
+     */
+    protected function buildHeadersCommon() : array
+    {
+        $facadeHeaders = array_filter($this->getConfig()->getOption('FACADE.HEADERS.COMMON')->toArray());
+        $commonHeaders = parent::buildHeadersCommon();
+        return array_merge($commonHeaders, $facadeHeaders);
+    }
 }
