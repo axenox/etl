@@ -1,6 +1,7 @@
 <?php
 namespace axenox\ETL\Facades\Middleware;
 
+use exface\Core\Exceptions\DataTypes\JsonSchemaValidationError;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
@@ -46,7 +47,7 @@ final class OpenApiMiddleware implements MiddlewareInterface
         	return $handler->handle($request);
         }
         
-        $openApiJson = $this->facade->getOpenApiJson($request);
+        $openApiJson = $this->facade->getOpenApiJson($request);	    
         if ($openApiJson === null) {
             return $handler->handle($request);
         }

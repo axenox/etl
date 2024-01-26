@@ -26,6 +26,7 @@ use axenox\ETL\Facades\Middleware\OpenApiMiddleware;
 use axenox\ETL\Facades\Middleware\SwaggerUiMiddleware;
 use axenox\ETL\Facades\Helper\JsonPathDataSelector;
 use Flow\JSONPath\JSONPath;
+use exface\Core\Exceptions\DataTypes\JsonSchemaValidationError;
 
 /**
  * 
@@ -313,6 +314,17 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 			->isAnonymous()) {
 			return new Response($code, $headers);
 		}
+		
+		if ($exception instanceof JsonSchemaValidationError) {			
+			$headers['Content-Type'] = 'application/json';
+			$errors = ['Invalid Swagger' => []];
+			foreach ($exception->getErrors() as $error) {
+				array_push($errors['Invalid Swagger'], 
+					array('source' => $error['property'], 'message' => $error['message']));
+			}
+			
+			return new Response(400, $headers, json_encode($errors));
+		}
 
 		$headers['Content-Type'] = 'application/json';
 		$errorData = json_encode(['Error' => [
@@ -367,6 +379,7 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 			return null;
 		}
 		
+		JsonDataType::validateJsonSchema($json, $routeData['type__schema_json']);		
 		$jsonArray = json_decode($json, true);
 		$jsonArray = $this->addServerPaths($path, $jsonArray);
 		$this->openApiCache[$path] = $jsonArray;
