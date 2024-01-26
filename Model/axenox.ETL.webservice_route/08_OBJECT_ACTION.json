@@ -61,7 +61,7 @@
     "rows": [
         {
             "CREATED_ON": "2024-01-09 12:47:29",
-            "MODIFIED_ON": "2024-01-23 12:24:42",
+            "MODIFIED_ON": "2024-01-26 14:47:26",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
             "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
             "UID": "0x11eeb5b6dde235f4b5b6025041000001",
@@ -84,6 +84,10 @@
                             "widget_type": "InputHidden",
                             "attribute_alias": "flow",
                             "id": "flow_uid_field"
+                        },
+                        {
+                            "widget_type": "InputHidden",
+                            "attribute_alias": "UID"
                         },
                         {
                             "widget_type": "SplitHorizontal",
@@ -185,10 +189,28 @@
                                     "widgets": [
                                         {
                                             "widget_type": "Browser",
+                                            "id": "swaggerui",
                                             "value": "=Concatenate(WorkbenchUrl(), 'api\/dataflow\/', in_url, '\/swaggerui')"
                                         }
                                     ]
                                 }
+                            ]
+                        }
+                    ],
+                    "buttons": [
+                        {
+                            "action_alias": "axenox.ETL.WebserviceEditOpenAPIDialog",
+                            "close_dialog": false,
+                            "refresh_widget_ids": [
+                                "swaggerui"
+                            ]
+                        },
+                        {
+                            "action_alias": "exface.Core.ShowObjectEditDialog",
+                            "caption": "Edit flow",
+                            "close_dialog": false,
+                            "refresh_widget_ids": [
+                                "swaggerui"
                             ]
                         }
                     ]
@@ -220,6 +242,77 @@
                         {
                             "widget_type": "Browser",
                             "value": "=Concatenate(WorkbenchUrl(), 'api\/dataflow\/', in_url, '\/swaggerui')"
+                        }
+                    ]
+                }
+            },
+            "APP": "0x11ebbc50679eacdabc50025041000001",
+            "USE_IN_OBJECT_BASKET_FLAG": 0,
+            "DOCS": ""
+        },
+        {
+            "CREATED_ON": "2024-01-26 12:42:18",
+            "MODIFIED_ON": "2024-01-26 12:49:53",
+            "CREATED_BY_USER": "0x31000000000000000000000000000000",
+            "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
+            "UID": "0x11eea9d6f67e1322a9d6025041000001",
+            "OBJECT": "0x11eebdc39597022cbdc3025041000001",
+            "ACTION_PROTOTYPE": "exface\/Core\/Actions\/ShowDialog.php",
+            "ALIAS": "WebserviceEditOpenAPIDialog",
+            "NAME": "Edit OpenAPI definition",
+            "SHORT_DESCRIPTION": "",
+            "CONFIG_UXON": {
+                "input_rows_min": 1,
+                "input_rows_max": 1,
+                "input_object_alias": "axenox.ETL.webservice_route",
+                "icon": "pencil-square",
+                "dialog": {
+                    "widgets": [
+                        {
+                            "attribute_alias": "flow",
+                            "widget_type": "InputHidden",
+                            "id": "flow_field"
+                        },
+                        {
+                            "widget_type": "InputUxon",
+                            "height": "100%",
+                            "hide_caption": true,
+                            "attribute_alias": "swagger_json",
+                            "schema": "\\axenox\\ETL\\Uxon\\OpenAPISchema"
+                        }
+                    ],
+                    "widget_type": "Dialog",
+                    "buttons": [
+                        {
+                            "caption": "Edit flow",
+                            "close_dialog": false,
+                            "action": {
+                                "alias": "exface.Core.ShowObjectEditDialog",
+                                "object_alias": "axenox.ETL.flow",
+                                "input_mapper": {
+                                    "column_to_column_mappings": [
+                                        {
+                                            "from": "flow",
+                                            "to": "UID"
+                                        }
+                                    ]
+                                }
+                            },
+                            "disabled_if": {
+                                "operator": "AND",
+                                "conditions": [
+                                    {
+                                        "value_left": "=flow_field!UID",
+                                        "comparator": "==",
+                                        "value_right": ""
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "action_alias": "exface.Core.UpdateData",
+                            "visibility": "promoted",
+                            "align": "opposite"
                         }
                     ]
                 }
