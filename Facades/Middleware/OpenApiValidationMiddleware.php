@@ -71,8 +71,12 @@ final class OpenApiValidationMiddleware implements MiddlewareInterface
             $prev = $e->getPrevious();
             if ($prev) {
                 $msg = $prev->getMessage();
-                if ($prev instanceof SchemaMismatch) {
-                    $msg = 'Request validation failed in `$.' . implode('.', $prev->dataBreadCrumb()->buildChain()) . '`. ' . $msg;
+                if ($prev instanceof SchemaMismatch) {                	
+                	if ($prev->dataBreadCrumb()->buildChain()[0] !== null){
+                		$source = ' in `$.' . implode('.', $prev->dataBreadCrumb()->buildChain()) . '`';
+                	}
+                		
+                	$msg = 'Request validation failed' . $source . '. ' . $msg;
                 }
             } else {
                 $msg = $e->getMessage();
