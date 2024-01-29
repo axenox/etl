@@ -12,6 +12,7 @@ use exface\Core\DataTypes\JsonDataType;
 use exface\Core\DataTypes\StringDataType;
 use exface\Core\Exceptions\InternalError;
 use exface\Core\Exceptions\Facades\FacadeRoutingError;
+use exface\Core\Exceptions\DataTypes\JsonSchemaValidationError;
 use exface\Core\Facades\AbstractHttpFacade\AbstractHttpFacade;
 use exface\Core\Facades\AbstractHttpFacade\Middleware\RouteConfigLoader;
 use exface\Core\Factories\ActionFactory;
@@ -21,12 +22,9 @@ use exface\Core\Interfaces\Exceptions\ExceptionInterface;
 use exface\Core\Interfaces\Tasks\ResultInterface;
 use axenox\ETL\Interfaces\OpenApiFacadeInterface;
 use axenox\ETL\Facades\Middleware\OpenApiValidationMiddleware;
-use axenox\ETL\Facades\Helper\JsonSchemaValidator;
 use axenox\ETL\Facades\Middleware\OpenApiMiddleware;
 use axenox\ETL\Facades\Middleware\SwaggerUiMiddleware;
-use axenox\ETL\Facades\Helper\JsonPathDataSelector;
 use Flow\JSONPath\JSONPath;
-use exface\Core\Exceptions\DataTypes\JsonSchemaValidationError;
 
 /**
  * 
@@ -56,12 +54,6 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 			$routePath = rtrim(strstr($path, '/'), '/');
 			$routeModel = $this->getRouteData($request);
 			$requestLogData = $this->logRequestReceived($request);
-
-			// validate webservice swagger
-			$response = (new JsonSchemaValidator($this))->getSwaggerValidatorResponse($routeModel, $requestLogData, $headers);
-			if ($response !== null) {
-				return $response;
-			}
 
 			// process flow
 			$routeUID = $routeModel['UID'];
