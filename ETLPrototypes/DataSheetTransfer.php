@@ -39,17 +39,19 @@ use axenox\ETL\Interfaces\ETLStepDataInterface;
  * for incremental reads.
  * 
  * It is possible to add parameter placeholder that are expected from the request for this step.
- * [~parameter:parameter_name]
+ * `[~parameter:parameter_name]` - replace `parameter_name` with your parameter.
  * 
  * For example if the request for the dataflow is expected to give a value for a `AenderungenAb` date within it's query [webservice.url?queryParameter=2024-01-02]
  * then it can be used within every step of that dataflow using the parameter configuration:
  * 
- * `"conditions": [[
+ * ```
+ * "conditions": [[
  * {
  *	  "expression": "FlurstueckFortschritt__LetzteFortschrittsAenderung",
    	  "comparator": ">=",
  * 	  "value": "[#~parameter:AenderungenAb#]"
- * }]`
+ * }]
+ * ```
  * 
  * @author andrej.kabachnik
  *
