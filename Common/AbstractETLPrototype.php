@@ -7,6 +7,7 @@ use exface\Core\CommonLogic\Traits\ImportUxonObjectTrait;
 use axenox\ETL\Interfaces\ETLStepInterface;
 use exface\Core\Interfaces\Model\MetaObjectInterface;
 use axenox\ETL\Interfaces\ETLStepResultInterface;
+use axenox\ETL\Interfaces\ETLStepDataInterface;
 
 abstract class AbstractETLPrototype implements ETLStepInterface
 {
@@ -223,13 +224,15 @@ abstract class AbstractETLPrototype implements ETLStepInterface
      * @param ETLStepResultInterface $lastResult
      * @return string[]
      */
-    protected function getPlaceholders(string $flowRunUid, string $stepRunUid, ETLStepResultInterface $lastResult = null) : array
+    protected function getPlaceholders(ETLStepDataInterface $stepData) : array
     {
+    	// map identifier to placeholders
         $phs = [
-            'flow_run_uid' => $flowRunUid,
-            'step_run_uid' => $stepRunUid
+        	'flow_run_uid' => $stepData->getFlowRunUid(),
+        	'step_run_uid' => $stepData->getStepRunUid()
         ];
         
+        $lastResult = $stepData->getLastResult();
         if ($lastResult === null) {
             $lastResult = static::parseResult('');
         }
@@ -241,6 +244,11 @@ abstract class AbstractETLPrototype implements ETLStepInterface
             }
         }
         
+        // map query parameter to placeholders
+        $task = $stepData->getTask();
+        foreach ($task->getParameters() as $name => $value) {
+        	$phs['~parameter:' . $name] = $value;
+        }
         return $phs;
     }
 }

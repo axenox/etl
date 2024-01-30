@@ -20,6 +20,7 @@ use exface\Core\Factories\DataSheetFactory;
 use exface\Core\CommonLogic\DataSheets\DataColumn;
 use exface\Core\DataTypes\LogLevelDataType;
 use exface\Core\Interfaces\Log\LoggerInterface;
+use axenox\ETL\Interfaces\ETLStepDataInterface;
 
 /**
  * Runs one or more SQL SELECTs to check for issues in the data, producing errors if the SELECTs return at least one row.
@@ -115,28 +116,35 @@ class SQLDataChecker extends AbstractETLPrototype
      * {@inheritDoc}
      * @see \axenox\ETL\Interfaces\ETLStepInterface::run()
      */
-    public function run(string $flowRunUid, string $stepRunUid, ETLStepResultInterface $previousStepResult = null, ETLStepResultInterface $lastResult = null) : \Generator
+    public function run(ETLStepDataInterface $stepData) : \Generator
     {
         $connection = $this->getSqlConnection();
-        $result = new IncrementalEtlStepResult($stepRunUid);
+        $result = new IncrementalEtlStepResult($stepData->getStepRunUid());
         $hitChecks = [];
         
-        $phs = $this->getPlaceholders($flowRunUid, $stepRunUid, $lastResult);
+        $phs = $this->getPlaceholders($stepData);
         
         // Handle incremental logic
         if ($this->isIncremental()) {
             if (! array_key_exists('last_run_increment_value', $phs)) {
                 $phs['last_run_increment_value'] = '';
             }
+            
             $incrSql = $this->getSqlToGetCurrentIncrementValue();
             if ($incrSql === null || $incrSql === '') {
-                throw new RuntimeException('Cannot get current increment value for ETL step "' . $this->getName() . '": please specify `sql_to_get_current_increment_value` in the steps configuration!');
+                throw new RuntimeException('Cannot get current increment value for ETL step "' 
+                	. $this->getName() 
+                	. '": please specify `sql_to_get_current_increment_value` in the steps configuration!');
             }
+            
             $incrSql = StringDataType::replacePlaceholders($incrSql, $phs);
             $incrRow = $connection->runSql($incrSql)->getResultArray()[0] ?? null;
             if (! is_array($incrRow) || count($incrRow) !== 1) {
-                throw new RuntimeException('Cannot get current increment value for ETL step"' . $this->getName() . '": the SQL to get the value does not return a single value!');
+                throw new RuntimeException('Cannot get current increment value for ETL step"' 
+                	. $this->getName() 
+                	. '": the SQL to get the value does not return a single value!');
             }
+            
             $currentIncrement = reset($incrRow);
             $phs['current_increment_value'] = $currentIncrement;
             $result->setIncrementValue($currentIncrement);
@@ -224,7 +232,9 @@ class SQLDataChecker extends AbstractETLPrototype
         
         if ($stop === true) {
             $translator = $this->getWorkbench()->getApp('axenox.ETL')->getTranslator();
-            $e = new DataQueryFailedError($this->getCombinedQuery(), $translator->translate('SQLDATACHECKER.ERRORS_IN_DATA') . ' ' . implode('; ', $messages), '7O4OM8F');
+            $e = new DataQueryFailedError(
+            	$this->getCombinedQuery(), 
+            	$translator->translate('SQLDATACHECKER.ERRORS_IN_DATA') . ' ' . implode('; ', $messages), '7O4OM8F');
             $e->setLogLevel($logLevel ?? LoggerInterface::CRITICAL);
             throw $e;
         }

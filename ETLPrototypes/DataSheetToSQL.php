@@ -20,6 +20,7 @@ use exface\Core\Widgets\DebugMessage;
 use axenox\ETL\Events\Flow\OnBeforeETLStepRun;
 use exface\Core\Exceptions\UxonParserError;
 use exface\Core\DataTypes\PhpClassDataType;
+use axenox\ETL\Interfaces\ETLStepDataInterface;
 
 /**
  * Reads a data sheet from the from-object and generates an SQL query from its rows.
@@ -104,22 +105,26 @@ class DataSheetToSQL extends AbstractETLPrototype
      * {@inheritDoc}
      * @see \axenox\ETL\Interfaces\ETLStepInterface::run()
      */
-    public function run(string $flowRunUid, string $stepRunUid, ETLStepResultInterface $previousStepResult = null, ETLStepResultInterface $lastResult = null) : \Generator
+    public function run(ETLStepDataInterface $stepData) : \Generator
     {
-        $baseSheet = $this->getFromDataSheet($this->getPlaceholders($flowRunUid, $stepRunUid, $lastResult));
-        $result = new IncrementalEtlStepResult($stepRunUid);
+    	$baseSheet = $this->getFromDataSheet($this->getPlaceholders($stepData));
+    	$result = new IncrementalEtlStepResult($stepData->getStepRunUid());
         
         if ($limit = $this->getPageSize()) {
             $baseSheet->setRowsLimit($limit);
         }
         $baseSheet->setAutoCount(false);
         
+        $lastResult = $stepData->getLastResult();
         if ($this->isIncrementalByTime()) {
             if ($lastResult instanceof IncrementalEtlStepResult) {
                 $lastResultIncrement = $lastResult->getIncrementValue();
             }
             if ($lastResultIncrement !== null && $this->getIncrementalTimeAttributeAlias() !== null) {
-                $baseSheet->getFilters()->addConditionFromAttribute($this->getIncrementalTimeAttribute(), $lastResultIncrement, ComparatorDataType::GREATER_THAN_OR_EQUALS);
+                $baseSheet->getFilters()->addConditionFromAttribute(
+                	$this->getIncrementalTimeAttribute(), 
+                	$lastResultIncrement, 
+                	ComparatorDataType::GREATER_THAN_OR_EQUALS);
             }
             $result->setIncrementValue(DateTimeDataType::formatDateNormalized($this->getIncrementalTimeCurrentValue()));
         }
@@ -166,7 +171,7 @@ class DataSheetToSQL extends AbstractETLPrototype
                     // only if all SQLs succeed.
                     $sqlRunner->setWrapInTransaction(false);
                     $processedCnt += $maxSqlRows;
-                    yield from $sqlRunner->run($flowRunUid, $stepRunUid, $previousStepResult, $lastResultForSqlRunner);
+                    yield from $sqlRunner->run($stepData);
                 }
             }
             
