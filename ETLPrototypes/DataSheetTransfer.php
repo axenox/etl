@@ -20,6 +20,7 @@ use exface\Core\Widgets\DebugMessage;
 use axenox\ETL\Events\Flow\OnBeforeETLStepRun;
 use exface\Core\Exceptions\UxonParserError;
 use exface\Core\DataTypes\PhpClassDataType;
+use axenox\ETL\Interfaces\ETLStepDataInterface;
 
 /**
  * Reads a data sheet from the from-object and maps it to the to-object similarly to an actions `input_mapper`.
@@ -36,6 +37,19 @@ use exface\Core\DataTypes\PhpClassDataType;
  * match the read item instead of creating a new one.
  * - `incremental_time_attribute`, `incremental_time_offset_minutes` - allows to use the current time
  * for incremental reads.
+ * 
+ * It is possible to add parameter placeholder that are expected from the request for this step.
+ * [~parameter:parameter_name]
+ * 
+ * For example if the request for the dataflow is expected to give a value for a `AenderungenAb` date within it's query [webservice.url?queryParameter=2024-01-02]
+ * then it can be used within every step of that dataflow using the parameter configuration:
+ * 
+ * `"conditions": [[
+ * {
+ *	  "expression": "FlurstueckFortschritt__LetzteFortschrittsAenderung",
+   	  "comparator": ">=",
+ * 	  "value": "[#~parameter:AenderungenAb#]"
+ * }]`
  * 
  * @author andrej.kabachnik
  *
@@ -61,12 +75,13 @@ class DataSheetTransfer extends AbstractETLPrototype
      * {@inheritDoc}
      * @see \axenox\ETL\Interfaces\ETLStepInterface::run()
      */
-    public function run(string $flowRunUid, string $stepRunUid, ETLStepResultInterface $previousStepResult = null, ETLStepResultInterface $lastResult = null) : \Generator
+    public function run(ETLStepDataInterface $stepData) : \Generator
     {
-    	$placeholders = $this->getPlaceholders($flowRunUid, $stepRunUid, $lastResult);
+    	$stepRunUid = $stepData->getStepRunUid();    	
+    	$placeholders = $this->getPlaceholders($stepData);
     	$baseSheet = $this->getFromDataSheet($placeholders);
     	$mapper = $this->getMapper($placeholders);
-        $result = new IncrementalEtlStepResult($stepRunUid);
+    	$result = new IncrementalEtlStepResult($stepRunUid);
         
         if ($this->isUpdateIfMatchingAttributes()) {
             $this->addDuplicatePreventingBehavior($this->getToObject());
@@ -77,12 +92,16 @@ class DataSheetTransfer extends AbstractETLPrototype
         }
         $baseSheet->setAutoCount(false);
         
+        $lastResult = $stepData->getLastResult();
         if ($this->isIncrementalByTime()) {
             if ($lastResult instanceof IncrementalEtlStepResult) {
                 $lastResultIncrement = $lastResult->getIncrementValue();
             }
             if ($lastResultIncrement !== null && $this->getIncrementalTimeAttributeAlias() !== null) {
-                $baseSheet->getFilters()->addConditionFromAttribute($this->getIncrementalTimeAttribute(), $lastResultIncrement, ComparatorDataType::GREATER_THAN_OR_EQUALS);
+                $baseSheet->getFilters()->addConditionFromAttribute(
+                	$this->getIncrementalTimeAttribute(), 
+                	$lastResultIncrement, 
+                	ComparatorDataType::GREATER_THAN_OR_EQUALS);
             }
             $result->setIncrementValue(DateTimeDataType::formatDateNormalized($this->getIncrementalTimeCurrentValue()));
         }
@@ -116,7 +135,7 @@ class DataSheetTransfer extends AbstractETLPrototype
                     if (null !== $this->getFlowRunUidAttributeAlias()) {
                         $toSheet->getColumns()
                             ->addFromAttribute($this->getToObject()->getAttribute($this->getFlowRunUidAttributeAlias()))
-                            ->setValueOnAllRows($flowRunUid);
+                            ->setValueOnAllRows($stepData->getFlowRunUid());
                     }
                     $toSheet->dataCreate(false, $transaction);
                 }
