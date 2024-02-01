@@ -13,9 +13,9 @@ interface ETLStepDataInterface
 	
 	public function getStepRunUid() : string;
 	
-	public function getPreviousResult( ): ETLStepResultInterface;
+	public function getPreviousResult( ): ?ETLStepResultInterface;
 	
-	public function getLastResult() : ETLStepResultInterface;
+	public function getLastResult() : ?ETLStepResultInterface;
 	
 	public function getTask() : TaskInterface;	
 }

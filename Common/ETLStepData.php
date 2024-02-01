@@ -41,12 +41,12 @@ class ETLStepData implements ETLStepDataInterface
 		return $this->stepRunUid;
 	}
 	
-	public function getPreviousResult( ): ETLStepResultInterface
+	public function getPreviousResult( ): ?ETLStepResultInterface
 	{
 		return $this->previousStepResult;
 	}
 	
-	public function getLastResult() : ETLStepResultInterface
+	public function getLastResult() : ?ETLStepResultInterface
 	{
 		return $this->lastResult;
 	}

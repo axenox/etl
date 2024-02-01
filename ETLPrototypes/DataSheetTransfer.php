@@ -21,6 +21,7 @@ use axenox\ETL\Events\Flow\OnBeforeETLStepRun;
 use exface\Core\Exceptions\UxonParserError;
 use exface\Core\DataTypes\PhpClassDataType;
 use axenox\ETL\Interfaces\ETLStepDataInterface;
+use exface\Core\DataTypes\IntegerDataType;
 
 /**
  * Reads a data sheet from the from-object and maps it to the to-object similarly to an actions `input_mapper`.
@@ -39,7 +40,7 @@ use axenox\ETL\Interfaces\ETLStepDataInterface;
  * for incremental reads.
  * 
  * It is possible to add parameter placeholder that are expected from the request for this step.
- * `[~parameter:parameter_name]` - replace `parameter_name` with your parameter.
+ * `[~parameter:parameter_name]` - replace `parameter_name` with your parameter. 
  * 
  * For example if the request for the dataflow is expected to give a value for a `AenderungenAb` date within it's query [webservice.url?queryParameter=2024-01-02]
  * then it can be used within every step of that dataflow using the parameter configuration:
@@ -52,6 +53,7 @@ use axenox\ETL\Interfaces\ETLStepDataInterface;
  * 	  "value": "[#~parameter:AenderungenAb#]"
  * }]
  * ```
+ * 
  * 
  * @author andrej.kabachnik
  *
@@ -66,6 +68,8 @@ class DataSheetTransfer extends AbstractETLPrototype
     
     private $pageSize = null;
     
+    private $offset = 0;
+    
     private $incrementalTimeAttributeAlias = null;
     
     private $incrementalTimeOffsetMinutes = 0;
@@ -79,7 +83,7 @@ class DataSheetTransfer extends AbstractETLPrototype
      */
     public function run(ETLStepDataInterface $stepData) : \Generator
     {
-    	$stepRunUid = $stepData->getStepRunUid();    	
+    	$stepRunUid = $stepData->getStepRunUid();
     	$placeholders = $this->getPlaceholders($stepData);
     	$baseSheet = $this->getFromDataSheet($placeholders);
     	$mapper = $this->getMapper($placeholders);
@@ -89,7 +93,7 @@ class DataSheetTransfer extends AbstractETLPrototype
             $this->addDuplicatePreventingBehavior($this->getToObject());
         }
         
-        if ($limit = $this->getPageSize()) {
+        if ($limit = $this->getPageSize($placeholders)) {
             $baseSheet->setRowsLimit($limit);
         }
         $baseSheet->setAutoCount(false);
@@ -116,7 +120,7 @@ class DataSheetTransfer extends AbstractETLPrototype
         
         $cntFrom = 0;
         $cntTo = 0;
-        $offset = 0;
+        $offset = $this->getOffset($placeholders);
         try {
             do {
                 $fromSheet = $baseSheet->copy();
@@ -304,27 +308,52 @@ class DataSheetTransfer extends AbstractETLPrototype
         return $this;
     }
     
-    protected function getPageSize() : ?int
+    protected function getPageSize($placeholders) : ?int
     {
-        return $this->pageSize;
+    	$value = StringDataType::replacePlaceholders($this->pageSize, $placeholders);
+    	return IntegerDataType::cast($value);
     }
     
     /**
-     * Number of rows to process at once - no limit if set to NULL.
+     * Number of rows to process at once - no limit if set to NULL. Can also be a placeholder.
      * 
      * The step will make as many requests to the from-objects data source as needed to read
      * all data by reading `page_size` rows at a time.
      * 
      * @uxon-property page_size
-     * @uxon-type integers
+     * @uxon-type string
      * 
-     * @param int $numberOfRows
+     * @param string $numberOfRows
      * @return DataSheetTransfer
      */
-    protected function setPageSize(int $numberOfRows) : DataSheetTransfer
+    protected function setPageSize(string $numberOfRows) : DataSheetTransfer
     {
         $this->pageSize = $numberOfRows;
         return $this;
+    }
+    
+    
+    protected function getOffset($placeholders) : int
+    {    	
+    	$value = StringDataType::replacePlaceholders($this->offset, $placeholders);
+    	return IntegerDataType::cast($value);
+    }   
+    
+    /**
+     * Offset from which the data is requested. Can also be a placeholder.
+     * 
+     * This should only be used when limiting `page_size` for accessing the next set of data.
+     * 
+     * @uxon-property data_offset
+     * @uxon-type string
+     * 
+     * @param int $offset
+     * @return DataSheetTransfer
+     */
+    protected function setOffset(string $offset) : DataSheetTransfer
+    {
+    	$this->offset = $offset;
+    	return $this;
     }
     
     /**
