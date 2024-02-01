@@ -10,11 +10,11 @@
     "replaces_page_selector": null,
     "created_by_user_selector": "0x31000000000000000000000000000000",
     "created_on": "2023-10-18 16:18:11",
-    "modified_by_user_selector": "0x31000000000000000000000000000000",
-    "modified_on": "2024-01-26 12:44:06",
+    "modified_by_user_selector": "0x11e8fe1c902c8ebea23ee4b318306b9a",
+    "modified_on": "2024-02-01 10:24:38",
     "contents": {
         "widget_type": "SplitVertical",
-        "object_alias": "axenox.ETL.webservice_route",
+        "object_alias": "axenox.ETL.webservice",
         "panels": [
             {
                 "height": "50%",
@@ -30,10 +30,10 @@
                                 "attribute_alias": "app"
                             },
                             {
-                                "attribute_alias": "in_url"
+                                "attribute_alias": "local_url"
                             },
                             {
-                                "attribute_alias": "out_connection"
+                                "attribute_alias": "remote_connection"
                             }
                         ],
                         "columns": [
@@ -47,13 +47,16 @@
                                 "attribute_alias": "type__LABEL"
                             },
                             {
-                                "attribute_alias": "direction"
+                                "attribute_alias": "request_direction"
                             },
                             {
-                                "attribute_alias": "in_url"
+                                "attribute_alias": "flow_direction"
                             },
                             {
-                                "attribute_alias": "out_connection__LABEL"
+                                "attribute_alias": "local_url"
+                            },
+                            {
+                                "attribute_alias": "remote_connection__LABEL"
                             },
                             {
                                 "attribute_alias": "app__ALIAS"
@@ -62,7 +65,7 @@
                                 "attribute_alias": "alias"
                             },
                             {
-                                "calculation": "=Concatenate(WorkbenchUrl(), 'api\/dataflow\/', in_url)"
+                                "calculation": "=Concatenate(WorkbenchUrl(), 'api\/dataflow\/', local_url)"
                             }
                         ],
                         "sorters": [
