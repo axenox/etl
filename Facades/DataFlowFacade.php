@@ -64,9 +64,10 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 			$flowOutput = $flowResult->getMessage();
 	
 			// get changes by flow
-			$this->reloadRequestData($requestLogData);	
+			$this->reloadRequestData($requestLogData);
+				
 			if ($requestLogData->countRows() == 1) {
-				$body = $this->createRequestResponse($requestLogData, $request, $headers,$routeModel, $routePath);			
+				$body = $this->createRequestResponseBody($requestLogData, $request, $headers,$routeModel, $routePath);	
 				$response = new Response(200, $headers, $body);
 			}
 			
@@ -207,34 +208,35 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 	 * @param array $routeModel
 	 * @param array $routePath
 	 */
-	private function createRequestResponse(
+	private function createRequestResponseBody(
 		DataSheetInterface $requestLogData,
 		ServerRequestInterface $request,
 		array &$headers,
 		array $routeModel,
-		string $routePath)
+		string $routePath) : string
 	{
-		if (empty($requestLogData->getRow()['response_body'])) {
-			$methodType = strtolower($request->getMethod());
-			$jsonPath = $routeModel['type__default_response_path'];
-			if ($jsonPath !== null) {
-				$defaultResponse = $this->createEmptyResponseBodyFromSwaggerJson(
-					$routePath,
-					$methodType,
-					$jsonPath,
-					$routeModel['swagger_json']);
-				
-				if ($defaultResponse !== 'null' && $defaultResponse !== ''){
-					$headers['Content-Type'] = 'application/json';
-					$body = $defaultResponse;
-				}
-			}
-		} else {
-			$headers['Content-Type'] = 'application/json';
-			$body = $requestLogData->getRow()['response_body'];
+		$flowResponse = json_decode($requestLogData->getRow()['response_body'], true);
+		
+		// load response model from swagger
+		$methodType = strtolower($request->getMethod());
+		$jsonPath = $routeModel['type__default_response_path'];
+		if ($jsonPath !== null) {
+			$responseModel = $this->readDataFromSwaggerJson(
+				$routePath,
+				$methodType,
+				$jsonPath,
+				$routeModel['swagger_json']);
+			
 		}
 		
-		return $body;
+		// set header
+		if ($responseModel !== null && empty($responseModel) === false && $flowResponse != null){
+				$headers['Content-Type'] = 'application/json';
+		}
+		
+		// merge flow response into model
+		$body = array_merge($responseModel, $flowResponse);		
+		return json_encode($body);
 	}
 
 	/**
@@ -275,15 +277,15 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 	 */
 	protected function getMiddleware(): array
 	{
-		$ds = DataSheetFactory::createFromObjectIdOrAlias($this->getWorkbench(), 'axenox.ETL.webservice_route');
+		$ds = DataSheetFactory::createFromObjectIdOrAlias($this->getWorkbench(), 'axenox.ETL.webservice');
 		$ds->getColumns()->addMultiple(
-			['UID', 'flow', 'flow__alias', 'in_url', 'type__schema_json', 'type__default_response_path', 'swagger_json', 'config_uxon']);
+			['UID', 'flow', 'flow__alias', 'local_url', 'type__schema_json', 'type__default_response_path', 'swagger_json', 'config_uxon']);
 		$ds->dataRead();
 		
 		$middleware = parent::getMiddleware();
 		array_push(
 			$middleware, 
-			new RouteConfigLoader($this, $ds, 'in_url', 'config_uxon', self::REQUEST_ATTRIBUTE_NAME_ROUTE),
+			new RouteConfigLoader($this, $ds, 'local_url', 'config_uxon', self::REQUEST_ATTRIBUTE_NAME_ROUTE),
 			new OpenApiValidationMiddleware($this, ['/.*swaggerui$/', '/.*openapi\\.json$/']),
 			new OpenApiMiddleware($this, $this->buildHeadersCommon(), '/.*openapi\\.json$/'),
 			new SwaggerUiMiddleware($this, $this->buildHeadersCommon(), '/.*swaggerui$/', 'openapi.json'));
@@ -311,8 +313,11 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 			$headers['Content-Type'] = 'application/json';
 			$errors = ['Invalid Swagger' => []];
 			foreach ($exception->getErrors() as $error) {
-				array_push($errors['Invalid Swagger'], 
-					array('source' => $error['property'], 'message' => $error['message']));
+				if (is_array($error)){
+					$errors['Invalid Swagger'][] = ['source' => $error['property'], 'message' => $error['message']];					
+				} else {
+					$errors['Invalid Swagger'][] = $error;
+				}
 			}
 			
 			return new Response(400, $headers, json_encode($errors));
@@ -408,11 +413,11 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 	 * @param string $swaggerJson
 	 * @return string
 	 */
-	public function createEmptyResponseBodyFromSwaggerJson(
+	public function readDataFromSwaggerJson(
 		string $routePath,
 		string $methodType,
 		string $jsonPath,
-		string $swaggerJson): string
+		string $swaggerJson): array
 		{
 			require_once '..' . DIRECTORY_SEPARATOR
 			. '..' . DIRECTORY_SEPARATOR
@@ -424,7 +429,7 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 			
 			$jsonPath = str_replace('[#routePath#]', $routePath, $jsonPath);
 			$jsonPath = str_replace('[#methodType#]', $methodType, $jsonPath);
-			$body = (new JSONPath(json_decode($swaggerJson, false)))->find($jsonPath)->getData()[0];
-			return json_encode($body);
+			$data = (new JSONPath(json_decode($swaggerJson, false)))->find($jsonPath)->getData()[0];
+			return get_object_vars($data);
 	}
 }

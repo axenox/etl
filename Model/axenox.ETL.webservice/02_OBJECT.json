@@ -81,9 +81,9 @@
     "rows": [
         {
             "CREATED_ON": "2023-10-18 16:06:50",
-            "MODIFIED_ON": "2024-01-23 13:26:34",
+            "MODIFIED_ON": "2024-02-01 10:34:56",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
-            "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
+            "MODIFIED_BY_USER": "0x11e8fe1c902c8ebea23ee4b318306b9a",
             "UID": "0x11eebdc39597022cbdc3025041000001",
             "READABLE_FLAG": 1,
             "WRITABLE_FLAG": 1,
@@ -121,8 +121,11 @@
                                         "calculation": "=flow_selector!alias"
                                     },
                                     {
-                                        "attribute_alias": "direction",
-                                        "id": "direction_selector"
+                                        "attribute_alias": "flow_direction"
+                                    },
+                                    {
+                                        "attribute_alias": "request_direction",
+                                        "id": "request_direction_selector"
                                     },
                                     {
                                         "attribute_alias": "type"
@@ -132,13 +135,13 @@
                                         "height": 3
                                     },
                                     {
-                                        "attribute_alias": "in_url",
+                                        "attribute_alias": "local_url",
                                         "calculation": "=flow_selector!alias",
                                         "disabled_if": {
                                             "operator": "AND",
                                             "conditions": [
                                                 {
-                                                    "value_left": "=direction_selector",
+                                                    "value_left": "=request_direction_selector",
                                                     "comparator": "!==",
                                                     "value_right": "IN"
                                                 }
@@ -146,12 +149,12 @@
                                         }
                                     },
                                     {
-                                        "attribute_alias": "out_connection",
+                                        "attribute_alias": "remote_connection",
                                         "disabled_if": {
                                             "operator": "AND",
                                             "conditions": [
                                                 {
-                                                    "value_left": "=direction_selector",
+                                                    "value_left": "=request_direction_selector",
                                                     "comparator": "!==",
                                                     "value_right": "OUT"
                                                 }
@@ -220,8 +223,8 @@
                     }
                 ]
             },
-            "ALIAS": "webservice_route",
-            "DATA_ADDRESS": "etl_webservice_route"
+            "ALIAS": "webservice",
+            "DATA_ADDRESS": "etl_webservice"
         }
     ],
     "totals_rows": [],

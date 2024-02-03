@@ -61,9 +61,9 @@
     "rows": [
         {
             "CREATED_ON": "2021-03-03 09:13:54",
-            "MODIFIED_ON": "2021-06-09 17:59:49",
+            "MODIFIED_ON": "2024-01-30 14:27:55",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
-            "MODIFIED_BY_USER": "0x11ea7e29e1126ef3a7eb0050568905af",
+            "MODIFIED_BY_USER": "0x11e8fe1c902c8ebea23ee4b318306b9a",
             "UID": "0x11eb9a29656d73f89a29025041000001",
             "OBJECT": "0x11eb90858867906c9085025041000001",
             "ACTION_PROTOTYPE": "exface\/Core\/Actions\/ShowDialog.php",
@@ -90,8 +90,10 @@
                                 ],
                                 "sorters": [
                                     {
+                                        "\/*": "",
                                         "attribute_alias": "level",
-                                        "direction": "asc"
+                                        "direction": "asc",
+                                        "*\/": ""
                                     },
                                     {
                                         "attribute_alias": "name",

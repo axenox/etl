@@ -61,9 +61,9 @@
     "rows": [
         {
             "CREATED_ON": "2024-01-09 12:47:29",
-            "MODIFIED_ON": "2024-01-26 14:47:26",
+            "MODIFIED_ON": "2024-02-01 10:45:38",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
-            "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
+            "MODIFIED_BY_USER": "0x11e8fe1c902c8ebea23ee4b318306b9a",
             "UID": "0x11eeb5b6dde235f4b5b6025041000001",
             "OBJECT": "0x11eebdc39597022cbdc3025041000001",
             "ACTION_PROTOTYPE": "exface\/Core\/Actions\/ShowDialog.php",
@@ -73,10 +73,10 @@
             "CONFIG_UXON": {
                 "input_rows_min": 1,
                 "input_rows_max": 1,
-                "input_object_alias": "axenox.ETL.webservice_route",
+                "input_object_alias": "axenox.ETL.webservice",
                 "icon": "columns",
                 "dialog": {
-                    "object_alias": "axenox.ETL.webservice_route",
+                    "object_alias": "axenox.ETL.webservice",
                     "width": "90%",
                     "height": "90%",
                     "widgets": [
@@ -190,7 +190,7 @@
                                         {
                                             "widget_type": "Browser",
                                             "id": "swaggerui",
-                                            "value": "=Concatenate(WorkbenchUrl(), 'api\/dataflow\/', in_url, '\/swaggerui')"
+                                            "value": "=Concatenate(WorkbenchUrl(), 'api\/dataflow\/', local_url, '\/swaggerui')"
                                         }
                                     ]
                                 }
@@ -222,9 +222,9 @@
         },
         {
             "CREATED_ON": "2024-01-09 12:50:01",
-            "MODIFIED_ON": "2024-01-09 12:56:08",
+            "MODIFIED_ON": "2024-02-01 10:29:13",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
-            "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
+            "MODIFIED_BY_USER": "0x11e8fe1c902c8ebea23ee4b318306b9a",
             "UID": "0x11eea34a3958ba8ea34a025041000001",
             "OBJECT": "0x11eebdc39597022cbdc3025041000001",
             "ACTION_PROTOTYPE": "exface\/Core\/Actions\/ShowDialog.php",
@@ -233,7 +233,7 @@
             "SHORT_DESCRIPTION": "",
             "CONFIG_UXON": {
                 "icon": "code",
-                "input_object_alias": "axenox.ETL.webservice_route",
+                "input_object_alias": "axenox.ETL.webservice",
                 "input_rows_min": 1,
                 "input_rows_max": 1,
                 "widget": {
@@ -241,7 +241,7 @@
                     "widgets": [
                         {
                             "widget_type": "Browser",
-                            "value": "=Concatenate(WorkbenchUrl(), 'api\/dataflow\/', in_url, '\/swaggerui')"
+                            "value": "=Concatenate(WorkbenchUrl(), 'api\/dataflow\/', local_url, '\/swaggerui')"
                         }
                     ]
                 }
@@ -252,9 +252,9 @@
         },
         {
             "CREATED_ON": "2024-01-26 12:42:18",
-            "MODIFIED_ON": "2024-01-26 12:49:53",
+            "MODIFIED_ON": "2024-02-01 10:29:01",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
-            "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
+            "MODIFIED_BY_USER": "0x11e8fe1c902c8ebea23ee4b318306b9a",
             "UID": "0x11eea9d6f67e1322a9d6025041000001",
             "OBJECT": "0x11eebdc39597022cbdc3025041000001",
             "ACTION_PROTOTYPE": "exface\/Core\/Actions\/ShowDialog.php",
@@ -264,7 +264,7 @@
             "CONFIG_UXON": {
                 "input_rows_min": 1,
                 "input_rows_max": 1,
-                "input_object_alias": "axenox.ETL.webservice_route",
+                "input_object_alias": "axenox.ETL.webservice",
                 "icon": "pencil-square",
                 "dialog": {
                     "widgets": [
