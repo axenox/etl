@@ -22,7 +22,10 @@ END;
 IF COL_LENGTH('etl_webservice', 'direction') IS NOT NULL
 BEGIN 
     EXEC sp_rename 'etl_webservice.direction', 'request_direction', 'COLUMN';
-
+END;
+    
+IF COL_LENGTH('etl_webservice', 'request_direction') IS NOT NULL
+BEGIN 
     DECLARE @alterQuery NVARCHAR(MAX);
     SET @alterQuery = 
         'ALTER TABLE etl_webservice ALTER COLUMN request_direction nvarchar(10);';
@@ -31,11 +34,11 @@ BEGIN
     
     DECLARE @updateQuery1 NVARCHAR(MAX);
     SET @updateQuery1 = 
-        'UPDATE etl_webservice SET request_direction = ''Inbound'' WHERE request_direction = ''IN'';';
+        'SET NOCOUNT ON; UPDATE etl_webservice SET request_direction = ''Inbound'' WHERE request_direction = ''IN'';';
 
     DECLARE @updateQuery2 NVARCHAR(MAX);
     SET @updateQuery2 = 
-        'UPDATE etl_webservice SET request_direction = ''Inbound'' WHERE request_direction = ''IN'';';
+        'SET NOCOUNT ON; UPDATE etl_webservice SET request_direction = ''Outbound'' WHERE request_direction = ''OUT'';';
         
     EXEC sp_executesql @updateQuery1;
     EXEC sp_executesql @updateQuery2;
@@ -48,11 +51,11 @@ BEGIN
 
     DECLARE @updateQuery3 NVARCHAR(MAX);
     SET @updateQuery3 = 
-        'UPDATE etl_webservice SET flow_direction = ''IN'' WHERE request_direction = ''Inbound'';';
+        'SET NOCOUNT ON; UPDATE etl_webservice SET flow_direction = ''IN'' WHERE request_direction = ''Inbound'';';
 
     DECLARE @updateQuery4 NVARCHAR(MAX);
     SET @updateQuery4 = 
-        'UPDATE etl_webservice SET flow_direction = ''OUT'' WHERE request_direction = ''Outbound'';';
+        'SET NOCOUNT ON; UPDATE etl_webservice SET flow_direction = ''OUT'' WHERE request_direction = ''Outbound'';';
         
     EXEC sp_executesql @updateQuery3;
     EXEC sp_executesql @updateQuery4;
