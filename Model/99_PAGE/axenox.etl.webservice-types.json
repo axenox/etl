@@ -34,7 +34,7 @@
                 "attribute_alias": "version"
             },
             {
-                "attribute_alias": "webservice_route__UID:COUNT",
+                "attribute_alias": "webservice__UID:COUNT",
                 "caption": "Services"
             },
             {
