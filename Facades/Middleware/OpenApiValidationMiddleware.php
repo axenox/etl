@@ -9,11 +9,20 @@ use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use axenox\ETL\Interfaces\OpenApiFacadeInterface;
 use exface\Core\Interfaces\WorkbenchInterface;
+use exface\Core\Exceptions\DataTypes\JsonSchemaValidationError;
 use cebe\openapi\spec\OpenApi;
 use League\OpenAPIValidation\PSR7\ValidatorBuilder;
 use cebe\openapi\ReferenceContext;
 use exface\Core\Exceptions\Facades\HttpBadRequestError;
 use League\OpenAPIValidation\Schema\Exception\SchemaMismatch;
+use League\OpenAPIValidation\Schema\Exception\ContentTypeMismatch;
+use League\OpenAPIValidation\Schema\Exception\FormatMismatch;
+use League\OpenAPIValidation\Schema\Exception\InvalidSchema;
+use League\OpenAPIValidation\Schema\Exception\KeywordMismatch;
+use League\OpenAPIValidation\Schema\Exception\NotEnoughValidSchemas;
+use League\OpenAPIValidation\Schema\Exception\TooManyValidSchemas;
+use League\OpenAPIValidation\Schema\Exception\TypeMismatch;
+use GuzzleHttp\Exception\BadResponseException;
 
 /**
  * This middleware adds request and response validation to facades implementing OpenApiFacadeInterface
@@ -67,8 +76,8 @@ final class OpenApiValidationMiddleware implements MiddlewareInterface
         // 1. Validate request
         try {
             $matchedOASOperation = $requestValidator->validate($request);
-        } catch (ValidationFailed $e) {
-            $prev = $e->getPrevious();
+        } catch (ValidationFailed $exception) {
+            $prev = $exception->getPrevious();
             if ($prev) {
                 $msg = $prev->getMessage();
                 if ($prev instanceof SchemaMismatch) {                	
@@ -79,9 +88,9 @@ final class OpenApiValidationMiddleware implements MiddlewareInterface
                 	$msg = 'Request validation failed' . $source . '. ' . $msg;
                 }
             } else {
-                $msg = $e->getMessage();
+                $msg = $exception->getMessage();
             }
-            throw new HttpBadRequestError($request, $msg, null, $e);
+            throw new HttpBadRequestError($request, $msg, null, $exception);
         }
         
         // 2. Process request
@@ -91,14 +100,43 @@ final class OpenApiValidationMiddleware implements MiddlewareInterface
         $responseValidator = $builder->getResponseValidator();
         if ($response->getStatusCode() >= 200 && $response->getStatusCode() < 300) {
             try {
-                // TODO currently seems not po pass content-type validation for application/json
-                // $responseValidator->validate($matchedOASOperation, $response);
-            } catch (ValidationFailed $e) {
-                throw InvalidResponseMessage::because($e);
+                $responseValidator->validate($matchedOASOperation, $response);
+            } catch (ValidationFailed $exception) {
+            	$prev = $exception->getPrevious();
+            	if ($this->isSchemaValidationException($prev)){
+            		if ($prev->dataBreadCrumb()->buildChain()[0] !== null){
+            			$source = ' in `$.' . implode('.', $prev->dataBreadCrumb()->buildChain()) . '`';
+            		}
+            		
+            		$msg = $prev->getMessage();
+            		$msg = 'Response validation failed' . $source . '. ' . $msg;
+            		
+            		$errorClass = 'exface\Core\Exceptions\DataTypes\JsonSchemaValidationError';
+            		throw new $errorClass([$msg], $msg, json: $response->getBody()->__toString());
+            	}
+            	
+            	throw new BadResponseException($msg, $request, null, $exception);
             }
         }
         
         return $response;
+    }
+    
+    private function isSchemaValidationException($exception) : bool
+    {
+    	switch (true){
+    		case $exception instanceof SchemaMismatch:
+    		case $exception instanceof ContentTypeMismatch:
+    		case $exception instanceof FormatMismatch:
+    		case $exception instanceof InvalidSchema:
+    		case $exception instanceof KeywordMismatch:
+    		case $exception instanceof NotEnoughValidSchemas:
+    		case $exception instanceof TooManyValidSchemas:
+    		case $exception instanceof TypeMismatch:
+    			return true;
+    		default:
+    			return false;
+    	}
     }
     
     protected function getWorkbench() : WorkbenchInterface
