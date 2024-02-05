@@ -28,7 +28,7 @@ IF COL_LENGTH('etl_webservice', 'request_direction') IS NOT NULL
 BEGIN 
     DECLARE @alterQuery NVARCHAR(MAX);
     SET @alterQuery = 
-        'ALTER TABLE etl_webservice ALTER COLUMN request_direction nvarchar(10);';
+        'SET NOCOUNT ON; ALTER TABLE etl_webservice ALTER COLUMN request_direction nvarchar(10);';
 
     EXEC sp_executesql @alterQuery;
     
@@ -47,8 +47,12 @@ END
 -- Add flow direction
 IF COL_LENGTH('etl_webservice', 'flow_direction') IS NULL
 BEGIN 
+    SET NOCOUNT ON; 
     ALTER TABLE etl_webservice ADD flow_direction NVARCHAR(3) NULL;
-
+END
+   
+IF COL_LENGTH('etl_webservice', 'flow_direction') IS NOT NULL
+BEGIN 
     DECLARE @updateQuery3 NVARCHAR(MAX);
     SET @updateQuery3 = 
         'SET NOCOUNT ON; UPDATE etl_webservice SET flow_direction = ''IN'' WHERE request_direction = ''Inbound'';';
@@ -62,11 +66,11 @@ BEGIN
     
     DECLARE @alterQuery2 NVARCHAR(MAX);
     SET @alterQuery2 = 
-        'ALTER TABLE etl_webservice ALTER COLUMN request_direction nvarchar(3) NOT NULL;';
+        'SET NOCOUNT ON; ALTER TABLE etl_webservice ALTER COLUMN flow_direction nvarchar(3) NOT NULL;';
 
     EXEC sp_executesql @alterQuery2;
 END
 
 -- DOWN
 
--- No changing back to schema
+-- No changing back
