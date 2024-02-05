@@ -33,6 +33,7 @@ use exface\Core\DataTypes\IntegerDataType;
  * - `from_data_sheet` - allows to customize the data read by adding `filters`, `sorters` or even 
  * `aggregate_by_attribute_alias`. Placeholders can be used as described below
  * - `page_size` - makes step read data X rows at a time
+ * - `offset` - defines the start position of the data from which the step starts reading
  * - `update_if_matching_attributes` - defines a unique key for the to-object consisting of one
  * or more attributes. If set, the step will update an item of the to-object if all these attributes
  * match the read item instead of creating a new one.
