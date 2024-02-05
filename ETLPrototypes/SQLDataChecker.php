@@ -294,9 +294,9 @@ class SQLDataChecker extends AbstractETLPrototype
      * {@inheritDoc}
      * @see \axenox\ETL\Common\AbstractETLPrototype::getPlaceholders()
      */
-    protected function getPlaceholders(string $flowRunUid, string $stepRunUid, ETLStepResultInterface $lastResult = null) : array
+    protected function getPlaceholders(ETLStepDataInterface $stepData) : array
     {
-        return array_merge(parent::getPlaceholders($flowRunUid, $stepRunUid, $lastResult),[
+        return array_merge(parent::getPlaceholders($stepData),[
             'from_object_address' => $this->getFromObject()->getDataAddress(),
             'to_object_address' => $this->getToObject()->getDataAddress()
         ]);

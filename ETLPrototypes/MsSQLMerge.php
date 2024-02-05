@@ -2,9 +2,9 @@
 namespace axenox\ETL\ETLPrototypes;
 
 use exface\Core\Exceptions\RuntimeException;
-use axenox\ETL\Interfaces\ETLStepResultInterface;
 use axenox\ETL\Common\Traits\SqlColumnMappingsTrait;
 use axenox\ETL\Common\Traits\SqlIncrementalWhereTrait;
+use axenox\ETL\Interfaces\ETLStepDataInterface;
 
 /**
  * Executes a MERGE statement on a Microsoft SQL Server data source.
@@ -96,7 +96,7 @@ SQL;
      * {@inheritDoc}
      * @see \axenox\ETL\ETLPrototypes\SQLRunner::getPlaceholders()
      */
-    protected function getPlaceholders(string $flowRunUid, string $stepRunUid, ETLStepResultInterface $lastResult = null) : array
+    protected function getPlaceholders(ETLStepDataInterface $stepData) : array
     {
         $insertValues = '';
         $insertCols = '';
@@ -133,7 +133,7 @@ SQL;
         
         $mergeCondition = $this->getSqlMergeOnCondition();
         
-        return array_merge(parent::getPlaceholders($flowRunUid, $stepRunUid, $lastResult), [
+        return array_merge(parent::getPlaceholders($stepData), [
             'source' => 'exfs',
             'target' => 'exft',
             'merge_condition' => $mergeCondition,

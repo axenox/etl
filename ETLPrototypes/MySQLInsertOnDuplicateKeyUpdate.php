@@ -2,9 +2,9 @@
 namespace axenox\ETL\ETLPrototypes;
 
 use exface\Core\Exceptions\RuntimeException;
-use axenox\ETL\Interfaces\ETLStepResultInterface;
 use axenox\ETL\Common\Traits\SqlColumnMappingsTrait;
 use axenox\ETL\Common\Traits\SqlIncrementalWhereTrait;
+use axenox\ETL\Interfaces\ETLStepDataInterface;
 
 /**
  * Executes a INSERT ... ON DUPLICATE KEY UPDATE statement on a MySQL data source.
@@ -101,7 +101,7 @@ SQL;
      * {@inheritDoc}
      * @see \axenox\ETL\ETLPrototypes\SQLRunner::getPlaceholders()
      */
-    protected function getPlaceholders(string $flowRunUid, string $stepRunUid, ETLStepResultInterface $lastResult = null) : array
+    protected function getPlaceholders(ETLStepDataInterface $stepData) : array
     {
         $insertSelects = '';
         $insertCols = '';
@@ -131,7 +131,7 @@ SQL;
             $updates .= ($updates ? ', ' : '') . "{$toSql} = [#flow_run_uid#]";
         }
         
-        return array_merge(parent::getPlaceholders($flowRunUid, $stepRunUid, $lastResult), [
+        return array_merge(parent::getPlaceholders($stepData), [
             'source' => 'exfsrc',
             'update_pairs' => $updates,
             'insert_columns' => $insertCols,

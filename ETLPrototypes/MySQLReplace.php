@@ -4,7 +4,7 @@ namespace axenox\ETL\ETLPrototypes;
 use exface\Core\Exceptions\RuntimeException;
 use axenox\ETL\Common\Traits\SqlIncrementalWhereTrait;
 use axenox\ETL\Common\Traits\SqlColumnMappingsTrait;
-use axenox\ETL\Interfaces\ETLStepResultInterface;
+use axenox\ETL\Interfaces\ETLStepDataInterface;
 
 /**
  * Executes a REPLACE statement on a MySQL data source.
@@ -72,7 +72,7 @@ SQL;
      * {@inheritDoc}
      * @see \axenox\ETL\ETLPrototypes\SQLRunner::getPlaceholders()
      */
-    protected function getPlaceholders(string $flowRunUid, string $stepRunUid, ETLStepResultInterface $lastResult = null) : array
+    protected function getPlaceholders(ETLStepDataInterface $stepData) : array
     {
         $targetCols = '';
         $sourceCols = '';
@@ -96,7 +96,7 @@ SQL;
             $sourceCols .= ', [#flow_run_uid#]';
         }
         
-        return array_merge(parent::getPlaceholders($flowRunUid, $stepRunUid, $lastResult), [
+        return array_merge(parent::getPlaceholders($stepData), [
             'columns' => $targetCols,
             'selects' => $sourceCols,
             'incremental_where' => $this->getSqlIncrementalWhere() ?? '(1=1)'
