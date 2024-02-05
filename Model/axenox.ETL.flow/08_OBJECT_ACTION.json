@@ -60,66 +60,6 @@
     ],
     "rows": [
         {
-            "CREATED_ON": "2021-03-03 09:13:54",
-            "MODIFIED_ON": "2024-02-01 16:35:02",
-            "CREATED_BY_USER": "0x31000000000000000000000000000000",
-            "MODIFIED_BY_USER": "0x11e8fe1c902c8ebea23ee4b318306b9a",
-            "UID": "0x11eb9a29656d73f89a29025041000001",
-            "OBJECT": "0x11eb90858867906c9085025041000001",
-            "ACTION_PROTOTYPE": "exface\/Core\/Actions\/ShowDialog.php",
-            "ALIAS": "EtlFlowSankeyDialogOld",
-            "NAME": "Data Flow",
-            "SHORT_DESCRIPTION": "",
-            "CONFIG_UXON": {
-                "icon": "random",
-                "widget": {
-                    "widget_type": "Dialog",
-                    "maximized": true,
-                    "widgets": [
-                        {
-                            "object_alias": "axenox.ETL.step",
-                            "widget_type": "Chart",
-                            "data": {
-                                "paginate": false,
-                                "filters": [
-                                    {
-                                        "attribute_alias": "flow",
-                                        "multi_select": true,
-                                        "id": "app_filter"
-                                    }
-                                ],
-                                "sorters": [
-                                    {
-                                        "attribute_alias": "level",
-                                        "direction": "asc"
-                                    },
-                                    {
-                                        "attribute_alias": "name",
-                                        "direction": "asc"
-                                    }
-                                ]
-                            },
-                            "series": [
-                                {
-                                    "type": "sankey",
-                                    "source_id_attribute": "from_object__UID",
-                                    "source_caption_attribute": "from_object__LABEL",
-                                    "source_level_attribute": "from_object__flow_objects__level:MAX",
-                                    "target_id_attribute": "to_object__UID",
-                                    "target_caption_attribute": "to_object__LABEL",
-                                    "target_level_attribute": "to_object__flow_objects__level:MAX",
-                                    "link_caption_attribute": "name"
-                                }
-                            ]
-                        }
-                    ]
-                }
-            },
-            "APP": "0x11ebbc50679eacdabc50025041000001",
-            "USE_IN_OBJECT_BASKET_FLAG": 0,
-            "DOCS": ""
-        },
-        {
             "CREATED_ON": "2021-06-09 17:59:36",
             "MODIFIED_ON": "2021-06-09 18:01:23",
             "CREATED_BY_USER": "0x11ea7e29e1126ef3a7eb0050568905af",
@@ -158,7 +98,7 @@
             "MODIFIED_ON": "2024-02-01 16:36:14",
             "CREATED_BY_USER": "0x11e8fe1c902c8ebea23ee4b318306b9a",
             "MODIFIED_BY_USER": "0x11e8fe1c902c8ebea23ee4b318306b9a",
-            "UID": "0x11eebd8d6fc492f2bd8d025041000001",
+            "UID": "0x11eb9a29656d73f89a29025041000001",
             "OBJECT": "0x11eb90858867906c9085025041000001",
             "ACTION_PROTOTYPE": "exface\/Core\/Actions\/ShowDialog.php",
             "ALIAS": "EtlFlowSankeyDialog",
