@@ -13,61 +13,65 @@ SELECT
 	flow_oid
 FROM
 (
-	SELECT * FROM
-	(	
-		(
-			SELECT 
-			    fof.level AS source_level,
-			    fot.level AS target_level,
-			    s.from_object_oid AS source_object_oid,
-			    s.to_object_oid AS target_object_oid,
-			    s.name,
-			    s.oid AS step_oid,
-			    s.flow_oid
-			FROM etl_step s
-			    INNER JOIN etl_flow_objects fof ON s.flow_oid = fof.flow_oid 
-			    	AND fof.object_oid = s.from_object_oid
-			    INNER JOIN etl_flow_objects fot ON s.flow_oid = fot.flow_oid 
-			    	AND fot.object_oid = s.to_object_oid
-	    )
-	    UNION ALL 
-	    (		    	
-	    	SELECT 
-			    fot.level AS source_level,
-			    fot.level + 1 AS target_level,
-			    s.to_object_oid AS source_object_oid,
-			    0x11eeae4695964d78ae46025041000001 AS target_object_oid, -- UID of the object axenox.ETL.webservice_request
-			    'Send HTTP Response' AS name,
-			    NULL AS step_oid,
-			    fot.flow_oid AS flow_oid
-			FROM
-			    etl_step s
-			    INNER JOIN etl_webservice wr ON wr.flow_oid = s.flow_oid 
-			    	AND wr.flow_direction = 'OUT'
-			    INNER JOIN etl_flow_objects fot ON s.flow_oid = fot.flow_oid 
-			WHERE 
-			    fot.`level` = (SELECT MAX(fo1.level) FROM etl_flow_objects fo1 WHERE fot.flow_oid = fo1.flow_oid) 		    
-				    
-	    )
-	    UNION ALL 
-	    (		    	
-	    	SELECT 
-			    fot.level - 1 AS source_level,
-			    fot.level AS target_level,
-			    0x11eeae4695964d78ae46025041000001 AS source_object_oid, -- UID of the object axenox.ETL.webservice_request
-			    s.from_object_oid AS target_object_oid,
-			    'Recieve HTTP Request' AS name,
-			    NULL AS step_oid,
-			    fot.flow_oid AS flow_oid
-			FROM
-			    etl_step s
-			    INNER JOIN etl_webservice wr ON wr.flow_oid = s.flow_oid 
-			    	AND wr.flow_direction = 'IN'
-			    INNER JOIN etl_flow_objects fot ON s.flow_oid = fot.flow_oid 
-			WHERE 
-			    fot.`level` = (SELECT MIN(fo1.level) FROM etl_flow_objects fo1 WHERE fot.flow_oid = fo1.flow_oid) 
-		    
-	    )
-	) sankeydata
-	GROUP BY sankeydata.flow_oid, sankeydata.name, sankeydata.target_object_oid, sankeydata.source_object_oid
-) sankeyview;
+	(
+		SELECT 
+		    fof.level AS source_level,
+		    fot.level AS target_level,
+		    s.from_object_oid AS source_object_oid,
+		    s.to_object_oid AS target_object_oid,
+		    s.name,
+		    s.oid AS step_oid,
+		    s.flow_oid
+		FROM etl_step s
+		    INNER JOIN etl_flow_objects fof ON s.flow_oid = fof.flow_oid 
+		    	AND fof.object_oid = s.from_object_oid
+		    INNER JOIN etl_flow_objects fot ON s.flow_oid = fot.flow_oid 
+		    	AND fot.object_oid = s.to_object_oid
+    )
+    UNION ALL 
+    (		    	
+    	SELECT 
+		    fot.level AS source_level,
+		    fot.level + 1 AS target_level,
+		    s.to_object_oid AS source_object_oid,
+		    0x11eeae4695964d78ae46025041000001 AS target_object_oid, -- UID of the object axenox.ETL.webservice_request
+		    'Send HTTP Response' AS name,
+		    NULL AS step_oid,
+		    fot.flow_oid AS flow_oid
+		FROM
+		    etl_step s
+		    INNER JOIN etl_webservice wr ON wr.flow_oid = s.flow_oid 
+		    	AND wr.flow_direction = 'OUT'
+		    INNER JOIN etl_flow_objects fot ON s.flow_oid = fot.flow_oid 
+		WHERE 
+		    fot.level = (SELECT MAX(fo1.level) FROM etl_flow_objects fo1 WHERE fot.flow_oid = fo1.flow_oid) 		    
+			    
+    )
+    UNION ALL 
+    (		    	
+    	SELECT 
+		    fot.level - 1 AS source_level,
+		    fot.level AS target_level,
+		    0x11eeae4695964d78ae46025041000001 AS source_object_oid, -- UID of the object axenox.ETL.webservice_request
+		    s.from_object_oid AS target_object_oid,
+		    'Recieve HTTP Request' AS name,
+		    NULL AS step_oid,
+		    fot.flow_oid AS flow_oid
+		FROM
+		    etl_step s
+		    INNER JOIN etl_webservice wr ON wr.flow_oid = s.flow_oid 
+		    	AND wr.flow_direction = 'IN'
+		    INNER JOIN etl_flow_objects fot ON s.flow_oid = fot.flow_oid 
+		WHERE 
+		    fot.level = (SELECT MIN(fo1.level) FROM etl_flow_objects fo1 WHERE fot.flow_oid = fo1.flow_oid) 
+	    
+    )
+) sankeydata
+GROUP BY 
+	sankeydata.flow_oid, 
+	sankeydata.step_oid,
+	sankeydata.name, 
+	sankeydata.source_level,
+	sankeydata.target_level,
+	sankeydata.target_object_oid, 
+	sankeydata.source_object_oid
