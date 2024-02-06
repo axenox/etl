@@ -173,7 +173,7 @@
     "rows": [
         {
             "CREATED_ON": "2023-10-18 16:06:51",
-            "MODIFIED_ON": "2023-10-18 17:56:21",
+            "MODIFIED_ON": "2024-02-06 12:52:46",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
             "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
             "UID": "0x11ee846795bfa9528467025041000001",
@@ -187,7 +187,7 @@
             "SYSTEMFLAG": 0,
             "DEFAULT_EDITOR_UXON": null,
             "COPY_WITH_RELATED_OBJECT": 0,
-            "DELETE_WITH_RELATED_OBJECT": 0,
+            "DELETE_WITH_RELATED_OBJECT": 1,
             "DEFAULT_DISPLAY_UXON": null,
             "COMMENTS": "",
             "NAME": "Route",
