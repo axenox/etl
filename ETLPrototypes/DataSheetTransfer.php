@@ -33,7 +33,6 @@ use exface\Core\DataTypes\IntegerDataType;
  * - `from_data_sheet` - allows to customize the data read by adding `filters`, `sorters` or even 
  * `aggregate_by_attribute_alias`. Placeholders can be used as described below
  * - `page_size` - makes step read data X rows at a time
- * - `offset` - defines the start position of the data from which the step starts reading
  * - `update_if_matching_attributes` - defines a unique key for the to-object consisting of one
  * or more attributes. If set, the step will update an item of the to-object if all these attributes
  * match the read item instead of creating a new one.
@@ -47,12 +46,21 @@ use exface\Core\DataTypes\IntegerDataType;
  * then it can be used within every step of that dataflow using the parameter configuration:
  * 
  * ```
- * "conditions": [[
  * {
- *	  "expression": "FlurstueckFortschritt__LetzteFortschrittsAenderung",
-   	  "comparator": ">=",
- * 	  "value": "[#~parameter:AenderungenAb#]"
- * }]
+ *  "from_data_sheet": {
+ *      "filters": {
+ *          "operator": "AND",
+ *          "conditions": [
+ *              {
+ *                  "expression": "FlurstueckFortschritt__LetzteFortschrittsAenderung",
+ *                  "comparator": ">=",
+ *                  "value": "[#~parameter:AenderungenAb#]"
+ *              }
+ *          ]
+ *      }
+ *  }
+ * }
+ * 
  * ```
  * 
  * 
@@ -68,8 +76,6 @@ class DataSheetTransfer extends AbstractETLPrototype
     private $updateIfMatchingAttributeAliases = [];
     
     private $pageSize = null;
-    
-    private $offset = 0;
     
     private $incrementalTimeAttributeAlias = null;
     
@@ -121,7 +127,7 @@ class DataSheetTransfer extends AbstractETLPrototype
         
         $cntFrom = 0;
         $cntTo = 0;
-        $offset = $this->getOffset($placeholders);
+        $offset = $baseSheet->getRowsOffset();
         try {
             do {
                 $fromSheet = $baseSheet->copy();
@@ -167,6 +173,10 @@ class DataSheetTransfer extends AbstractETLPrototype
         yield from [];
     }
     
+    /**
+     * 
+     * @param MetaObjectInterface $object
+     */
     protected function addDuplicatePreventingBehavior(MetaObjectInterface $object)
     {
         $behavior = BehaviorFactory::createFromUxon($object, PreventDuplicatesBehavior::class, new UxonObject([
@@ -208,6 +218,10 @@ class DataSheetTransfer extends AbstractETLPrototype
         return $this;
     }
     
+    /**
+     * 
+     * @return bool
+     */
     protected function isUpdateIfMatchingAttributes() : bool
     {
         return empty($this->updateIfMatchingAttributeAliases) === false;
@@ -223,7 +237,7 @@ class DataSheetTransfer extends AbstractETLPrototype
         $ds = DataSheetFactory::createFromObject($this->getFromObject());
         if ($this->sourceSheetUxon && ! $this->sourceSheetUxon->isEmpty()) {
             $json = $this->sourceSheetUxon->toJson();
-            $json = StringDataType::replacePlaceholders($json, $placeholders);
+            $json = StringDataType::replacePlaceholders($json, $placeholders, false);
             $ds->importUxonObject(UxonObject::fromJson($json));
         }
         return $ds;
@@ -336,34 +350,6 @@ class DataSheetTransfer extends AbstractETLPrototype
     {
         $this->pageSize = $numberOfRows;
         return $this;
-    }
-    
-    
-    protected function getOffset($placeholders) : int
-    {    	
-    	if (strpos($this->offset, '#') > 0){
-    		$value = StringDataType::replacePlaceholders($this->offset, $placeholders, false);
-    		$value = empty($value) ? 0 : $value;
-    	}
-    	
-    	return IntegerDataType::cast($value);
-    }   
-    
-    /**
-     * Offset from which the data is requested. Can also be a placeholder.
-     * 
-     * This should only be used when limiting `page_size` for accessing the next set of data.
-     * 
-     * @uxon-property data_offset
-     * @uxon-type string
-     * 
-     * @param int $offset
-     * @return DataSheetTransfer
-     */
-    protected function setOffset(string $offset) : DataSheetTransfer
-    {
-    	$this->offset = $offset;
-    	return $this;
     }
     
     /**
