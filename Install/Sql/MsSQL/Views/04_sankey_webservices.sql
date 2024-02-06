@@ -1,4 +1,8 @@
-CREATE OR REPLACE VIEW etl_sankey_webservices AS
+IF OBJECT_ID('dbo.etl_sankey_webservices', 'V') IS NOT NULL
+    DROP VIEW dbo.etl_sankey_webservices;
+GO
+
+CREATE VIEW dbo.etl_sankey_webservices AS
 SELECT
 	source_level,
 	target_level,
