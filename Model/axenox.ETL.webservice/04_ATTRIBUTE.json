@@ -590,9 +590,9 @@
         },
         {
             "CREATED_ON": "2024-02-01 10:01:06",
-            "MODIFIED_ON": "2024-02-01 10:26:54",
+            "MODIFIED_ON": "2024-02-06 07:42:28",
             "CREATED_BY_USER": "0x11e8fe1c902c8ebea23ee4b318306b9a",
-            "MODIFIED_BY_USER": "0x11e8fe1c902c8ebea23ee4b318306b9a",
+            "MODIFIED_BY_USER": "0x11eeaa26cae7d4f4aa26005056bef75d",
             "UID": "0x11ee9f7c6ff1344c9f7c025041000001",
             "SORTABLEFLAG": 1,
             "FILTERABLEFLAG": 1,
@@ -633,8 +633,8 @@
             "CUSTOM_DATA_TYPE": {
                 "show_values": false,
                 "values": {
-                    "IN": "In",
-                    "OUT": "Out"
+                    "Inbound": "Inbound",
+                    "Outbound": "Outbound"
                 }
             }
         },
@@ -686,9 +686,9 @@
         },
         {
             "CREATED_ON": "2024-02-01 10:01:06",
-            "MODIFIED_ON": "2024-02-01 10:26:16",
+            "MODIFIED_ON": "2024-02-06 07:41:17",
             "CREATED_BY_USER": "0x11e8fe1c902c8ebea23ee4b318306b9a",
-            "MODIFIED_BY_USER": "0x11e8fe1c902c8ebea23ee4b318306b9a",
+            "MODIFIED_BY_USER": "0x11eeaa26cae7d4f4aa26005056bef75d",
             "UID": "0x11eebbf76fffa298bbf7025041000001",
             "SORTABLEFLAG": 1,
             "FILTERABLEFLAG": 1,
@@ -727,7 +727,11 @@
             "DEFAULT_VALUE": "",
             "FIXED_VALUE": "",
             "CUSTOM_DATA_TYPE": {
-                "length_max": 3
+                "show_values": false,
+                "values": {
+                    "IN": "In",
+                    "OUT": "Out"
+                }
             }
         }
     ],
