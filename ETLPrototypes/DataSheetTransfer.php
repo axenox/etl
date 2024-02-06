@@ -32,29 +32,34 @@ use exface\Core\DataTypes\IntegerDataType;
  * - `mapper` - defines `from`-`to` relationships between attributes of the from- and to-objects (like `input_mapper` for actions)
  * - `from_data_sheet` - allows to customize the data read by adding `filters`, `sorters` or even 
  * `aggregate_by_attribute_alias`. Placeholders can be used as described below
- * - `page_size` - makes step read data X rows at a time
+ * - `page_size` - makes the step read data X rows at a time
  * - `update_if_matching_attributes` - defines a unique key for the to-object consisting of one
  * or more attributes. If set, the step will update an item of the to-object if all these attributes
  * match the read item instead of creating a new one.
  * - `incremental_time_attribute`, `incremental_time_offset_minutes` - allows to use the current time
  * for incremental reads.
  * 
- * It is possible to add parameter placeholder that are expected from the request for this step.
- * `[~parameter:parameter_name]` - replace `parameter_name` with your parameter. 
+ * You can also use input parameters via placeholders: e.g. HTTP URL parameters or CLI parameters 
+ * depending on how the flow is called. A placeholder like `[#~parameter:offset#]` will 
+ * be replaced by the value of the parameter `offset`. 
  * 
- * For example if the request for the dataflow is expected to give a value for a `AenderungenAb` date within it's query [webservice.url?queryParameter=2024-01-02]
- * then it can be used within every step of that dataflow using the parameter configuration:
+ * ## Examples
+ * 
+ * ### Filtering via URL parameters
+ * 
+ * Here is a step in a flow called by a webservice like `/api/dataflow/read-changed-page?since=2024-06-02`.
  * 
  * ```
  * {
  *  "from_data_sheet": {
+ *      "object_alias": "exface.Core.PAGE",
  *      "filters": {
  *          "operator": "AND",
  *          "conditions": [
  *              {
- *                  "expression": "FlurstueckFortschritt__LetzteFortschrittsAenderung",
+ *                  "expression": "MODIFIED_ON",
  *                  "comparator": ">=",
- *                  "value": "[#~parameter:AenderungenAb#]"
+ *                  "value": "[#~parameter:since#]"
  *              }
  *          ]
  *      }
@@ -63,6 +68,20 @@ use exface\Core\DataTypes\IntegerDataType;
  * 
  * ```
  * 
+ * ### Pagination via parameters
+ * 
+ * Similarly, you can control pagination remotely `/api/dataflow/read-changed-stuff?limit=10&offset=0`.
+ * 
+ * ```
+ * {
+ *  "from_data_sheet": {
+ *      "object_alias": "exface.Core.PAGE",
+ *      "rows_limit": "[#~parameter:limit#]",
+ *      "rows_offset": "[#~parameter:offset#]"
+ *  }
+ * }
+ * 
+ * ```
  * 
  * @author andrej.kabachnik
  *
@@ -100,7 +119,7 @@ class DataSheetTransfer extends AbstractETLPrototype
             $this->addDuplicatePreventingBehavior($this->getToObject());
         }
         
-        if ($limit = $this->getPageSize($placeholders)) {
+        if ($limit = $this->getPageSize()) {
             $baseSheet->setRowsLimit($limit);
         }
         $baseSheet->setAutoCount(false);
@@ -323,30 +342,36 @@ class DataSheetTransfer extends AbstractETLPrototype
         return $this;
     }
     
-    protected function getPageSize($placeholders) : ?int
+    /**
+     * 
+     * @return int|NULL
+     */
+    protected function getPageSize() : ?int
     {
-    	
-    	if (strpos($this->pageSize, '#') > 0){
-    		$value = StringDataType::replacePlaceholders($this->pageSize, $placeholders, false);
-    		$value = empty($value) ? 0 : $value;
-    	}
-    	
-    	return IntegerDataType::cast($value);
+        return $this->pageSize;
     }
     
     /**
-     * Number of rows to process at once - no limit if set to NULL. Can also be a placeholder.
+     * Number of rows to read at once - no limit if set to NULL.
      * 
-     * The step will make as many requests to the from-objects data source as needed to read
-     * all data by reading `page_size` rows at a time.
+     * Use this parameter if the data source of the from-object has trouble reading 
+     * large amounts of data at once. 
      * 
+     * The step will still process ALL data required for the from-sheet, but it will
+     * read this data in chunks. It will make as many requests to the from-objects data 
+     * source as needed to read all data by reading `page_size` rows at a time.
+     * 
+     * If you need external parameter to control pagination - e.g. proces the first
+     * 100 rows only - use placeholders for `rows_limit` and `rows_offset` in the 
+     * `from_data_sheet` instead!
+     *
      * @uxon-property page_size
-     * @uxon-type string
-     * 
-     * @param string $numberOfRows
+     * @uxon-type integer
+     *
+     * @param int $numberOfRows
      * @return DataSheetTransfer
      */
-    protected function setPageSize(string $numberOfRows) : DataSheetTransfer
+    protected function setPageSize(int $numberOfRows) : DataSheetTransfer
     {
         $this->pageSize = $numberOfRows;
         return $this;
