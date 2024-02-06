@@ -311,7 +311,12 @@ class DataSheetTransfer extends AbstractETLPrototype
     
     protected function getPageSize($placeholders) : ?int
     {
-    	$value = StringDataType::replacePlaceholders($this->pageSize, $placeholders);
+    	
+    	if (strpos($this->pageSize, '#') > 0){
+    		$value = StringDataType::replacePlaceholders($this->pageSize, $placeholders, false);
+    		$value = empty($value) ? 0 : $value;
+    	}
+    	
     	return IntegerDataType::cast($value);
     }
     
@@ -336,7 +341,11 @@ class DataSheetTransfer extends AbstractETLPrototype
     
     protected function getOffset($placeholders) : int
     {    	
-    	$value = StringDataType::replacePlaceholders($this->offset, $placeholders);
+    	if (strpos($this->offset, '#') > 0){
+    		$value = StringDataType::replacePlaceholders($this->offset, $placeholders, false);
+    		$value = empty($value) ? 0 : $value;
+    	}
+    	
     	return IntegerDataType::cast($value);
     }   
     
