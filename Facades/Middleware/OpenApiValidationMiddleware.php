@@ -1,7 +1,6 @@
 <?php
 namespace axenox\ETL\Facades\Middleware;
 
-use League\OpenAPIValidation\PSR15\Exception\InvalidResponseMessage;
 use League\OpenAPIValidation\PSR7\Exception\ValidationFailed;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -87,7 +86,9 @@ final class OpenApiValidationMiddleware implements MiddlewareInterface
                 		
                 	$msg = 'Request validation failed' . $source . '. ' . $msg;
                 }
-            } else {
+            }
+            
+            if (! $msg) {
                 $msg = $exception->getMessage();
             }
             throw new HttpBadRequestError($request, $msg, null, $exception);
@@ -103,16 +104,14 @@ final class OpenApiValidationMiddleware implements MiddlewareInterface
                 $responseValidator->validate($matchedOASOperation, $response);
             } catch (ValidationFailed $exception) {
             	$prev = $exception->getPrevious();
+            	$msg = $exception->getMessage();
             	if ($this->isSchemaValidationException($prev)){
             		if ($prev->dataBreadCrumb()->buildChain()[0] !== null){
             			$source = ' in `$.' . implode('.', $prev->dataBreadCrumb()->buildChain()) . '`';
             		}
             		
-            		$msg = $prev->getMessage();
-            		$msg = 'Response validation failed' . $source . '. ' . $msg;
-            		
-            		$errorClass = 'exface\Core\Exceptions\DataTypes\JsonSchemaValidationError';
-            		throw new $errorClass([$msg], $msg, json: $response->getBody()->__toString());
+            		$msg = 'Response validation failed' . $source . '. ' . $prev->getMessage();
+            		throw new JsonSchemaValidationError([$prev->getMessage()], $msg, null, $exception, $response->getBody()->__toString());
             	}
             	
             	throw new BadResponseException($msg, $request, null, $exception);
