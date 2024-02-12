@@ -85,7 +85,7 @@ final class OpenApiMiddleware implements MiddlewareInterface
     			}
     		}
     		
-    		$swaggerArray['components']['schemas']['Metamodel Informationen'] = $swaggerSchema;
+    		$swaggerArray['components']['schemas'] = $swaggerSchema;
     	}
     	
     	return $swaggerArray;
