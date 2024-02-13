@@ -590,9 +590,9 @@
         },
         {
             "CREATED_ON": "2024-02-01 10:01:06",
-            "MODIFIED_ON": "2024-02-06 07:42:28",
+            "MODIFIED_ON": "2024-02-02 08:43:24",
             "CREATED_BY_USER": "0x11e8fe1c902c8ebea23ee4b318306b9a",
-            "MODIFIED_BY_USER": "0x11eeaa26cae7d4f4aa26005056bef75d",
+            "MODIFIED_BY_USER": "0x11e8fe1c902c8ebea23ee4b318306b9a",
             "UID": "0x11ee9f7c6ff1344c9f7c025041000001",
             "SORTABLEFLAG": 1,
             "FILTERABLEFLAG": 1,
@@ -628,7 +628,7 @@
             "RELATED_OBJ_ATTR": "",
             "SHORT_DESCRIPTION": "Shows from which scope the request is coming from.",
             "DATA_ADDRESS_PROPS": null,
-            "DEFAULT_VALUE": "'IN'",
+            "DEFAULT_VALUE": "'Inbound'",
             "FIXED_VALUE": "",
             "CUSTOM_DATA_TYPE": {
                 "show_values": false,
@@ -686,9 +686,9 @@
         },
         {
             "CREATED_ON": "2024-02-01 10:01:06",
-            "MODIFIED_ON": "2024-02-06 07:41:17",
+            "MODIFIED_ON": "2024-02-02 08:38:44",
             "CREATED_BY_USER": "0x11e8fe1c902c8ebea23ee4b318306b9a",
-            "MODIFIED_BY_USER": "0x11eeaa26cae7d4f4aa26005056bef75d",
+            "MODIFIED_BY_USER": "0x11e8fe1c902c8ebea23ee4b318306b9a",
             "UID": "0x11eebbf76fffa298bbf7025041000001",
             "SORTABLEFLAG": 1,
             "FILTERABLEFLAG": 1,
@@ -724,7 +724,7 @@
             "RELATED_OBJ_ATTR": "",
             "SHORT_DESCRIPTION": "Shows the direction the data is going.",
             "DATA_ADDRESS_PROPS": null,
-            "DEFAULT_VALUE": "",
+            "DEFAULT_VALUE": "'IN'",
             "FIXED_VALUE": "",
             "CUSTOM_DATA_TYPE": {
                 "show_values": false,
