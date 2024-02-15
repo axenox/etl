@@ -466,7 +466,7 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI, 
             
             if ($predecessorUid = ($row['run_after_step'] ?? null)) {
                 if (array_key_exists($predecessorUid, $explicitFollowers)) {
-                    throw new ActionConfigurationError($this, 'Step "' . $row['name'] . '" cannot be run immediately after step id "' . $explicitFollowers . '": another step is scheduled to run at the same time!');
+                    throw new ActionConfigurationError($this, 'Data flow conflict found: steps "' . $row['name'] . '" and "' . $stepsToPlan[$explicitFollowers[$predecessorUid]]->getName() . '" are scheduled to run explicitly after the same step (with step id "' . $predecessorUid . '")');
                 }
                 $explicitFollowers[$predecessorUid] = $row['UID'];
             }
