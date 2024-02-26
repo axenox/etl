@@ -120,7 +120,7 @@ BEGIN
          );
         SET currentdate = ADDDATE(currentdate,INTERVAL 1 DAY);
     END WHILE;
-END;
+END//
 
 delimiter ;
 
