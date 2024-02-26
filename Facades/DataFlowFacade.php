@@ -311,12 +311,13 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 		
 		if ($exception instanceof JsonSchemaValidationError) {			
 			$headers['Content-Type'] = 'application/json';
-			$errors = ['Invalid Swagger' => []];
+            $context = $exception->getContext();
+			$errors = [$context => []];
 			foreach ($exception->getErrors() as $error) {
 				if (is_array($error)){
-					$errors['Invalid Swagger'][] = ['source' => $error['property'], 'message' => $error['message']];					
+					$errors[$context][] = ['source' => $error['property'], 'message' => $error['message']];
 				} else {
-					$errors['Invalid Swagger'][] = $error;
+					$errors[$context] = $error;
 				}
 			}
 			
