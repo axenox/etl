@@ -81,7 +81,7 @@
     "rows": [
         {
             "CREATED_ON": "2021-02-26 16:44:37",
-            "MODIFIED_ON": "2023-10-18 16:08:59",
+            "MODIFIED_ON": "2024-02-06 20:37:20",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
             "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
             "UID": "0x11eb90858867906c9085025041000001",
@@ -100,129 +100,210 @@
                 "widget_type": "Dialog",
                 "widgets": [
                     {
-                        "widget_type": "SplitVertical",
-                        "panels": [
+                        "widget_type": "Tabs",
+                        "tabs": [
                             {
-                                "height": 3,
+                                "caption": "Flow",
                                 "widgets": [
                                     {
-                                        "attribute_alias": "UID",
-                                        "widget_type": "InputHidden",
-                                        "id": "uid_field"
-                                    },
-                                    {
-                                        "attribute_alias": "name"
-                                    },
-                                    {
-                                        "attribute_alias": "description",
-                                        "height": 2
-                                    },
-                                    {
-                                        "attribute_alias": "alias"
-                                    },
-                                    {
-                                        "attribute_alias": "app"
-                                    },
-                                    {
-                                        "attribute_alias": "scheduler",
-                                        "id": "scheduler_id_field"
+                                        "widget_type": "SplitVertical",
+                                        "panels": [
+                                            {
+                                                "height": 3,
+                                                "widgets": [
+                                                    {
+                                                        "attribute_alias": "UID",
+                                                        "widget_type": "InputHidden",
+                                                        "id": "uid_field"
+                                                    },
+                                                    {
+                                                        "attribute_alias": "name"
+                                                    },
+                                                    {
+                                                        "attribute_alias": "description",
+                                                        "height": 2
+                                                    },
+                                                    {
+                                                        "attribute_alias": "alias"
+                                                    },
+                                                    {
+                                                        "attribute_alias": "app"
+                                                    },
+                                                    {
+                                                        "attribute_alias": "scheduler",
+                                                        "id": "scheduler_id_field"
+                                                    }
+                                                ]
+                                            },
+                                            {
+                                                "caption": "Steps",
+                                                "widgets": [
+                                                    {
+                                                        "widget_type": "DataTable",
+                                                        "object_alias": "axenox.ETL.step",
+                                                        "multi_select": true,
+                                                        "filters": [
+                                                            {
+                                                                "attribute_alias": "flow",
+                                                                "hidden": true,
+                                                                "required": true,
+                                                                "comparator": "=="
+                                                            },
+                                                            {
+                                                                "attribute_alias": "name"
+                                                            },
+                                                            {
+                                                                "attribute_alias": "etl_config_uxon",
+                                                                "input_widget": {
+                                                                    "widget_type": "Input",
+                                                                    "height": 1,
+                                                                    "width": 1
+                                                                }
+                                                            },
+                                                            {
+                                                                "attribute_alias": "etl_prototype"
+                                                            }
+                                                        ],
+                                                        "row_grouper": {
+                                                            "group_by_attribute_alias": "type",
+                                                            "hide_caption": true
+                                                        },
+                                                        "columns": [
+                                                            {
+                                                                "attribute_alias": "disabled",
+                                                                "caption": "Off"
+                                                            },
+                                                            {
+                                                                "attribute_alias": "name"
+                                                            },
+                                                            {
+                                                                "attribute_alias": "from_object__ALIAS_WITH_NS",
+                                                                "caption": "From"
+                                                            },
+                                                            {
+                                                                "attribute_alias": "to_object__ALIAS_WITH_NS",
+                                                                "caption": "To"
+                                                            },
+                                                            {
+                                                                "attribute_alias": "run_after_step__LABEL"
+                                                            },
+                                                            {
+                                                                "attribute_alias": "etl_prototype"
+                                                            },
+                                                            {
+                                                                "attribute_alias": "type"
+                                                            }
+                                                        ],
+                                                        "sorters": [
+                                                            {
+                                                                "attribute_alias": "level",
+                                                                "direction": "asc"
+                                                            },
+                                                            {
+                                                                "attribute_alias": "name",
+                                                                "direction": "asc"
+                                                            }
+                                                        ],
+                                                        "buttons": [
+                                                            {
+                                                                "action_alias": "exface.Core.ShowObjectCreateDialog",
+                                                                "disabled_if": {
+                                                                    "operator": "AND",
+                                                                    "conditions": [
+                                                                        {
+                                                                            "value_left": "=uid_field",
+                                                                            "comparator": "==",
+                                                                            "value_right": ""
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            },
+                                                            {
+                                                                "action_alias": "exface.Core.ShowObjectEditDialog",
+                                                                "bind_to_double_click": true
+                                                            },
+                                                            {
+                                                                "action_alias": "exface.Core.ShowObjectCopyDialog"
+                                                            },
+                                                            {
+                                                                "action_alias": "axenox.ETL.EtlStepOnOffToggle"
+                                                            },
+                                                            {
+                                                                "action_alias": "exface.Core.DeleteObject"
+                                                            }
+                                                        ]
+                                                    }
+                                                ]
+                                            }
+                                        ]
                                     }
                                 ]
                             },
                             {
-                                "caption": "Steps",
+                                "caption": "Objects",
                                 "widgets": [
                                     {
                                         "widget_type": "DataTable",
-                                        "object_alias": "axenox.ETL.step",
+                                        "object_alias": "axenox.ETL.flow_objects",
                                         "filters": [
                                             {
                                                 "attribute_alias": "flow",
                                                 "hidden": true,
-                                                "required": true,
-                                                "comparator": "=="
-                                            },
-                                            {
-                                                "attribute_alias": "name"
-                                            },
-                                            {
-                                                "attribute_alias": "etl_config_uxon",
-                                                "input_widget": {
-                                                    "widget_type": "Input",
-                                                    "height": 1,
-                                                    "width": 1
-                                                }
-                                            },
-                                            {
-                                                "attribute_alias": "etl_prototype"
+                                                "comparator": "==",
+                                                "apply_on_change": true,
+                                                "required": true
                                             }
                                         ],
                                         "row_grouper": {
                                             "group_by_attribute_alias": "type",
                                             "hide_caption": true
                                         },
-                                        "columns": [
-                                            {
-                                                "attribute_alias": "disabled",
-                                                "caption": "Off"
-                                            },
-                                            {
-                                                "attribute_alias": "name"
-                                            },
-                                            {
-                                                "attribute_alias": "from_object__ALIAS_WITH_NS",
-                                                "caption": "From"
-                                            },
-                                            {
-                                                "attribute_alias": "to_object__ALIAS_WITH_NS",
-                                                "caption": "To"
-                                            },
-                                            {
-                                                "attribute_alias": "run_after_step__LABEL"
-                                            },
-                                            {
-                                                "attribute_alias": "etl_prototype"
-                                            },
-                                            {
-                                                "attribute_alias": "type"
-                                            }
-                                        ],
                                         "sorters": [
                                             {
                                                 "attribute_alias": "level",
                                                 "direction": "asc"
                                             },
                                             {
-                                                "attribute_alias": "name",
+                                                "attribute_alias": "object__ALIAS",
                                                 "direction": "asc"
+                                            }
+                                        ],
+                                        "columns": [
+                                            {
+                                                "attribute_alias": "object__NAME"
+                                            },
+                                            {
+                                                "attribute_alias": "object__ALIAS"
+                                            },
+                                            {
+                                                "attribute_alias": "object__DATA_SOURCE__LABEL"
+                                            },
+                                            {
+                                                "attribute_alias": "object__DATA_SOURCE__CONNECTION__LABEL"
+                                            },
+                                            {
+                                                "attribute_alias": "type"
+                                            },
+                                            {
+                                                "attribute_alias": "object",
+                                                "hidden": true
                                             }
                                         ],
                                         "buttons": [
                                             {
-                                                "action_alias": "exface.Core.ShowObjectCreateDialog",
-                                                "disabled_if": {
-                                                    "operator": "AND",
-                                                    "conditions": [
-                                                        {
-                                                            "value_left": "=uid_field",
-                                                            "comparator": "==",
-                                                            "value_right": ""
-                                                        }
-                                                    ]
+                                                "bind_to_double_click": true,
+                                                "action": {
+                                                    "alias": "exface.Core.ShowObjectEditDialog",
+                                                    "object_alias": "exface.Core.OBJECT",
+                                                    "input_mapper": {
+                                                        "column_to_column_mappings": [
+                                                            {
+                                                                "from": "object",
+                                                                "to": "UID"
+                                                            }
+                                                        ]
+                                                    }
                                                 }
-                                            },
-                                            {
-                                                "action_alias": "exface.Core.ShowObjectEditDialog",
-                                                "bind_to_double_click": true
-                                            },
-                                            {
-                                                "action_alias": "exface.Core.ShowObjectCopyDialog"
-                                            },
-                                            {
-                                                "action_alias": "axenox.ETL.EtlStepOnOffToggle"
-                                            },
-                                            {
-                                                "action_alias": "exface.Core.DeleteObject"
                                             }
                                         ]
                                     }

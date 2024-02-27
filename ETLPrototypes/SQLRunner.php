@@ -11,6 +11,7 @@ use exface\Core\Exceptions\RuntimeException;
 use axenox\ETL\Common\UxonEtlStepResult;
 use axenox\ETL\Events\Flow\OnBeforeETLStepRun;
 use exface\Core\Widgets\DebugMessage;
+use axenox\ETL\Interfaces\ETLStepDataInterface;
 
 /**
  * Runs any SQL script in the data source of the to-object
@@ -66,31 +67,38 @@ class SQLRunner extends AbstractETLPrototype
      * {@inheritDoc}
      * @see \axenox\ETL\Interfaces\ETLStepInterface::run()
      */
-    public function run(string $flowRunUid, string $stepRunUid, ETLStepResultInterface $previousStepResult = null, ETLStepResultInterface $lastResult = null) : \Generator
+    public function run(ETLStepDataInterface $stepData) : \Generator
     {
         $sql = $this->getSql();
         $connection = $this->getSqlConnection();
-        $result = new IncrementalEtlStepResult($stepRunUid);
+        $result = new IncrementalEtlStepResult($stepData->getStepRunUid());
         
         if ($this->isWrappedInTransaction()) {
             $connection->transactionStart();
         }
         
-        $phs = $this->getPlaceholders($flowRunUid, $stepRunUid, $lastResult);
+        $phs = $this->getPlaceholders($stepData);
         // Handle incremental logic
         if ($this->isIncremental()) {
             if (! array_key_exists('last_run_increment_value', $phs)) {
                 $phs['last_run_increment_value'] = '';
             }
+            
             $incrSql = $this->getSqlToGetCurrentIncrementValue();
             if ($incrSql === null || $incrSql === '') {
-                throw new RuntimeException('Cannot get current increment value for ETL step "' . $this->getName() . '": please specify `sql_to_get_current_increment_value` in the steps configuration!');
+                throw new RuntimeException('Cannot get current increment value for ETL step "' 
+                	. $this->getName() 
+                	. '": please specify `sql_to_get_current_increment_value` in the steps configuration!');
             }
+            
             $incrSql = StringDataType::replacePlaceholders($incrSql, $phs);
             $incrRow = $connection->runSql($incrSql)->getResultArray()[0] ?? null;
             if (! is_array($incrRow) || count($incrRow) !== 1) {
-                throw new RuntimeException('Cannot get current increment value for ETL step"' . $this->getName() . '": the SQL to get the value does not return a single value!');
+                throw new RuntimeException('Cannot get current increment value for ETL step"' 
+                	. $this->getName() 
+                	. '": the SQL to get the value does not return a single value!');
             }
+            
             $currentIncrement = reset($incrRow);
             $phs['current_increment_value'] = $currentIncrement;
             $result->setIncrementValue($currentIncrement);
@@ -114,7 +122,11 @@ class SQLRunner extends AbstractETLPrototype
             $connection->transactionCommit();
         }
         
-        yield 'SQL query successful (' . $cnt . ' affected rows' . ($phs['last_run_increment_value'] ? ', starting with ' . $phs['last_run_increment_value'] : '') . ')' . PHP_EOL;
+        yield 'SQL query successful (' . $cnt . ' affected rows' 
+        	. ($phs['last_run_increment_value'] 
+        		? ', starting with ' . $phs['last_run_increment_value'] 
+        		: '') 
+        	. ')' . PHP_EOL;
         
         if ($cnt !== null) {
             $result->setProcessedRowsCounter($cnt);
@@ -188,9 +200,9 @@ class SQLRunner extends AbstractETLPrototype
         return $this->getToObject()->getDataConnection();
     }
     
-    protected function getPlaceholders(string $flowRunUid, string $stepRunUid, ETLStepResultInterface $lastResult = null) : array
+    protected function getPlaceholders(ETLStepDataInterface $stepData) : array
     {
-        return array_merge(parent::getPlaceholders($flowRunUid, $stepRunUid, $lastResult),[
+        return array_merge(parent::getPlaceholders($stepData),[
             'from_object_address' => $this->getFromObject()->getDataAddress(),
             'to_object_address' => $this->getToObject()->getDataAddress()
         ]);

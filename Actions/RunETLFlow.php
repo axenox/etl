@@ -35,6 +35,7 @@ use exface\Core\Interfaces\Model\MetaAttributeInterface;
 use exface\Core\Interfaces\Model\ExpressionInterface;
 use exface\Core\Factories\ExpressionFactory;
 use exface\Core\Exceptions\Actions\ActionInputError;
+use axenox\ETL\Common\ETLStepData;
 
 /**
  * Runs one or multiple ETL flows
@@ -122,7 +123,7 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI, 
      */
     protected function performImmediately(TaskInterface $task, DataTransactionInterface $transaction, ResultMessageStreamInterface $result) : array
     {
-        return [$this->getFlowAliases($task)];
+    	return [$task, $this->getFlowAliases($task)];
     }
     
     /**
@@ -130,10 +131,10 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI, 
      * {@inheritDoc}
      * @see \exface\Core\CommonLogic\AbstractActionDeferred::performDeferred()
      */
-    protected function performDeferred(array $flows = []) : \Generator
+    protected function performDeferred(TaskInterface $task = null, array $flows = []) : \Generator
     {
         foreach ($flows as $uid => $alias) {
-            yield from $this->runFlow($alias, $uid);
+            yield from $this->runFlow($alias, $uid, $task);
         }
     }
     
@@ -143,7 +144,7 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI, 
      * @throws null
      * @return \Generator|string[]
      */
-    protected function runFlow(string $alias, string $flowRunUid) : \Generator
+    protected function runFlow(string $alias, string $flowRunUid, TaskInterface $task) : \Generator
     {
         $indent = '  ';
         
@@ -177,6 +178,7 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI, 
                 yield 'disabled' . PHP_EOL;
             } else {
                 $log = '';
+                $stepData = new ETLStepData($task, $flowRunUid, $stepRunUid, $prevStepResult, $prevRunResult);
                 $this->getWorkbench()->eventManager()->addListener(OnBeforeETLStepRun::getEventName(), function(OnBeforeETLStepRun $event) use (&$logRow, $step) {
                     if ($event->getStep() !== $step) {
                         return;
@@ -185,7 +187,7 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI, 
                     $logRow = $ds->getRow(0);
                 });
                 try {
-                    $generator = $step->run($flowRunUid, $stepRunUid, $prevStepResult, $prevRunResult);
+                	$generator = $step->run($stepData);
                     foreach ($generator as $msg) {
                         $msg = $indent . $indent . $msg;
                         $log .= $msg;
@@ -201,7 +203,10 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI, 
                         $this->logRunError($logRow, $e, $log);
                     } catch (\Throwable $el) {
                         $this->getWorkbench()->getLogger()->logException($el);
-                        yield PHP_EOL . $indent .  '✗ Could not save ETL run log: ' . $el->getMessage() . ' in ' . $el->getFile() . ' on line ' . $el->getLine();
+                        yield PHP_EOL . $indent 
+                        .  '✗ Could not save ETL run log: ' . $el->getMessage() 
+                        . ' in ' . $el->getFile() 
+                        . ' on line ' . $el->getLine();
                     }
                     if ($this->getStopFlowOnError($step)) {
                         throw $e;
@@ -431,6 +436,7 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI, 
          */
         $explicitFollowers = [];
         
+        $disabledCompletely = true;
         foreach ($ds->getRows() as $row) {
             $toObj = MetaObjectFactory::createFromString($this->getWorkbench(), $row['to_object']);
             if ($row['from_object']) {
@@ -447,6 +453,9 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI, 
                 UxonObject::fromAnything($row['etl_config_uxon'] ?? [])
             );
             $step->setDisabled(BooleanDataType::cast($row['disabled']));
+            if (! $step->isDisabled()) {
+                $disabledCompletely = false;
+            }
             $stepsToPlan[$row['UID']] = $step;
             $stepsForObject[$toObj->getAliasWithNamespace()][$row['UID']] = $step;
             $flowUId = $row['flow'];
@@ -457,10 +466,14 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI, 
             
             if ($predecessorUid = ($row['run_after_step'] ?? null)) {
                 if (array_key_exists($predecessorUid, $explicitFollowers)) {
-                    throw new ActionConfigurationError($this, 'Step "' . $row['name'] . '" cannot be run immediately after step id "' . $explicitFollowers . '": another step is scheduled to run at the same time!');
+                    throw new ActionConfigurationError($this, 'Data flow conflict found: steps "' . $row['name'] . '" and "' . $stepsToPlan[$explicitFollowers[$predecessorUid]]->getName() . '" are scheduled to run explicitly after the same step (with step id "' . $predecessorUid . '")');
                 }
                 $explicitFollowers[$predecessorUid] = $row['UID'];
             }
+        }
+        
+        if ($disabledCompletely === true) {
+            return [];
         }
         
         $this->stepsLoaded = $stepsToPlan;

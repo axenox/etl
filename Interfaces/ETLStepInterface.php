@@ -14,13 +14,10 @@ interface ETLStepInterface extends WorkbenchDependantInterface, iCanBeConvertedT
     
     /**
      * 
-     * @param string $flowRunUid
-     * @param string $stepRunUid
-     * @param ETLStepResultInterface $previousStepResult
-     * @param ETLStepResultInterface $lastResult
+     * @param ETLStepDataInterface $stepData
      * @return \Generator|string[]|ETLStepResultInterface
      */
-    public function run(string $flowRunUid, string $stepRunUid, ETLStepResultInterface $previousStepResult = null, ETLStepResultInterface $lastResult = null) : \Generator;
+    public function run(ETLStepDataInterface $stepData) : \Generator;
     
     public function validate() : \Generator;
     

@@ -4,6 +4,7 @@ namespace axenox\ETL\ETLPrototypes;
 use exface\Core\CommonLogic\DataQueries\SqlDataQuery;
 use axenox\ETL\Common\Traits\SqlIncrementalWhereTrait;
 use axenox\ETL\Interfaces\ETLStepResultInterface;
+use axenox\ETL\Interfaces\ETLStepDataInterface;
 
 /**
  * Performs a SELECT * query on the to-object to check for errors.
@@ -63,9 +64,9 @@ SQL;
      * {@inheritDoc}
      * @see \axenox\ETL\ETLPrototypes\SQLRunner::getPlaceholders()
      */
-    protected function getPlaceholders(string $flowRunUid, string $stepRunUid, ETLStepResultInterface $lastResult = null) : array
+    protected function getPlaceholders(ETLStepDataInterface $stepData) : array
     {
-        return array_merge(parent::getPlaceholders($flowRunUid, $stepRunUid, $lastResult), [
+        return array_merge(parent::getPlaceholders($stepData), [
             'incremental_where' => $this->getSqlIncrementalWhere() ?? '(1=1)'
         ]);
     }      

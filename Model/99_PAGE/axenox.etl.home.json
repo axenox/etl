@@ -10,8 +10,8 @@
     "replaces_page_selector": null,
     "created_by_user_selector": "0x31000000000000000000000000000000",
     "created_on": "2021-02-26 16:55:01",
-    "modified_by_user_selector": "0x31000000000000000000000000000000",
-    "modified_on": "2024-01-11 18:51:53",
+    "modified_by_user_selector": "0x11e8fe1c902c8ebea23ee4b318306b9a",
+    "modified_on": "2024-02-26 15:22:03",
     "contents": {
         "widget_type": "SplitHorizontal",
         "object_alias": "axenox.ETL.flow",
@@ -23,8 +23,8 @@
                         "widget_type": "SplitVertical",
                         "panels": [
                             {
-                                "caption": "ETL Flows",
-                                "height": "30%",
+                                "caption": "Data flows",
+                                "height": "50%",
                                 "widgets": [
                                     {
                                         "widget_type": "DataTable",
@@ -54,7 +54,7 @@
                                                 "attribute_alias": "flow_run_latest__flow_run__status"
                                             },
                                             {
-                                                "attribute_alias": "webservice_route__UID:COUNT",
+                                                "attribute_alias": "webservice__UID:COUNT",
                                                 "caption": "Web",
                                                 "hint": "Web services"
                                             },
@@ -163,70 +163,42 @@
                                 ]
                             },
                             {
-                                "caption": "Objects",
+                                "caption": "Flow diagram",
                                 "widgets": [
                                     {
-                                        "widget_type": "DataTable",
-                                        "object_alias": "axenox.ETL.flow_objects",
-                                        "filters": [
-                                            {
-                                                "attribute_alias": "flow",
-                                                "hidden": true,
-                                                "comparator": "==",
-                                                "value": "=flows_table!UID",
-                                                "apply_on_change": true
-                                            }
-                                        ],
-                                        "row_grouper": {
-                                            "group_by_attribute_alias": "type",
-                                            "hide_caption": true
-                                        },
-                                        "sorters": [
-                                            {
-                                                "attribute_alias": "level",
-                                                "direction": "asc"
-                                            },
-                                            {
-                                                "attribute_alias": "object__ALIAS",
-                                                "direction": "asc"
-                                            }
-                                        ],
-                                        "columns": [
-                                            {
-                                                "attribute_alias": "object__NAME"
-                                            },
-                                            {
-                                                "attribute_alias": "object__ALIAS"
-                                            },
-                                            {
-                                                "attribute_alias": "object__DATA_SOURCE__LABEL"
-                                            },
-                                            {
-                                                "attribute_alias": "object__DATA_SOURCE__CONNECTION__LABEL"
-                                            },
-                                            {
-                                                "attribute_alias": "type"
-                                            },
-                                            {
-                                                "attribute_alias": "object",
-                                                "hidden": true
-                                            }
-                                        ],
-                                        "buttons": [
-                                            {
-                                                "bind_to_double_click": true,
-                                                "action": {
-                                                    "alias": "exface.Core.ShowObjectEditDialog",
-                                                    "object_alias": "exface.Core.OBJECT",
-                                                    "input_mapper": {
-                                                        "column_to_column_mappings": [
-                                                            {
-                                                                "from": "object",
-                                                                "to": "UID"
-                                                            }
-                                                        ]
-                                                    }
+                                        "object_alias": "axenox.ETL.sankey_flow_view",
+                                        "widget_type": "Chart",
+                                        "hide_header": true,
+                                        "data": {
+                                            "paginate": false,
+                                            "autoload_disabled_hint": "Please select a data flow to see a chart here",
+                                            "filters": [
+                                                {
+                                                    "attribute_alias": "flow",
+                                                    "hidden": true,
+                                                    "comparator": "==",
+                                                    "value": "=flows_table!UID",
+                                                    "apply_on_change": true,
+                                                    "required": true
                                                 }
+                                            ],
+                                            "sorters": [
+                                                {
+                                                    "attribute_alias": "name",
+                                                    "direction": "asc"
+                                                }
+                                            ]
+                                        },
+                                        "series": [
+                                            {
+                                                "type": "sankey",
+                                                "source_id_attribute": "source_object__UID",
+                                                "source_caption_attribute": "source_object__LABEL",
+                                                "source_level_attribute": "source_level",
+                                                "target_id_attribute": "target_object__UID",
+                                                "target_caption_attribute": "target_object__LABEL",
+                                                "target_level_attribute": "target_level",
+                                                "link_caption_attribute": "name"
                                             }
                                         ]
                                     }

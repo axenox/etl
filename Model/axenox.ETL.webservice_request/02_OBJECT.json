@@ -81,15 +81,15 @@
     "rows": [
         {
             "CREATED_ON": "2023-10-18 16:06:50",
-            "MODIFIED_ON": "2023-12-05 16:26:35",
+            "MODIFIED_ON": "2024-02-06 12:53:00",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
-            "MODIFIED_BY_USER": "0x11e8fe1c902c8ebea23ee4b318306b9a",
+            "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
             "UID": "0x11eeae4695964d78ae46025041000001",
             "READABLE_FLAG": 1,
             "WRITABLE_FLAG": 1,
             "COMMENTS": "",
             "DOCS": "",
-            "NAME": "Web request",
+            "NAME": "Web message",
             "INHERIT_DATA_SOURCE_BASE_OBJECT": 1,
             "DATA_SOURCE": "0x32000000000000000000000000000000",
             "APP": "0x11ebbc50679eacdabc50025041000001",

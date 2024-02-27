@@ -20,6 +20,8 @@ use exface\Core\Widgets\DebugMessage;
 use axenox\ETL\Events\Flow\OnBeforeETLStepRun;
 use exface\Core\Exceptions\UxonParserError;
 use exface\Core\DataTypes\PhpClassDataType;
+use axenox\ETL\Interfaces\ETLStepDataInterface;
+use exface\Core\DataTypes\IntegerDataType;
 
 /**
  * Reads a data sheet from the from-object and maps it to the to-object similarly to an actions `input_mapper`.
@@ -30,12 +32,56 @@ use exface\Core\DataTypes\PhpClassDataType;
  * - `mapper` - defines `from`-`to` relationships between attributes of the from- and to-objects (like `input_mapper` for actions)
  * - `from_data_sheet` - allows to customize the data read by adding `filters`, `sorters` or even 
  * `aggregate_by_attribute_alias`. Placeholders can be used as described below
- * - `page_size` - makes step read data X rows at a time
+ * - `page_size` - makes the step read data X rows at a time
  * - `update_if_matching_attributes` - defines a unique key for the to-object consisting of one
  * or more attributes. If set, the step will update an item of the to-object if all these attributes
  * match the read item instead of creating a new one.
  * - `incremental_time_attribute`, `incremental_time_offset_minutes` - allows to use the current time
  * for incremental reads.
+ * 
+ * You can also use input parameters via placeholders: e.g. HTTP URL parameters or CLI parameters 
+ * depending on how the flow is called. A placeholder like `[#~parameter:offset#]` will 
+ * be replaced by the value of the parameter `offset`. 
+ * 
+ * ## Examples
+ * 
+ * ### Filtering via URL parameters
+ * 
+ * Here is a step in a flow called by a webservice like `/api/dataflow/read-changed-page?since=2024-06-02`.
+ * 
+ * ```
+ * {
+ *  "from_data_sheet": {
+ *      "object_alias": "exface.Core.PAGE",
+ *      "filters": {
+ *          "operator": "AND",
+ *          "conditions": [
+ *              {
+ *                  "expression": "MODIFIED_ON",
+ *                  "comparator": ">=",
+ *                  "value": "[#~parameter:since#]"
+ *              }
+ *          ]
+ *      }
+ *  }
+ * }
+ * 
+ * ```
+ * 
+ * ### Pagination via parameters
+ * 
+ * Similarly, you can control pagination remotely `/api/dataflow/read-changed-stuff?limit=10&offset=0`.
+ * 
+ * ```
+ * {
+ *  "from_data_sheet": {
+ *      "object_alias": "exface.Core.PAGE",
+ *      "rows_limit": "[#~parameter:limit#]",
+ *      "rows_offset": "[#~parameter:offset#]"
+ *  }
+ * }
+ * 
+ * ```
  * 
  * @author andrej.kabachnik
  *
@@ -61,12 +107,13 @@ class DataSheetTransfer extends AbstractETLPrototype
      * {@inheritDoc}
      * @see \axenox\ETL\Interfaces\ETLStepInterface::run()
      */
-    public function run(string $flowRunUid, string $stepRunUid, ETLStepResultInterface $previousStepResult = null, ETLStepResultInterface $lastResult = null) : \Generator
+    public function run(ETLStepDataInterface $stepData) : \Generator
     {
-    	$placeholders = $this->getPlaceholders($flowRunUid, $stepRunUid, $lastResult);
+    	$stepRunUid = $stepData->getStepRunUid();
+    	$placeholders = $this->getPlaceholders($stepData);
     	$baseSheet = $this->getFromDataSheet($placeholders);
     	$mapper = $this->getMapper($placeholders);
-        $result = new IncrementalEtlStepResult($stepRunUid);
+    	$result = new IncrementalEtlStepResult($stepRunUid);
         
         if ($this->isUpdateIfMatchingAttributes()) {
             $this->addDuplicatePreventingBehavior($this->getToObject());
@@ -77,12 +124,16 @@ class DataSheetTransfer extends AbstractETLPrototype
         }
         $baseSheet->setAutoCount(false);
         
+        $lastResult = $stepData->getLastResult();
         if ($this->isIncrementalByTime()) {
             if ($lastResult instanceof IncrementalEtlStepResult) {
                 $lastResultIncrement = $lastResult->getIncrementValue();
             }
             if ($lastResultIncrement !== null && $this->getIncrementalTimeAttributeAlias() !== null) {
-                $baseSheet->getFilters()->addConditionFromAttribute($this->getIncrementalTimeAttribute(), $lastResultIncrement, ComparatorDataType::GREATER_THAN_OR_EQUALS);
+                $baseSheet->getFilters()->addConditionFromAttribute(
+                	$this->getIncrementalTimeAttribute(), 
+                	$lastResultIncrement, 
+                	ComparatorDataType::GREATER_THAN_OR_EQUALS);
             }
             $result->setIncrementValue(DateTimeDataType::formatDateNormalized($this->getIncrementalTimeCurrentValue()));
         }
@@ -95,7 +146,7 @@ class DataSheetTransfer extends AbstractETLPrototype
         
         $cntFrom = 0;
         $cntTo = 0;
-        $offset = 0;
+        $offset = $baseSheet->getRowsOffset();
         try {
             do {
                 $fromSheet = $baseSheet->copy();
@@ -116,7 +167,7 @@ class DataSheetTransfer extends AbstractETLPrototype
                     if (null !== $this->getFlowRunUidAttributeAlias()) {
                         $toSheet->getColumns()
                             ->addFromAttribute($this->getToObject()->getAttribute($this->getFlowRunUidAttributeAlias()))
-                            ->setValueOnAllRows($flowRunUid);
+                            ->setValueOnAllRows($stepData->getFlowRunUid());
                     }
                     $toSheet->dataCreate(false, $transaction);
                 }
@@ -141,6 +192,10 @@ class DataSheetTransfer extends AbstractETLPrototype
         yield from [];
     }
     
+    /**
+     * 
+     * @param MetaObjectInterface $object
+     */
     protected function addDuplicatePreventingBehavior(MetaObjectInterface $object)
     {
         $behavior = BehaviorFactory::createFromUxon($object, PreventDuplicatesBehavior::class, new UxonObject([
@@ -182,6 +237,10 @@ class DataSheetTransfer extends AbstractETLPrototype
         return $this;
     }
     
+    /**
+     * 
+     * @return bool
+     */
     protected function isUpdateIfMatchingAttributes() : bool
     {
         return empty($this->updateIfMatchingAttributeAliases) === false;
@@ -197,7 +256,7 @@ class DataSheetTransfer extends AbstractETLPrototype
         $ds = DataSheetFactory::createFromObject($this->getFromObject());
         if ($this->sourceSheetUxon && ! $this->sourceSheetUxon->isEmpty()) {
             $json = $this->sourceSheetUxon->toJson();
-            $json = StringDataType::replacePlaceholders($json, $placeholders);
+            $json = StringDataType::replacePlaceholders($json, $placeholders, false);
             $ds->importUxonObject(UxonObject::fromJson($json));
         }
         return $ds;
@@ -283,20 +342,32 @@ class DataSheetTransfer extends AbstractETLPrototype
         return $this;
     }
     
+    /**
+     * 
+     * @return int|NULL
+     */
     protected function getPageSize() : ?int
     {
         return $this->pageSize;
     }
     
     /**
-     * Number of rows to process at once - no limit if set to NULL.
+     * Number of rows to read at once - no limit if set to NULL.
      * 
-     * The step will make as many requests to the from-objects data source as needed to read
-     * all data by reading `page_size` rows at a time.
+     * Use this parameter if the data source of the from-object has trouble reading 
+     * large amounts of data at once. 
      * 
+     * The step will still process ALL data required for the from-sheet, but it will
+     * read this data in chunks. It will make as many requests to the from-objects data 
+     * source as needed to read all data by reading `page_size` rows at a time.
+     * 
+     * If you need external parameter to control pagination - e.g. proces the first
+     * 100 rows only - use placeholders for `rows_limit` and `rows_offset` in the 
+     * `from_data_sheet` instead!
+     *
      * @uxon-property page_size
-     * @uxon-type integers
-     * 
+     * @uxon-type integer
+     *
      * @param int $numberOfRows
      * @return DataSheetTransfer
      */
