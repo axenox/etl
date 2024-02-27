@@ -30,6 +30,8 @@ UPDATE f SET
 FROM (
   SELECT 
       (CASE WHEN ... THEN opt1 ELSE opt2 END) AS col1,
+      opt1,
+      opt2,
       ...
     FROM 
       [#to_object_address#] t
