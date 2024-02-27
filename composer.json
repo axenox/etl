@@ -1,5 +1,10 @@
 {
 	"name" : "axenox/etl",
+	"support" : {
+		"source" : "https://github.com/axenox/ETL",
+		"docs" : "https://github.com/axenox/ETL/blob/1.x-dev/Docs",
+		"issues" : "https://github.com/axenox/ETL/issues"
+	},
 	"require" : {
 		"exface/core" : "^1.0",
 		"npm-asset/swagger-ui-dist" : "^5",
