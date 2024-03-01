@@ -17,13 +17,7 @@ use League\OpenAPIValidation\PSR7\ValidatorBuilder;
 use cebe\openapi\ReferenceContext;
 use exface\Core\Exceptions\Facades\HttpBadRequestError;
 use League\OpenAPIValidation\Schema\Exception\SchemaMismatch;
-use League\OpenAPIValidation\Schema\Exception\ContentTypeMismatch;
-use League\OpenAPIValidation\Schema\Exception\FormatMismatch;
 use League\OpenAPIValidation\Schema\Exception\InvalidSchema;
-use League\OpenAPIValidation\Schema\Exception\KeywordMismatch;
-use League\OpenAPIValidation\Schema\Exception\NotEnoughValidSchemas;
-use League\OpenAPIValidation\Schema\Exception\TooManyValidSchemas;
-use League\OpenAPIValidation\Schema\Exception\TypeMismatch;
 use GuzzleHttp\Exception\BadResponseException;
 
 /**
