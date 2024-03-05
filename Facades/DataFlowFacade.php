@@ -67,7 +67,7 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 			$this->reloadRequestData($requestLogData);
 				
 			if ($requestLogData->countRows() == 1) {
-				$body = $this->createRequestResponseBody($requestLogData, $request, $headers,$routeModel, $routePath);	
+				$body = $this->createRequestResponseBody($requestLogData, $request, $headers, $routeModel, $routePath);
 				$response = new Response(200, $headers, $body);
 			}
 			
@@ -230,12 +230,18 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 		}
 		
 		// set header
-		if ($responseModel !== null && empty($responseModel) === false && $flowResponse != null){
+		if ($responseModel !== null && empty($responseModel) === false){
 				$headers['Content-Type'] = 'application/json';
 		}
 		
-		// merge flow response into model
-		$body = array_merge($responseModel, $flowResponse);		
+		// merge flow response into empty model
+        if ($flowResponse === null && empty($flowResponse) === false){
+            $body = array_merge($responseModel, $flowResponse);
+        }
+        else {
+            $body = $responseModel;
+        }
+
 		return json_encode($body);
 	}
 
