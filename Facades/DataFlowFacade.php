@@ -235,10 +235,9 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 		}
 		
 		// merge flow response into empty model
-        if ($flowResponse === null && empty($flowResponse) === false){
+        if ($flowResponse !== null && empty($flowResponse) === false){
             $body = array_merge($responseModel, $flowResponse);
-        }
-        else {
+        } else {
             $body = $responseModel;
         }
 
