@@ -9,6 +9,8 @@ use exface\Core\Interfaces\WorkbenchInterface;
 use exface\Core\DataTypes\SortingDirectionsDataType;
 use exface\Core\Factories\DataSheetFactory;
 use exface\Core\DataTypes\ComparatorDataType;
+use axenox\ETL\Facades\Helper\MetaModelSchemaBuilder;
+use exface\Core\Factories\MetaObjectFactory;
 
 /**
  * UXON-schema class for Composer auth.json.
@@ -156,6 +158,34 @@ class OpenAPISchema implements UxonSchemaInterface
         ->addFromString('PROTOTYPE', SortingDirectionsDataType::ASC)
         ->addFromString('NAME', SortingDirectionsDataType::ASC);
         $ds->dataRead();
+        
+             
+        $objectAlias = end($path);
+        if (($path ?? '') !== ''){
+            $objectSheet = DataSheetFactory::createFromObjectIdOrAlias($this->getWorkbench(), 'exface.Core.OBJECT');
+            $objectSheet->getFilters()->addConditionFromString('ALIAS_WITH_NS', $objectAlias, ComparatorDataType::IS);
+            $objectSheet->getColumns()->addMultiple([
+                'NAME',
+                'ALIAS_WITH_NS'
+            ]);
+            $objectSheet->dataRead();
+            $schemaBuilder = new MetaModelSchemaBuilder();
+            foreach ($objectSheet->getRows() as $objRow) {
+                $obj = MetaObjectFactory::createFromString($this->getWorkbench(), $objRow['ALIAS_WITH_NS']);
+                $json = $schemaBuilder::transformIntoJsonSchema($obj, []);
+            
+                $ds->addRow([
+                    'UID' => $obj->getId(),
+                    'NAME' => $obj->getName(), 
+                    'PROTOTYPE__LABEL' => 'Meta objects', 
+                    'DESCRIPTION' => '', 
+                    'PROTOTYPE' => 'object', 
+                    'UXON' => json_encode($json), 
+                    'WRAP_PATH' => null, 
+                    'WRAP_FLAG' => 0
+                ]);
+            }
+        }
         
         return $ds->getRows();
     }
