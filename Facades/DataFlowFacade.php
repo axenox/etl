@@ -225,8 +225,8 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 				$routePath,
 				$methodType,
 				$jsonPath,
-				$routeModel['swagger_json']);
-			
+				$routeModel['swagger_json']
+		    );
 		}
 		
 		// set header
@@ -417,14 +417,14 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 	 * @param string $methodType
 	 * @param string $jsonPath
 	 * @param string $swaggerJson
-	 * @return string
+	 * @return array
 	 */
 	public function readDataFromSwaggerJson(
 		string $routePath,
 		string $methodType,
 		string $jsonPath,
-		string $swaggerJson): array
-		{
+		string $swaggerJson) : array
+	{
 			require_once '..' . DIRECTORY_SEPARATOR
 			. '..' . DIRECTORY_SEPARATOR
 			. 'axenox' . DIRECTORY_SEPARATOR
@@ -435,7 +435,7 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 			
 			$jsonPath = str_replace('[#routePath#]', $routePath, $jsonPath);
 			$jsonPath = str_replace('[#methodType#]', $methodType, $jsonPath);
-			$data = (new JSONPath(json_decode($swaggerJson, false)))->find($jsonPath)->getData()[0];
-			return get_object_vars($data);
+			$data = (new JSONPath(json_decode($swaggerJson, false)))->find($jsonPath)->getData()[0] ?? null;
+			return is_object($data) ? get_object_vars($data) : $data;
 	}
 }
