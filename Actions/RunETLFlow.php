@@ -152,22 +152,20 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI, 
         yield PHP_EOL . $indent . 'Execution plan:' . PHP_EOL;
         
         $prevStepResult = null;
-        
-        $planner = $this->getStepsPlanGenerator($alias, $indent.$indent);
-        yield from $planner;
-        $plan = $planner->getReturn();
-        
+
+        $steps = $this->getSteps($alias, $indent.$indent);
         $timeout = 0;
-        foreach ($plan as $step) {
+        foreach ($steps as $step) {
             $timeout += $step->getTimeout();
         }
+
         if ($timeout > (ini_get('max_execution_time') ?? 30)) {
             yield PHP_EOL . 'Increasing PHP max execution time to ' . $timeout . ' seconds.';
             set_time_limit($timeout);
         }
         
         yield PHP_EOL . 'Starting now...' . PHP_EOL . PHP_EOL;
-        foreach ($plan as $pos => $step) {
+        foreach ($steps as $pos => $step) {
             $nr = $pos+1;
             $prevRunResult = $this->getPreviousResultData($step);
             $logRow = $this->logRunStart($step, $flowRunUid, $nr, $prevRunResult)->getRow(0);
@@ -382,15 +380,14 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI, 
      * 
      * @param string $flowAlias
      * @throws ActionRuntimeError
-     * @return \Generator|ETLStepInterface[]
+     * @return ETLStepInterface[]
      */
-    protected function getStepsPlanGenerator(string $flowAlias, string $logIndent) : \Generator
+    protected function getSteps(string $flowAlias, string $logIndent) : array
     {
         $ds = DataSheetFactory::createFromObjectIdOrAlias($this->getWorkbench(), 'axenox.ETL.step');
         $ds->getFilters()->addConditionFromString('flow__alias', $flowAlias, ComparatorDataType::EQUALS);
-        $ds->getSorters()->addFromString('level', SortingDirectionsDataType::ASC);
+        $ds->getSorters()->addFromString('step_flow_sequence', SortingDirectionsDataType::ASC);
         $ds->getColumns()->addMultiple([
-            'required_for_step',
             'UID',
             'name',
             'etl_prototype',
@@ -400,43 +397,17 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI, 
             'disabled',
             'flow',
             'stop_flow_on_error',
-            'run_after_step'
+            'step_flow_sequence'
         ]);
         $ds->dataRead();
         
         if ($ds->isEmpty()) {
-            return;
+            return [];
         }
         
-        /* 
-         * Steps in original reading order with UIDs as keys. Planned steps are moved
-         * from this array to $stepsPlanned.
-         * @var $stepsToPlan \axenox\ETL\Interfaces\ETLStepInterface[] 
-         */
-        $stepsToPlan = [];
-        
-        /* 
-         * Steps in execution order with regular numeric keys starting with 0.
-         * @var $stepsPlanned \axenox\ETL\Interfaces\ETLStepInterface[] 
-         */
-        $stepsPlanned = [];
-        
-        /* 
-         * Array with object aliases as keys and subsets of $stepsToPlan still required 
-         * to populate each object as values. Once a step is planned it should be removed
-         * from each step-array here it was contained in.
-         * @var $stepsForObject \axenox\ETL\Interfaces\ETLStepInterface[][] 
-         */
-        $stepsForObject = [];
-        
-        /*
-         * Array with step UIDs for keys and their immediate follower step UID as value.
-         * It contains only those UIDs, that really have an immediate follower!
-         * @var $explicitFollowers string[]
-         */
-        $explicitFollowers = [];
-        
         $disabledCompletely = true;
+        $steps = [];
+        $loadedSteps = [];
         foreach ($ds->getRows() as $row) {
             $toObj = MetaObjectFactory::createFromString($this->getWorkbench(), $row['to_object']);
             if ($row['from_object']) {
@@ -452,99 +423,28 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI, 
                 $fromObj,
                 UxonObject::fromAnything($row['etl_config_uxon'] ?? [])
             );
+
             $step->setDisabled(BooleanDataType::cast($row['disabled']));
-            if (! $step->isDisabled()) {
+            if ($step->isDisabled() === false) {
                 $disabledCompletely = false;
             }
-            $stepsToPlan[$row['UID']] = $step;
-            $stepsForObject[$toObj->getAliasWithNamespace()][$row['UID']] = $step;
+
+            $steps[] = $step;
             $flowUId = $row['flow'];
-            
+            $loadedSteps[$row['UID']] = $step;
+
             if ($row['stop_flow_on_error']) {
                 $this->flowStoppers[] = $step;
-            }
-            
-            if ($predecessorUid = ($row['run_after_step'] ?? null)) {
-                if (array_key_exists($predecessorUid, $explicitFollowers)) {
-                    throw new ActionConfigurationError($this, 'Data flow conflict found: steps "' . $row['name'] . '" and "' . $stepsToPlan[$explicitFollowers[$predecessorUid]]->getName() . '" are scheduled to run explicitly after the same step (with step id "' . $predecessorUid . '")');
-                }
-                $explicitFollowers[$predecessorUid] = $row['UID'];
             }
         }
         
         if ($disabledCompletely === true) {
             return [];
         }
-        
-        $this->stepsLoaded = $stepsToPlan;
-        $this->stepsPerFlowUid[$flowUId] = $stepsToPlan;
-        
-        $stepsCnt = count($stepsToPlan);
-        for ($i = 0; $i < $stepsCnt; $i++) {
-            foreach ($stepsToPlan as $stepUid => $step) {
-                // If the step was already planned, skip it
-                if (in_array($step, $stepsPlanned, true)) {
-                    continue;
-                }
-                // If the step is an immediate follower of another step - skip it as it
-                // will be handled when that other step (being followed) is planned.
-                if (in_array($stepUid, $explicitFollowers)) {
-                    continue;
-                }
-                // See if the steps from-object still has non-planned required steps
-                $stepsRequired = $step->getFromObject() ? ($stepsForObject[$step->getFromObject()->getAliasWithNamespace()] ?? []) : [];
-                // If not, enqueue the step
-                if (empty($stepsRequired) || (count($stepsRequired) === 1 && $stepsRequired[$stepUid] === $step)) {
-                    $stepsPlanned[] = $step;
-                    yield $logIndent . count($stepsPlanned) . '. ' . $step->getName() . PHP_EOL;
-                    // Remove it from all object requirements
-                    foreach ($stepsForObject as $o => $reqs) {
-                        if (array_key_exists($stepUid, $reqs)) {
-                            unset($stepsForObject[$o][$stepUid]);
-                        }
-                    }
-                    // Remove it from the steps to plan to reduce future iterations
-                    unset($stepsToPlan[$stepUid]);
-                    
-                    // See if the step has an immediate follower
-                    $followerUid = $explicitFollowers[$stepUid] ?? null;
-                    while ($followerUid !== null) {
-                        // If so, plan the follow-up step now
-                        $followerStep = $stepsToPlan[$followerUid];
-                        $stepsPlanned[] = $followerStep;
-                        yield $logIndent . count($stepsPlanned) . '. ' . $followerStep->getName() . ' - as immediate follower of (' . (count($stepsPlanned)-1) . '.)' . PHP_EOL;
-                        unset($stepsToPlan[$followerUid]);
-                        // Remove the follow-up from object requirements
-                        foreach ($stepsForObject as $o => $reqs) {
-                            if (array_key_exists($followerUid, $reqs)) {
-                                unset($stepsForObject[$o][$followerUid]);
-                            }
-                        }
-                        // See if the follow-up has a follow-up and, if so, stay in the WHILE
-                        // to handle it - otherwise proceed regularly.
-                        $followerUid = $explicitFollowers[$followerUid] ?? null;
-                    }
-                    
-                    // Leave the inner FOREACH and start over from the beginning of the
-                    // remaining steps to plan.
-                    break;
-                }
-            }
-        }
-        
-        if (count($stepsPlanned) !== $stepsCnt) {
-            yield $logIndent . '✗ Cannot order remaining steps according to their dependencies:' . PHP_EOL;
-            foreach ($stepsToPlan as $step) {
-                yield $logIndent . '  - Step "' . $step->getName() . '" requires ' . ($step->getFromObject() ? 'object "' . $step->getFromObject()->getAliasWithNamespace() . '"' : 'nothing') . ' with:' . PHP_EOL;
-                $stepsRequired = $step->getFromObject() ? ($stepsForObject[$step->getFromObject()->getAliasWithNamespace()] ?? []) : [];
-                foreach ($stepsRequired as $req) {
-                    yield $logIndent . $logIndent . '- "' . $req->getName() . '"' . PHP_EOL;
-                }
-            }
-            throw new RuntimeException('Cannot determine execution order for ETL steps! Circular dependency?');
-        }
-        
-        return $stepsPlanned;
+
+        $this->stepsLoaded = $loadedSteps;
+        $this->stepsPerFlowUid[$flowUId] = $loadedSteps;
+        return $steps;
     }
     
     /**

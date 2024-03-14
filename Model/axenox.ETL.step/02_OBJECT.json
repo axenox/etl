@@ -81,9 +81,9 @@
     "rows": [
         {
             "CREATED_ON": "2021-02-26 16:46:29",
-            "MODIFIED_ON": "2023-10-18 16:08:49",
+            "MODIFIED_ON": "2024-03-11 07:48:36",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
-            "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
+            "MODIFIED_BY_USER": "0x11e8fe1c902c8ebea23ee4b318306b9a",
             "UID": "0x11ebae9fcb215da2ae9f025041000001",
             "READABLE_FLAG": 1,
             "WRITABLE_FLAG": 1,
@@ -133,16 +133,7 @@
                                 "id": "prototype_field"
                             },
                             {
-                                "attribute_alias": "run_after_step",
-                                "widget_type": "InputComboTable",
-                                "autoselect_single_suggestion": false,
-                                "filters": [
-                                    {
-                                        "attribute_alias": "flow",
-                                        "value": "=flow_selector",
-                                        "comparator": "=="
-                                    }
-                                ]
+                                "attribute_alias": "step_flow_sequence"
                             },
                             {
                                 "attribute_alias": "stop_flow_on_error"
