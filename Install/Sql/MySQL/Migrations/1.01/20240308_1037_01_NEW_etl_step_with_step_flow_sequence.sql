@@ -1,5 +1,5 @@
 -- UP
-CALL execute_sql_on_missing_column('etl_step', 'step_flow_sequence', 'ALTER TABLE etl_step ADD COLUMN step_flow_sequence INT NOT NULL`');
+CALL execute_sql_on_missing_column('etl_step', 'step_flow_sequence', 'ALTER TABLE etl_step ADD COLUMN step_flow_sequence INT NOT NULL');
 CALL execute_sql_on_missing_column('etl_step', 'step_flow_sequence',
      'UPDATE etl_step
       INNER JOIN (
