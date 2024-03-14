@@ -61,7 +61,7 @@
     "rows": [
         {
             "CREATED_ON": "2024-01-09 12:47:29",
-            "MODIFIED_ON": "2024-02-26 15:13:37",
+            "MODIFIED_ON": "2024-03-14 09:05:15",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
             "MODIFIED_BY_USER": "0x11e8fe1c902c8ebea23ee4b318306b9a",
             "UID": "0x11eeb5b6dde235f4b5b6025041000001",
@@ -129,11 +129,10 @@
                                                                     "attribute_alias": "etl_prototype"
                                                                 }
                                                             ],
-                                                            "row_grouper": {
-                                                                "group_by_attribute_alias": "type",
-                                                                "hide_caption": true
-                                                            },
                                                             "columns": [
+                                                                {
+                                                                    "attribute_alias": "step_flow_sequence"
+                                                                },
                                                                 {
                                                                     "attribute_alias": "disabled",
                                                                     "caption": "Off"
@@ -150,9 +149,6 @@
                                                                     "caption": "To"
                                                                 },
                                                                 {
-                                                                    "attribute_alias": "run_after_step__LABEL"
-                                                                },
-                                                                {
                                                                     "attribute_alias": "etl_prototype"
                                                                 },
                                                                 {
@@ -161,11 +157,7 @@
                                                             ],
                                                             "sorters": [
                                                                 {
-                                                                    "attribute_alias": "level",
-                                                                    "direction": "asc"
-                                                                },
-                                                                {
-                                                                    "attribute_alias": "name",
+                                                                    "attribute_alias": "step_flow_sequence",
                                                                     "direction": "asc"
                                                                 }
                                                             ],

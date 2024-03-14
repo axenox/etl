@@ -1,0 +1,17 @@
+-- UP
+CALL execute_sql_on_missing_column('etl_step', 'step_flow_sequence', 'ALTER TABLE etl_step ADD COLUMN step_flow_sequence INT NOT NULL`');
+CALL execute_sql_on_missing_column('etl_step', 'step_flow_sequence',
+     'UPDATE etl_step
+      INNER JOIN (
+          SELECT DISTINCT flow_run_pos, sr.flow_oid, sr.step_oid FROM etl_step_run sr
+          LEFT JOIN etl_flow_run fr ON fr.oid = sr.flow_run_oid
+          WHERE  fr.valid_flag = 1 AND fr.created_on = (Select MAX(created_on) FROM etl_flow_run WHERE flow_oid = fr.flow_oid)
+      ) srs ON etl_step.oid = srs.step_oid AND etl_step.flow_oid = srs.flow_oid
+      SET step_flow_sequence = srs.flow_run_pos');
+
+-- delete old value
+CALL execute_sql_on_existing_column('etl_step', 'run_after_step_oid', 'ALTER TABLE etl_step DROP COLUMN run_after_step_oid');
+
+
+-- DOWN
+-- cannot change back structural changes
