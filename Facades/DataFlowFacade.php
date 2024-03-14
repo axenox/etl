@@ -1,6 +1,7 @@
 <?php
 namespace axenox\ETL\Facades;
 
+use exface\Core\Facades\AbstractHttpFacade\Middleware\JsonBodyParser;
 use GuzzleHttp\Psr7\Response;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -213,7 +214,7 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 		ServerRequestInterface $request,
 		array &$headers,
 		array $routeModel,
-		string $routePath) : string
+		string $routePath) : ?string
 	{
 		$flowResponse = json_decode($requestLogData->getRow()['response_body'], true);
 		
@@ -228,12 +229,12 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 				$routeModel['swagger_json']
 		    );
 		}
-		
-		// set header
-		if ($responseModel !== null && empty($responseModel) === false){
-				$headers['Content-Type'] = 'application/json';
+
+		if ($responseModel === null && empty($responseModel)) {
+            return null;
 		}
-		
+
+        $headers['Content-Type'] = 'application/json';
 		// merge flow response into empty model
         if ($flowResponse !== null && empty($flowResponse) === false){
             $body = array_merge($responseModel, $flowResponse);
@@ -417,14 +418,14 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 	 * @param string $methodType
 	 * @param string $jsonPath
 	 * @param string $swaggerJson
-	 * @return array
+	 * @return array|null
 	 */
 	public function readDataFromSwaggerJson(
 		string $routePath,
 		string $methodType,
 		string $jsonPath,
-		string $swaggerJson) : array
-	{
+		string $swaggerJson): ?array
+    {
 			require_once '..' . DIRECTORY_SEPARATOR
 			. '..' . DIRECTORY_SEPARATOR
 			. 'axenox' . DIRECTORY_SEPARATOR
