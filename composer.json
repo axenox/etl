@@ -1,30 +1,30 @@
 {
-	"name" : "axenox/etl",
-	"support" : {
-		"source" : "https://github.com/axenox/ETL",
-		"docs" : "https://github.com/axenox/ETL/blob/1.x-dev/Docs",
-		"issues" : "https://github.com/axenox/ETL/issues"
-	},
-	"require" : {
-		"exface/core" : "^1.0",
-		"npm-asset/swagger-ui-dist" : "^5",
-		"softcreatr/jsonpath" : "~0.7",
-		"league/openapi-psr7-validator" : "~0.22"
-	},
-	"autoload" : {
-		"psr-4" : {
-			"\\axenox\\ETL\\" : ""
-		},
-		"exclude-from-classmap" : [
-			"/Config/",
-			"/Translations/",
-			"/Model/"
-		]
-	},
-	"extra" : {
-		"app" : {
-			"app_uid" : "0x11ebbc50679eacdabc50025041000001",
-			"app_alias" : "axenox.ETL"
-		}
-	}
+    "name": "axenox/etl",
+    "support": {
+        "source": "https://github.com/axenox/ETL",
+        "docs": "https://github.com/axenox/ETL/blob/1.x-dev/Docs",
+        "issues": "https://github.com/axenox/ETL/issues"
+    },
+    "require": {
+        "exface/core": "^1.0",
+        "npm-asset/swagger-ui-dist": "^5",
+        "softcreatr/jsonpath": "~0.7",
+        "league/openapi-psr7-validator": "~0.22"
+    },
+    "autoload": {
+        "psr-4": {
+            "\\axenox\\ETL\\": ""
+        },
+        "exclude-from-classmap": [
+            "/Config/",
+            "/Translations/",
+            "/Model/"
+        ]
+    },
+    "extra": {
+        "app": {
+            "app_uid": "0x11ebbc50679eacdabc50025041000001",
+            "app_alias": "axenox.ETL"
+        }
+    }
 }
