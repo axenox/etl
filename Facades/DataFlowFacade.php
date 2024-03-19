@@ -84,7 +84,6 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 			}
 
 			$response = $this->createResponseFromError($e, $request, $requestLogData);
-			$requestLogData = $this->logRequestFailed($requestLogData, $e, $response);
 			return $response;
 		}
 
@@ -179,26 +178,52 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 	 * @param ExceptionInterface $e
 	 * @return DataSheetInterface
 	 */
-	protected function logRequestFailed(
-		DataSheetInterface $requestLogData,
-		\Throwable $e,
-		ResponseInterface $response = null): DataSheetInterface
+	protected function logRequestFailed(mixed $request, \Throwable $e, ResponseInterface $response = null) : DataSheetInterface
 	{
 		if (!($e instanceof ExceptionInterface)) {
 			$e = new InternalError($e->getMessage(), null, $e);
 		}
-		$this->getWorkbench()
-			->getLogger()
-			->logException($e);
-		$ds = $requestLogData->extractSystemColumns();
-		$ds->setCellValue('status', 0, WebRequestStatusDataType::ERROR);
-		$ds->setCellValue('error_message', 0, $e->getMessage());
-		$ds->setCellValue('error_logid', 0, $e->getId());
-		$ds->setCellValue('http_response_code', 0, $response !== null ? $response->getStatusCode() : $e->getStatusCode());
-		$ds->setCellValue('response_header', 0, json_encode($response->getHeaders()));
-		$ds->setCellValue('response_body', 0, $response->getBody()
-			->__toString());
-		$ds->dataUpdate(false);
+
+        switch (true) {
+            // request already exists in DB
+            case $request instanceof DataSheetInterface:
+                $this->getWorkbench()
+                    ->getLogger()
+                    ->logException($e);
+                $ds = $request->extractSystemColumns();
+                $ds->setCellValue('status', 0, WebRequestStatusDataType::ERROR);
+                $ds->setCellValue('error_message', 0, $e->getMessage());
+                $ds->setCellValue('error_logid', 0, $e->getId());
+                $ds->setCellValue('http_response_code', 0, $response !== null ? $response->getStatusCode() : $e->getStatusCode());
+                $ds->setCellValue('response_header', 0, json_encode($response->getHeaders()));
+                $ds->setCellValue('response_body', 0, $response->getBody()
+                    ->__toString());
+                $ds->dataUpdate(false);
+                break;
+            // request has not been created yet
+            case $request instanceof ServerRequestInterface:
+                $ds = DataSheetFactory::createFromObjectIdOrAlias($this->getWorkbench(), 'axenox.ETL.webservice_request');
+                $ds->addRow([
+                    'status' => WebRequestStatusDataType::ERROR,
+                    'url' => $request->getUri()->__toString(),
+                    'url_path' => StringDataType::substringAfter(
+                        $request->getUri()->getPath(),
+                        $this->getUrlRouteDefault() . '/',
+                        $request->getUri()->getPath()),
+                    'http_method' => $request->getMethod(),
+                    'http_headers' => JsonDataType::encodeJson($request->getHeaders()),
+                    'http_body' => $request->getBody()->__toString(),
+                    'http_content_type' => implode(';', $request->getHeader('Content-Type')),
+                    'error_message' => $e->getMessage(),
+                    'error_logid' => $e->getId(),
+                    'http_response_code' => $response !== null ? $response->getStatusCode() : $e->getStatusCode(),
+                    'response_header' => json_encode($response->getHeaders()),
+                    'response_body' => $response->getBody()
+                ]);
+                $ds->dataCreate(false);
+                break;
+        }
+
 		return $ds;
 	}
 	
@@ -303,7 +328,10 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 	 * {@inheritDoc}
 	 * @see \exface\Core\Facades\AbstractHttpFacade\AbstractHttpFacade::createResponseFromError()
 	 */
-	protected function createResponseFromError(\Throwable $exception, ServerRequestInterface $request = null): ResponseInterface
+	protected function createResponseFromError(
+        \Throwable $exception,
+        ServerRequestInterface $request = null,
+        DataSheetInterface $requestLogData = null): ResponseInterface
 	{
 		$code = $exception->getStatusCode();
 		$headers = $this->buildHeadersCommon();
@@ -312,7 +340,9 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 			->getSecurity()
 			->getAuthenticatedToken()
 			->isAnonymous()) {
-			return new Response($code, $headers);
+            $response = new Response($code, $headers);
+            $this->logRequestFailed($requestLogData ?? $request, $exception, $response);
+            return $response;
 		}
 		
 		if ($exception instanceof JsonSchemaValidationError) {			
@@ -326,8 +356,10 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 					$errors[$context] = $error;
 				}
 			}
-			
-			return new Response(400, $headers, json_encode($errors));
+
+            $response = new Response(400, $headers, json_encode($errors));
+            $this->logRequestFailed($requestLogData ?? $request, $exception, $response);
+            return $response;
 		}
 
 		$headers['Content-Type'] = 'application/json';
@@ -336,7 +368,10 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 			'Log-Id' => $exception->getId()]
 		]);
 
-		return new Response($code, $headers, $errorData);
+		$response = new Response($code, $headers, $errorData);
+
+        $this->logRequestFailed($requestLogData ?? $request, $exception, $response);
+        return $response;
 	}
 
 	/**
