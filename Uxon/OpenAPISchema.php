@@ -169,10 +169,10 @@ class OpenAPISchema implements UxonSchemaInterface
                 'ALIAS_WITH_NS'
             ]);
             $objectSheet->dataRead();
-            $schemaBuilder = new MetaModelSchemaBuilder();
+            $schemaBuilder = new MetaModelSchemaBuilder(onlyReturnProperties: true, forceSchema: true, loadExamples: true);
             foreach ($objectSheet->getRows() as $objRow) {
                 $obj = MetaObjectFactory::createFromString($this->getWorkbench(), $objRow['ALIAS_WITH_NS']);
-                $json = $schemaBuilder::transformIntoJsonSchema($obj, []);
+                $json = $schemaBuilder->transformIntoJsonSchema($obj);
             
                 $ds->addRow([
                     'UID' => $obj->getId(),

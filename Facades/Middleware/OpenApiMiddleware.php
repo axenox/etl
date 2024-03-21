@@ -70,18 +70,12 @@ final class OpenApiMiddleware implements MiddlewareInterface
     	$swaggerSchema = $swaggerArray['components']['schemas'];
     	if (array_key_exists('Metamodel Informationen', $swaggerSchema)){
     		if (array_key_exists('Metamodel Informationen', $swaggerSchema)) {
-    			$attribtueAliasesToAdd = array_keys($swaggerSchema['Metamodel Informationen']['properties']);
-    			foreach ($attribtueAliasesToAdd as $metaobjectAlias){
-    				$metaObjectSchema = MetaModelSchemaBuilder::transformIntoJsonSchema(
-    					MetaObjectFactory::createFromString($this->getWorkbench(), $metaobjectAlias),
-    					$attribtueAliasesToAdd);
-    				foreach ($attribtueAliasesToAdd as $metaobjectAlias) {
-    					$metaObjectSchema = MetaModelSchemaBuilder::transformIntoJsonSchema(
-    						MetaObjectFactory::createFromString($this->getWorkbench(), $metaobjectAlias), 
-    						$attribtueAliasesToAdd);
-    					
-    					$swaggerSchema['Metamodel Informationen']['properties'][$metaobjectAlias] = $metaObjectSchema[$metaobjectAlias];
-    				}
+    			$objectsInJsonSchema = array_keys($swaggerSchema['Metamodel Informationen']['properties']);
+    			foreach ($objectsInJsonSchema as $metaobjectAlias){
+    				$metaObjectSchema = (new MetaModelSchemaBuilder($objectsInJsonSchema))->transformIntoJsonSchema(
+    					MetaObjectFactory::createFromString($this->getWorkbench(), $metaobjectAlias));
+
+                    $swaggerSchema['Metamodel Informationen']['properties'][$metaobjectAlias] = $metaObjectSchema[$metaobjectAlias];
     			}
     		}
     		
