@@ -3,8 +3,14 @@ namespace axenox\ETL\Facades\Helper;
 
 use axenox\ETL\Common\SqlColumnMapping;
 use exface\Core\CommonLogic\DataSheets\DataColumn;
+use exface\Core\CommonLogic\Model\Attribute;
+use exface\Core\DataTypes\ComparatorDataType;
 use exface\Core\DataTypes\StringDataType;
+use exface\Core\Factories\AttributeListFactory;
 use exface\Core\Factories\DataSheetFactory;
+use exface\Core\Factories\DataSorterFactory;
+use exface\Core\Interfaces\DataSheets\DataSheetInterface;
+use exface\Core\Interfaces\Model\MetaAttributeInterface;
 use exface\Core\Interfaces\Model\MetaObjectInterface;
 use exface\Core\DataTypes\IntegerDataType;
 use exface\Core\DataTypes\NumberDataType;
@@ -15,6 +21,7 @@ use exface\Core\DataTypes\DateTimeDataType;
 use exface\Core\DataTypes\DateDataType;
 use exface\Core\DataTypes\BinaryDataType;
 use exface\Core\Exceptions\InvalidArgumentException;
+use function Sodium\add;
 
 /**
  * A builder that creates a schema from a MetaObjectInterface.
@@ -78,9 +85,14 @@ class MetaModelSchemaBuilder
 
             $ds->getColumns()->addMultiple($columns);
 
+            if (($tsBehavior = $metaObject->getBehaviors()->getByPrototypeClass(TimeStampingBehavior::class)->getFirst()) != null){
+                $oderingAttribute = $tsBehavior->getUpdatedOnAttribute();
+                $ds->getSorters()->addFromString($oderingAttribute, 'DESC');
+            }
+
             if ($ds->hasUidColumn()){
-                $ds->dataRead(1000);
-                $richestRow = $this->getRowWithTheLeastNullValues($columns, $ds->getRows());
+                $ds->dataRead(1);
+                $richestRow = $this->getRowWithTheLeastNullValues($ds);
             }
         }
 
@@ -159,29 +171,27 @@ class MetaModelSchemaBuilder
     }
 
     /**
-     * @param array $columns
      * @param \exface\Core\Interfaces\DataSheets\DataSheetInterface|\exface\Core\CommonLogic\DataSheets\DataSheet $ds
      * @return mixed|null
      */
-    private function getRowWithTheLeastNullValues(array $columns, array $rows): mixed
+    private function getRowWithTheLeastNullValues(DataSheetInterface $ds) : mixed
     {
-        $amountOfColumns = count($columns);
-        $leastAmountOfNull = $amountOfColumns;
-        $richestRow = null;
-        foreach ($rows as $row) {
-            $currentAmountOfNull = 0;
-            foreach ($row as $value) {
-                $currentAmountOfNull += empty($value) ? 1 : 0;
-            }
+        $row = $ds->getRow();
+        foreach ($row as $col=>$value) {
+            if ($value === null) {
+                $ds->getFilters()->addConditionFromString(
+                    $col,
+                    EXF_LOGICAL_NULL,
+                    ComparatorDataType::IS_NOT);
+                $ds->dataRead(1);
+                $newRow = $ds->getRow();
 
-            if ($currentAmountOfNull === $amountOfColumns) {
-                return $row;
-            } else if ($currentAmountOfNull < $leastAmountOfNull) {
-                $leastAmountOfNull = $currentAmountOfNull;
-                $richestRow = $row;
+                if ($newRow != null){
+                    $this->getRowWithTheLeastNullValues($ds);
+                }
             }
         }
 
-        return $richestRow;
+        return $newRow ?? $row;
     }
 }
