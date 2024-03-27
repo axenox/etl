@@ -44,8 +44,7 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 	 * {@inheritDoc}
 	 * @see \exface\Core\Facades\AbstractHttpFacade\AbstractHttpFacade::createResponse()
 	 */
-	protected function createResponse(
-		ServerRequestInterface $request): ResponseInterface
+	protected function createResponse(ServerRequestInterface $request): ResponseInterface
 	{
 		$headers = $this->buildHeadersCommon();
 
@@ -178,52 +177,19 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 	 * @param ExceptionInterface $e
 	 * @return DataSheetInterface
 	 */
-	protected function logRequestFailed(mixed $request, \Throwable $e, ResponseInterface $response = null) : DataSheetInterface
+	protected function logRequestFailed(
+		DataSheetInterface $requestLogData,
+		\Throwable $e,
+		ResponseInterface $response = null): DataSheetInterface
 	{
-		if (!($e instanceof ExceptionInterface)) {
-			$e = new InternalError($e->getMessage(), null, $e);
-		}
-
-        switch (true) {
-            // request already exists in DB
-            case $request instanceof DataSheetInterface:
-                $this->getWorkbench()
-                    ->getLogger()
-                    ->logException($e);
-                $ds = $request->extractSystemColumns();
-                $ds->setCellValue('status', 0, WebRequestStatusDataType::ERROR);
-                $ds->setCellValue('error_message', 0, $e->getMessage());
-                $ds->setCellValue('error_logid', 0, $e->getId());
-                $ds->setCellValue('http_response_code', 0, $response !== null ? $response->getStatusCode() : $e->getStatusCode());
-                $ds->setCellValue('response_header', 0, json_encode($response->getHeaders()));
-                $ds->setCellValue('response_body', 0, $response->getBody()
-                    ->__toString());
-                $ds->dataUpdate(false);
-                break;
-            // request has not been created yet
-            case $request instanceof ServerRequestInterface:
-                $ds = DataSheetFactory::createFromObjectIdOrAlias($this->getWorkbench(), 'axenox.ETL.webservice_request');
-                $ds->addRow([
-                    'status' => WebRequestStatusDataType::ERROR,
-                    'url' => $request->getUri()->__toString(),
-                    'url_path' => StringDataType::substringAfter(
-                        $request->getUri()->getPath(),
-                        $this->getUrlRouteDefault() . '/',
-                        $request->getUri()->getPath()),
-                    'http_method' => $request->getMethod(),
-                    'http_headers' => JsonDataType::encodeJson($request->getHeaders()),
-                    'http_body' => $request->getBody()->__toString(),
-                    'http_content_type' => implode(';', $request->getHeader('Content-Type')),
-                    'error_message' => $e->getMessage(),
-                    'error_logid' => $e->getId(),
-                    'http_response_code' => $response !== null ? $response->getStatusCode() : $e->getStatusCode(),
-                    'response_header' => json_encode($response->getHeaders()),
-                    'response_body' => $response->getBody()
-                ]);
-                $ds->dataCreate(false);
-                break;
-        }
-
+		$ds = $requestLogData->extractSystemColumns();
+		$ds->setCellValue('status', 0, WebRequestStatusDataType::ERROR);
+		$ds->setCellValue('error_message', 0, $e->getMessage());
+		$ds->setCellValue('error_logid', 0, $e->getId());
+		$ds->setCellValue('http_response_code', 0, $response !== null ? $response->getStatusCode() : $e->getStatusCode());
+		$ds->setCellValue('response_header', 0, json_encode($response->getHeaders()));
+		$ds->setCellValue('response_body', 0, $response->getBody()->__toString());
+		$ds->dataUpdate(false);
 		return $ds;
 	}
 	
@@ -314,12 +280,10 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 		$ds->dataRead();
 		
 		$middleware = parent::getMiddleware();
-		array_push(
-			$middleware, 
-			new RouteConfigLoader($this, $ds, 'local_url', 'config_uxon', self::REQUEST_ATTRIBUTE_NAME_ROUTE),
-			new OpenApiValidationMiddleware($this, ['/.*swaggerui$/', '/.*openapi\\.json$/']),
-			new OpenApiMiddleware($this, $this->buildHeadersCommon(), '/.*openapi\\.json$/'),
-			new SwaggerUiMiddleware($this, $this->buildHeadersCommon(), '/.*swaggerui$/', 'openapi.json'));
+		$middleware[] = new RouteConfigLoader($this, $ds, 'local_url', 'config_uxon', self::REQUEST_ATTRIBUTE_NAME_ROUTE);
+		$middleware[] = new OpenApiValidationMiddleware($this, ['/.*swaggerui$/', '/.*openapi\\.json$/']);
+		$middleware[] = new OpenApiMiddleware($this, $this->buildHeadersCommon(), '/.*openapi\\.json$/');
+		$middleware[] = new SwaggerUiMiddleware($this, $this->buildHeadersCommon(), '/.*swaggerui$/', 'openapi.json');
 		
 		return $middleware;
 	}
@@ -328,10 +292,7 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 	 * {@inheritDoc}
 	 * @see \exface\Core\Facades\AbstractHttpFacade\AbstractHttpFacade::createResponseFromError()
 	 */
-	protected function createResponseFromError(
-        \Throwable $exception,
-        ServerRequestInterface $request = null,
-        DataSheetInterface $requestLogData = null): ResponseInterface
+	protected function createResponseFromError(\Throwable $exception, ServerRequestInterface $request = null): ResponseInterface
 	{
 		$code = $exception->getStatusCode();
 		$headers = $this->buildHeadersCommon();
@@ -341,9 +302,30 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 			->getAuthenticatedToken()
 			->isAnonymous()) {
             $response = new Response($code, $headers);
-            $this->logRequestFailed($requestLogData ?? $request, $exception, $response);
+            // Don't log anonymous requests to avoid flooding the request log
             return $response;
 		}
+		
+		/*
+		 * How to get the current route here? The route is determined by the RouteConfigLoader middleware
+		 * and saved in an attribute of the request. This is NOT the request passed to the method, however,
+		 * but rather a later version of it. The request here does not know the route because it is the
+		 * version, that the handler receives for processing in the AbstractHttpFacade. 
+		 * 
+		 * This is not critical, but leaves the request log without a proper relation to the route making
+		 * searching for requests for specific routes incomplete.
+		 * 
+		 * Ideas:
+		 * - pass an error handler callable to HttpRequestHandler to make it call the error handler with
+		 * the most current request instance
+		 * - fire an OnRouteMatched event in the RouteConfigLoader middlware and remember the route here
+		 * in the facade
+		 * - wrap all exceptions in some HttpRequestException in the HttpRequestHandler and attach the
+		 * request to that exception
+		 * - place exceptions in the request attribute bag instead of handling them directly and use a
+		 * middleware to render them at the very end of the middlware stack. This would also help with
+		 * exceptions thrown to early (in index.php) or to late.
+		 */
 		
 		if ($exception instanceof JsonSchemaValidationError) {			
 			$headers['Content-Type'] = 'application/json';
@@ -358,7 +340,8 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 			}
 
             $response = new Response(400, $headers, json_encode($errors));
-            $this->logRequestFailed($requestLogData ?? $request, $exception, $response);
+            $logData = $this->logRequestReceived($request);
+            $this->logRequestFailed($logData, $exception, $response);
             return $response;
 		}
 
@@ -370,7 +353,8 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 
 		$response = new Response($code, $headers, $errorData);
 
-        $this->logRequestFailed($requestLogData ?? $request, $exception, $response);
+		$logData = $this->logRequestReceived($request);
+        $this->logRequestFailed($logData, $exception, $response);
         return $response;
 	}
 
