@@ -6,6 +6,7 @@ use exface\Core\CommonLogic\DataSheets\DataColumn;
 use exface\Core\CommonLogic\Model\Attribute;
 use exface\Core\DataTypes\ComparatorDataType;
 use exface\Core\DataTypes\StringDataType;
+use exface\Core\DataTypes\TimeDataType;
 use exface\Core\Factories\AttributeListFactory;
 use exface\Core\Factories\DataSheetFactory;
 use exface\Core\Factories\DataSorterFactory;
@@ -21,6 +22,7 @@ use exface\Core\DataTypes\DateTimeDataType;
 use exface\Core\DataTypes\DateDataType;
 use exface\Core\DataTypes\BinaryDataType;
 use exface\Core\Exceptions\InvalidArgumentException;
+use PhpOffice\PhpSpreadsheet\Calculation\DateTimeExcel\TimeValue;
 use function Sodium\add;
 
 /**
@@ -112,6 +114,7 @@ class MetaModelSchemaBuilder
                         continue 2;
                     }
                 case $dataType instanceof IntegerDataType:
+                case $dataType instanceof TimeDataType:
                     $schema = ['type' => 'integer'];
                     break;
                 case $dataType instanceof NumberDataType:
@@ -144,7 +147,7 @@ class MetaModelSchemaBuilder
                     $schema = ['type' => 'string'];
                     break;
                 default:
-                    throw new InvalidArgumentException('Datatype: ' . $dataType . ' not recognized.');
+                    throw new InvalidArgumentException('Datatype: ' . $dataType->getAlias() . ' not recognized.');
             }
 
             if ($attribute->isRequired() === false){
