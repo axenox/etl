@@ -127,10 +127,12 @@ final class OpenApiValidationMiddleware implements MiddlewareInterface
 
     private function getSource(\Throwable $exception) : ?string
     {
-        if ($exception->dataBreadCrumb()->buildChain()[0] !== null) {
+        if ($exception->dataBreadCrumb()?->buildChain()[0] !== null) {
             return 'Invalid input found in `$.'
                 . implode('.', $exception->dataBreadCrumb()->buildChain())
                 . '`';
+        } else {
+            return null;
         }
     }
     

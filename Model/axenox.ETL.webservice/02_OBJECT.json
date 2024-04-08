@@ -81,7 +81,7 @@
     "rows": [
         {
             "CREATED_ON": "2023-10-18 16:06:50",
-            "MODIFIED_ON": "2024-03-15 12:01:01",
+            "MODIFIED_ON": "2024-04-08 11:09:12",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
             "MODIFIED_BY_USER": "0x11e8fe1c902c8ebea23ee4b318306b9a",
             "UID": "0x11eebdc39597022cbdc3025041000001",
@@ -106,19 +106,19 @@
                                 "caption": "Configuration",
                                 "widgets": [
                                     {
-                                        "attribute_alias": "flow",
-                                        "id": "flow_selector"
+                                        "attribute_alias": "UID",
+                                        "widget_type": "InputHidden",
+                                        "id": "uid_field"
                                     },
                                     {
                                         "attribute_alias": "app"
                                     },
                                     {
-                                        "attribute_alias": "name",
-                                        "calculation": "=flow_selector!name"
+                                        "attribute_alias": "name"
                                     },
                                     {
                                         "attribute_alias": "alias",
-                                        "calculation": "=flow_selector!alias"
+                                        "id": "route_alias"
                                     },
                                     {
                                         "attribute_alias": "flow_direction"
@@ -136,7 +136,7 @@
                                     },
                                     {
                                         "attribute_alias": "local_url",
-                                        "calculation": "=flow_selector!alias",
+                                        "calculation": "=route_alias",
                                         "disabled_if": {
                                             "operator": "AND",
                                             "conditions": [
@@ -190,36 +190,66 @@
                                         "schema": "\\axenox\\ETL\\Uxon\\OpenAPISchema"
                                     }
                                 ]
-                            }
-                        ]
-                    }
-                ],
-                "buttons": [
-                    {
-                        "caption": "Edit flow",
-                        "close_dialog": false,
-                        "action": {
-                            "alias": "exface.Core.ShowObjectEditDialog",
-                            "object_alias": "axenox.ETL.flow",
-                            "input_mapper": {
-                                "column_to_column_mappings": [
+                            },
+                            {
+                                "caption": "Flows",
+                                "widgets": [
                                     {
-                                        "from": "flow",
-                                        "to": "UID"
+                                        "widget_type": "DataTable",
+                                        "object_alias": "axenox.ETL.webservice_flows",
+                                        "filters": [
+                                            {
+                                                "attribute_alias": "webservice",
+                                                "hidden": true,
+                                                "required": true,
+                                                "comparator": "==",
+                                                "value": "=uid_field"
+                                            },
+                                            {
+                                                "attribute_alias": "route"
+                                            }
+                                        ],
+                                        "columns": [
+                                            {
+                                                "attribute_alias": "route"
+                                            },
+                                            {
+                                                "attribute_alias": "flow__name"
+                                            },
+                                            {
+                                                "caption": "Step Count",
+                                                "attribute_alias": "flow__step:COUNT"
+                                            },
+                                            {
+                                                "attribute_alias": "flow__description"
+                                            }
+                                        ],
+                                        "buttons": [
+                                            {
+                                                "action_alias": "exface.Core.ShowObjectCreateDialog",
+                                                "disabled_if": {
+                                                    "operator": "AND",
+                                                    "conditions": [
+                                                        {
+                                                            "value_left": "=uid_field",
+                                                            "comparator": "==",
+                                                            "value_right": ""
+                                                        }
+                                                    ]
+                                                }
+                                            },
+                                            {
+                                                "action_alias": "exface.Core.ShowObjectEditDialog",
+                                                "bind_to_double_click": true
+                                            },
+                                            {
+                                                "action_alias": "exface.Core.DeleteObject"
+                                            }
+                                        ]
                                     }
                                 ]
                             }
-                        },
-                        "disabled_if": {
-                            "operator": "AND",
-                            "conditions": [
-                                {
-                                    "value_left": "=flow_selector!UID",
-                                    "comparator": "==",
-                                    "value_right": ""
-                                }
-                            ]
-                        }
+                        ]
                     }
                 ]
             },

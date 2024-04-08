@@ -1,8 +1,10 @@
 <?php
 namespace axenox\ETL\Facades;
 
+use exface\Core\Exceptions\InvalidArgumentException;
 use exface\Core\Facades\AbstractHttpFacade\Middleware\JsonBodyParser;
 use GuzzleHttp\Psr7\Response;
+use Intervention\Image\Exception\NotFoundException;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use axenox\ETL\Actions\RunETLFlow;
@@ -52,12 +54,12 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 			$path = $request->getUri()->getPath();
 			$path = StringDataType::substringAfter($path, $this->getUrlRouteDefault() . '/', '');
 			$routePath = rtrim(strstr($path, '/'), '/');
-			$routeModel = $this->getRouteData($request);
+			$routeModel = $this->getRouteData($request, $routePath);
 			$requestLogData = $this->logRequestReceived($request);
 
 			// process flow
 			$routeUID = $routeModel['UID'];
-			$flowAlias = $routeModel['flow__alias'];
+			$flowAlias = $this->getFlowAlias($routeUID, $routePath);
 			$flowRunUID = RunETLFlow::generateFlowRunUid();
 			$requestLogData = $this->logRequestProcessing($requestLogData, $routeUID, $flowRunUID); // flow data update
 			$flowResult = $this->runFlow($flowAlias, $request, $requestLogData); // flow data update
@@ -263,10 +265,33 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 	 * @return string[]
 	 */
 	protected function getRouteData(
-		ServerRequestInterface $request): ?array
+		ServerRequestInterface $request) : ?array
 	{
 		return $request->getAttribute(self::REQUEST_ATTRIBUTE_NAME_ROUTE, null);
 	}
+
+    protected function getFlowAlias(string $routeUid, string $routePath) : string
+    {
+        $ds = DataSheetFactory::createFromObjectIdOrAlias($this->getWorkbench(), 'axenox.ETL.webservice_flows');
+        $ds->getColumns()->addMultiple(['webservice', 'flow__alias', 'route']);
+        $ds->getFilters()->addConditionFromString('webservice', $routeUid);
+        $ds->dataRead();
+
+        $alias = null;
+        $rows = $ds->getRows();
+        foreach ($rows as $row){
+            if (str_contains($routePath, $row['route'])) {
+                $alias = $row['flow__alias'];
+                return $alias;
+            }
+        }
+
+        if ($alias === null && count($rows) === 1){
+            return $rows[0]['flow__alias'];
+        } else {
+            throw new NotFoundException('Cannot find flow to webservice `' . $routeUid . '`');
+        }
+    }
 
 	/**
 	 * {@inheritDoc}
@@ -276,7 +301,7 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 	{
 		$ds = DataSheetFactory::createFromObjectIdOrAlias($this->getWorkbench(), 'axenox.ETL.webservice');
 		$ds->getColumns()->addMultiple(
-			['UID', 'flow', 'flow__alias', 'local_url', 'type__schema_json', 'type__default_response_path', 'swagger_json', 'config_uxon']);
+			['UID', 'local_url', 'type__schema_json', 'type__default_response_path', 'swagger_json', 'config_uxon']);
 		$ds->dataRead();
 		
 		$middleware = parent::getMiddleware();
