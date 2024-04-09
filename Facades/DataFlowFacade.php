@@ -2,7 +2,7 @@
 namespace axenox\ETL\Facades;
 
 use exface\Core\Exceptions\InvalidArgumentException;
-use exface\Core\Facades\AbstractHttpFacade\Middleware\JsonBodyParser;
+use Flow\JSONPath\JSONPathException;
 use GuzzleHttp\Psr7\Response;
 use Intervention\Image\Exception\NotFoundException;
 use Psr\Http\Message\ResponseInterface;
@@ -29,6 +29,15 @@ use axenox\ETL\Facades\Middleware\OpenApiMiddleware;
 use axenox\ETL\Facades\Middleware\SwaggerUiMiddleware;
 use Flow\JSONPath\JSONPath;
 
+// Use local version of JSONPathLexer with edit to
+require_once '..' . DIRECTORY_SEPARATOR
+    . '..' . DIRECTORY_SEPARATOR
+    . 'axenox' . DIRECTORY_SEPARATOR
+    . 'etl' . DIRECTORY_SEPARATOR
+    . 'Common' . DIRECTORY_SEPARATOR
+    . 'JSONPath' . DIRECTORY_SEPARATOR
+    . 'JSONPathLexer.php';
+
 /**
  * 
  * 
@@ -37,12 +46,13 @@ use Flow\JSONPath\JSONPath;
  */
 class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterface
 {
+    // TODO: move all OpenApiFacadeInterface methods into a separate OpenApiWebserviceType class
 
 	const REQUEST_ATTRIBUTE_NAME_ROUTE = 'route';
 
 	private $openApiCache = [];
 
-	/**
+    /**
 	 * {@inheritDoc}
 	 * @see \exface\Core\Facades\AbstractHttpFacade\AbstractHttpFacade::createResponse()
 	 */
@@ -51,10 +61,9 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 		$headers = $this->buildHeadersCommon();
 
 		try {
-			$path = $request->getUri()->getPath();
-			$path = StringDataType::substringAfter($path, $this->getUrlRouteDefault() . '/', '');
-			$routePath = rtrim(strstr($path, '/'), '/');
-			$routeModel = $this->getRouteData($request, $routePath);
+            $path = $this->getRoutePath($request);
+            $routePath = rtrim(strstr($path, '/'), '/');
+			$routeModel = $this->getRouteData($request);
 			$requestLogData = $this->logRequestReceived($request);
 
 			// process flow
@@ -322,6 +331,7 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 		$code = $exception->getStatusCode();
 		$headers = $this->buildHeadersCommon();
 
+        /*
 		if ($this->getWorkbench()
 			->getSecurity()
 			->getAuthenticatedToken()
@@ -330,6 +340,7 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
             // Don't log anonymous requests to avoid flooding the request log
             return $response;
 		}
+        */
 		
 		/*
 		 * How to get the current route here? The route is determined by the RouteConfigLoader middleware
@@ -354,17 +365,9 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 		
 		if ($exception instanceof JsonSchemaValidationError) {			
 			$headers['Content-Type'] = 'application/json';
-            $context = $exception->getContext();
-			$errors = [$context => []];
-			foreach ($exception->getErrors() as $error) {
-				if (is_array($error)){
-					$errors[$context][] = ['source' => $error['property'], 'message' => $error['message']];
-				} else {
-					$errors[$context] = $error;
-				}
-			}
 
-            $response = new Response(400, $headers, json_encode($errors));
+
+            $response = new Response(400, $headers, json_encode($exception->getFormattedErrors()));
             $logData = $this->logRequestReceived($request);
             $this->logRequestFailed($logData, $exception, $response);
             return $response;
@@ -416,7 +419,7 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 	{
 		$path = $request->getUri()->getPath();
 		if (array_key_exists($path, $this->openApiCache)) {
-			return $this->swaggerCache[$path];
+			return $this->openApiCache[$path];
 		}
 		$routeData = $request->getAttribute(self::REQUEST_ATTRIBUTE_NAME_ROUTE);
 		if (empty($routeData)) {
@@ -433,6 +436,114 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 		$this->openApiCache[$path] = $jsonArray;
 		return $jsonArray;
 	}
+
+    /**
+     *
+     * {@inheritDoc}
+     * @see \axenox\ETL\Interfaces\OpenApiFacadeInterface::getRequestBodySchemaForCurrentRoute()
+     */
+    public function getRequestBodySchemaForCurrentRoute(ServerRequestInterface $request): object
+    {
+        $jsonPath = '$.paths.[#routePath#].[#methodType#].requestBody';
+        $contentType = $request->getHeader('Content-Type')[0];
+        return $this->getJsonSchemaFromOpenApiByRef($request, $jsonPath, $contentType);
+    }
+
+    /**
+     *
+     * {@inheritDoc}
+     * @see \axenox\ETL\Interfaces\OpenApiFacadeInterface::getResponseBodySchemaForCurrentRoute()
+     */
+    public function getResponseBodySchemaForCurrentRoute(ServerRequestInterface $request, int $responseCode): object
+    {
+        $jsonPath = '$.paths.[#routePath#].[#methodType#].responses.' . $responseCode;
+        $contentType = $request->getHeader('accept')[0];
+        return $this->getJsonSchemaFromOpenApiByRef($request, $jsonPath, $contentType);
+    }
+
+    /**
+     *
+     * {@inheritDoc}
+     * @see \axenox\ETL\Interfaces\OpenApiFacadeInterface::getJsonSchemaFromOpenApiByRef()
+     */
+    public function getJsonSchemaFromOpenApiByRef(ServerRequestInterface $request, string $jsonPath, string $contentType): object
+    {
+        $openApiSchema = $this->getOpenApiJson($request);
+        $jsonPath = $this->findSchemaPathInOpenApiJson($request, $jsonPath, $contentType);
+        $schema = $this->findJsonDataByRef($openApiSchema, $jsonPath);
+        if ($schema === null) {
+            throw new InvalidArgumentException('Could not find schema with given json path in OpenApi.'
+            . ' Json path: ' . $jsonPath);
+        }
+
+        $schema = is_array($schema) ? json_decode(json_encode($schema)) : $schema;
+        return $this->convertNullableToNullType($schema);
+    }
+
+    /**
+     *
+     * {@inheritDoc}
+     * @see \axenox\ETL\Interfaces\OpenApiFacadeInterface::convertNullableToNullType()
+     */
+    public function convertNullableToNullType(object $schema) : object
+    {
+        if ($schema instanceof \StdClass === false) {
+            throw new InvalidArgumentException('');
+        }
+
+        foreach ($schema as $objectPart) {
+            if (is_object($objectPart) === false) {
+                continue;
+            }
+
+            if (property_exists($objectPart, 'nullable') && $objectPart->nullable === true) {
+                $type = $objectPart->type;
+                $objectPart->type = [ $type,  'null'];
+            } else {
+                $this->convertNullableToNullType($objectPart);
+            }
+        }
+
+        return $schema;
+    }
+
+
+    /**
+     *
+     * {@inheritDoc}
+     * @see \axenox\ETL\Interfaces\OpenApiFacadeInterface::findSchemaPathInOpenApiJson()
+     */
+    public function findSchemaPathInOpenApiJson(ServerRequestInterface $request, string $jsonPath, string $contentType): string
+    {
+        $path = $this->getRoutePath($request);
+        $routePath = rtrim(strstr($path, '/'), '/');
+        $methodType = strtolower($request->getMethod());
+
+        $jsonPath .= '.content.[#ContentType#].schema';
+        return str_replace(
+            ['[#routePath#]', '[#methodType#]', '[#ContentType#]'],
+            [$routePath, $methodType, $contentType],
+            $jsonPath);
+    }
+
+    /**
+     * @param array|null $openApiSchema
+     * @param string $jsonPath
+     * @return mixed|null
+     * @throws \Flow\JSONPath\JSONPathException
+     */
+    public function findJsonDataByRef(?array $openApiSchema, string $jsonPath): mixed
+    {
+        $jsonPathFinder = new JSONPath($openApiSchema);
+        $refSchema = $jsonPathFinder->find($jsonPath)->getData()[0] ?? null;
+        if ($refSchema != null) {
+            $refSchema = str_replace('#', '$', $refSchema['$ref']);
+            $refSchema = str_replace('/', '.', $refSchema);
+            return $jsonPathFinder->find($refSchema)->getData()[0] ?? null;
+        }
+
+        return null;
+    }
 	
 	/**
 	 * @param string $path
@@ -452,35 +563,38 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 		}
 			
 		return $swaggerArray;
-	}	
-	
-	/**
-	 * Selects data from a swaggerJson with the given json path.
-	 * Route path and method type are used to replace placeholders within the path.
-	 *
-	 * @param string $routePath
-	 * @param string $methodType
-	 * @param string $jsonPath
-	 * @param string $swaggerJson
-	 * @return array|null
-	 */
+	}
+
+    /**
+     * Selects data from a swaggerJson with the given json path.
+     * Route path and method type are used to replace placeholders within the path.
+     *
+     * @param string $routePath
+     * @param string $methodType
+     * @param string $jsonPath
+     * @param string $swaggerJson
+     * @return array|null
+     * @throws JSONPathException
+     */
 	public function readDataFromSwaggerJson(
 		string $routePath,
 		string $methodType,
 		string $jsonPath,
 		string $swaggerJson): ?array
     {
-			require_once '..' . DIRECTORY_SEPARATOR
-			. '..' . DIRECTORY_SEPARATOR
-			. 'axenox' . DIRECTORY_SEPARATOR
-			. 'etl' . DIRECTORY_SEPARATOR
-			. 'Common' . DIRECTORY_SEPARATOR
-			. 'JSONPath' . DIRECTORY_SEPARATOR
-			. 'JSONPathLexer.php';
-			
 			$jsonPath = str_replace('[#routePath#]', $routePath, $jsonPath);
 			$jsonPath = str_replace('[#methodType#]', $methodType, $jsonPath);
 			$data = (new JSONPath(json_decode($swaggerJson, false)))->find($jsonPath)->getData()[0] ?? null;
 			return is_object($data) ? get_object_vars($data) : $data;
 	}
+
+    /**
+     * @param ServerRequestInterface $request
+     * @return bool|string
+     */
+    public function getRoutePath(ServerRequestInterface $request): string|bool
+    {
+        $path = $request->getUri()->getPath();
+        return StringDataType::substringAfter($path, $this->getUrlRouteDefault() . '/', '');
+    }
 }
