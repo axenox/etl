@@ -206,16 +206,29 @@ class DataSheetToSQL extends AbstractETLPrototype
             $sqlRows = [];
             for ($i = $firstRow; $i < $lastRow; $i++) {
                 $row = $sheet->getRow($i);
-                $rowPhVals = [];
+                $rowPhValues = [];
+                $nullPhs = [];
                 foreach ($rowPhs as $ph) {
+                    if ($row[$ph] === null) {
+                        $nullPhs[] = $ph;
+                    }
                     if (array_key_exists($ph, $row)) {
-                        $rowPhVals[$ph] = $row[$ph];
+                        $rowPhValues[$ph] = $row[$ph];
                     } else {
-                        $rowPhVals[$ph] = '[#' . $ph . '#]';
+                        $rowPhValues[$ph] = '[#' . $ph . '#]';
                     }
                 }
-                $sqlRows[] = StringDataType::replacePlaceholders($sqlRowTpl, $rowPhVals);
+
+                $sqlRow = $sqlRowTpl;
+                // fill placeholders with NULL values
+                foreach ($nullPhs as $ph){
+                    $sqlRow = preg_replace("/('?\[#{$ph}#]'?)/", 'NULL', $sqlRow);
+                }
+
+                // fill placeholders with values
+                $sqlRows[] = StringDataType::replacePlaceholders($sqlRow, $rowPhValues);
             }
+
             $sql = str_replace('[#' . $tplPh . '#]', implode($this->getSqlRowDelimiter(), $sqlRows), $sql);
         }
         return $sql;
