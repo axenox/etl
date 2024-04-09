@@ -5,10 +5,6 @@ use exface\Core\Interfaces\Model\MetaObjectInterface;
 use exface\Core\CommonLogic\UxonObject;
 use exface\Core\Interfaces\DataSheets\DataSheetInterface;
 use exface\Core\Factories\DataSheetFactory;
-use exface\Core\Interfaces\DataSheets\DataSheetMapperInterface;
-use exface\Core\Factories\DataSheetMapperFactory;
-use exface\Core\Factories\BehaviorFactory;
-use exface\Core\Behaviors\PreventDuplicatesBehavior;
 use axenox\ETL\Common\AbstractETLPrototype;
 use axenox\ETL\Interfaces\ETLStepResultInterface;
 use exface\Core\DataTypes\StringDataType;
@@ -18,12 +14,17 @@ use exface\Core\DataTypes\ComparatorDataType;
 use exface\Core\DataTypes\DateTimeDataType;
 use exface\Core\Widgets\DebugMessage;
 use axenox\ETL\Events\Flow\OnBeforeETLStepRun;
-use exface\Core\Exceptions\UxonParserError;
-use exface\Core\DataTypes\PhpClassDataType;
 use axenox\ETL\Interfaces\ETLStepDataInterface;
+use exface\Core\Exceptions\UnexpectedValueException;
 
 /**
  * Reads a data sheet from the from-object and generates an SQL query from its rows.
+ * 
+ * ## Handling empty/NULL values
+ * 
+ * Data sheets may contain different types of empty values: e.g. empty strings and NULL values. By
+ * default all of them are automatically normalized to `NULL` in SQL. However, you can change this
+ * behavior using the `sql_empty_values` property.
  * 
  * ## Examples
  * 
@@ -82,6 +83,12 @@ use axenox\ETL\Interfaces\ETLStepDataInterface;
  */
 class DataSheetToSQL extends AbstractETLPrototype
 {
+    const EMPTY_AS_STRING = "''";
+    
+    const EMPTY_AS_NULL = "NULL";
+    
+    const EMPTY_AS_IS = null;
+    
     private $sourceSheetUxon = null;
     
     private $pageSize = null;
@@ -99,6 +106,8 @@ class DataSheetToSQL extends AbstractETLPrototype
     private $sqlRowsMax = 500;
     
     private $sqlRowDelimiter = "\n,";
+    
+    private $sqlEmptyValues = self::EMPTY_AS_NULL;
     
     /**
      * 
@@ -199,6 +208,7 @@ class DataSheetToSQL extends AbstractETLPrototype
     protected function buildSql(DataSheetInterface $sheet, int $limit, int $offset) : string
     {
         $sql = $this->getSql();
+        $sqlNull = $this->getSqlEmptyValue();
         $firstRow = $offset;
         $lastRow = min($limit + $offset, $sheet->countRows());
         foreach ($this->getSqlRowTemplates() as $tplPh => $sqlRowTpl) {
@@ -207,29 +217,52 @@ class DataSheetToSQL extends AbstractETLPrototype
             for ($i = $firstRow; $i < $lastRow; $i++) {
                 $row = $sheet->getRow($i);
                 $rowPhValues = [];
-                $nullPhs = [];
+                $rowNulls = [];
                 foreach ($rowPhs as $ph) {
-                    if ($row[$ph] === null) {
-                        $nullPhs[] = $ph;
-                    }
-                    if (array_key_exists($ph, $row)) {
-                        $rowPhValues[$ph] = $row[$ph];
-                    } else {
-                        $rowPhValues[$ph] = '[#' . $ph . '#]';
+                    $colExists = array_key_exists($ph, $row);
+                    $rowPhValue = $row[$ph];
+                    switch (true) {
+                        // Leave the placeholder as-is if there is no matching data column
+                        case $colExists === false:
+                            $rowPhValues[$ph] = '[#' . $ph . '#]';
+                            break;
+                        // Normalize empty existing data values (column exists, but value empty)
+                        case $rowPhValue === '' || $rowPhValue === null || $rowPhValue === EXF_LOGICAL_NULL:
+                            // If they need to be normalized to a specific value, use that value
+                            // Otherwise turn empty strings to `''` and all other values to `NULL`.
+                            // In both cases, the custom replacer below will take care of removing
+                            // any surrounding quotes from the template
+                            if ($sqlNull !== null) {
+                                $rowNulls[$ph] = $sqlNull;
+                            } else {
+                                $rowNulls[$ph] = $rowPhValue === '' ? "''" : "NULL";
+                            }
+                            break;
+                        // Use existing non-empty row values directly
+                        default:
+                            // FIXME escape strings here!
+                            $rowPhValues[$ph] = $rowPhValue;
+                            break;
                     }
                 }
 
+                // Replace placeholders with emtpy values by their normalized value BEFORE
+                // processing the other placeholders. This is important, because `replacePlaceholders()`
+                // will de-facto normalize empty values to empty strings (because PHPs `null` will 
+                // result in an empty string when stringified). Thus `'[#mycol#]'` will become `''`
+                // and not `NULL`. The replacer below will also get rid of the quotation marks, convertig
+                // `'[#mycol#]'` to `NULL` correctly.
                 $sqlRow = $sqlRowTpl;
-                // fill placeholders with NULL values
-                foreach ($nullPhs as $ph){
-                    $sqlRow = preg_replace("/('?\[#{$ph}#]'?)/", 'NULL', $sqlRow);
+                foreach ($rowNulls as $ph => $val){
+                    // If the value is really NULL, remove the quotation marks
+                    $sqlRow = preg_replace("/('?\[#{$ph}#]'?)/", $val, $sqlRow);
                 }
 
                 // fill placeholders with values
                 $sqlRows[] = StringDataType::replacePlaceholders($sqlRow, $rowPhValues);
             }
 
-            $sql = str_replace('[#' . $tplPh . '#]', implode($this->getSqlRowDelimiter(), $sqlRows), $sql);
+            $sql = StringDataType::replacePlaceholder($sql, $tplPh, implode($this->getSqlRowDelimiter(), $sqlRows));
         }
         return $sql;
     }
@@ -524,6 +557,40 @@ class DataSheetToSQL extends AbstractETLPrototype
     protected function setSqlRowsMaxPerQuery(?int $value) : DataSheetToSQL
     {
         $this->sqlRowsMax = $value;
+        return $this;
+    }
+    
+    /**
+     * 
+     * @return string|NULL
+     */
+    protected function getSqlEmptyValue() : ?string
+    {
+        return $this->sqlEmptyValues;
+    }
+    
+    /**
+     * What to do with empty values in the data sheet?
+     * 
+     * By default, this type of flow step will normalize all empty values to SQL NULLs (`as_null`). 
+     * However, you can change this behavior to either normalize them to empty strings (`as_string`)
+     * or leave them `as_is`.
+     * 
+     * @uxon-property sql_empty_values
+     * @uxon-type [as_null,as_string,as_is]
+     * @uxon-default as_null
+     * 
+     * @param string $value
+     * @return DataSheetToSQL
+     */
+    public function setSqlEmptyValues(string $value) : DataSheetToSQL
+    {
+        $const = DataSheetToSQL::class . '::EMPTY_' . strtoupper($value);
+        if (! defined($const)) {
+            throw new UnexpectedValueException('Invalid value "' . $value . '" for property "sql_empty_values" in data flow step "' . $this->getName() . '"');
+        }
+        $value = constant($const);
+        $this->sqlEmptyValues = $value;
         return $this;
     }
 }
