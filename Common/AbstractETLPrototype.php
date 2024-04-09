@@ -13,6 +13,16 @@ abstract class AbstractETLPrototype implements ETLStepInterface
 {
     use ImportUxonObjectTrait;
     
+    const PH_PARAMETER_PREFIX = '~parameter:';
+    
+    const PH_LAST_RUN_PREFIX = 'last_run_';
+    
+    const PH_LAST_RUN_UID = 'last_run_uid';
+    
+    const PH_FLOW_RUN_UID = 'flow_run_uid';
+    
+    const PH_STEP_RUN_UID = 'step_run_uid';
+    
     private $workbench = null;
     
     private $uxon = null;
@@ -228,8 +238,8 @@ abstract class AbstractETLPrototype implements ETLStepInterface
     {
     	// map identifier to placeholders
         $phs = [
-        	'flow_run_uid' => $stepData->getFlowRunUid(),
-        	'step_run_uid' => $stepData->getStepRunUid()
+        	self::PH_FLOW_RUN_UID => $stepData->getFlowRunUid(),
+        	self::PH_STEP_RUN_UID => $stepData->getStepRunUid()
         ];
         
         $lastResult = $stepData->getLastResult();
@@ -237,17 +247,17 @@ abstract class AbstractETLPrototype implements ETLStepInterface
             $lastResult = static::parseResult('');
         }
         
-        $phs['last_run_uid'] = $lastResult->getStepRunUid();
+        $phs[self::PH_LAST_RUN_UID] = $lastResult->getStepRunUid();
         foreach ($lastResult->exportUxonObject(true)->toArray() as $ph => $val) {
             if (is_scalar($val) || $val === null) {
-                $phs['last_run_' . $ph] = $val ?? '';
+                $phs[self::PH_LAST_RUN_PREFIX . $ph] = $val ?? '';
             }
         }
         
         // map query parameter to placeholders
         $task = $stepData->getTask();
         foreach ($task->getParameters() as $name => $value) {
-        	$phs['~parameter:' . $name] = $value;
+        	$phs[self::PH_PARAMETER_PREFIX . $name] = $value;
         }
         return $phs;
     }

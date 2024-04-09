@@ -16,6 +16,7 @@ use exface\Core\Widgets\DebugMessage;
 use axenox\ETL\Events\Flow\OnBeforeETLStepRun;
 use axenox\ETL\Interfaces\ETLStepDataInterface;
 use exface\Core\Exceptions\UnexpectedValueException;
+use exface\Core\Interfaces\DataSources\SqlDataConnectorInterface;
 
 /**
  * Reads a data sheet from the from-object and generates an SQL query from its rows.
@@ -207,6 +208,7 @@ class DataSheetToSQL extends AbstractETLPrototype
      */
     protected function buildSql(DataSheetInterface $sheet, int $limit, int $offset) : string
     {
+        $sqlConnection = $this->getSqlConnection();
         $sql = $this->getSql();
         $sqlNull = $this->getSqlEmptyValue();
         $firstRow = $offset;
@@ -240,7 +242,9 @@ class DataSheetToSQL extends AbstractETLPrototype
                             break;
                         // Use existing non-empty row values directly
                         default:
-                            // FIXME escape strings here!
+                            if (is_string($rowPhValue) === true) {
+                                $rowPhValue = $sqlConnection->escapeString($rowPhValue);
+                            }
                             $rowPhValues[$ph] = $rowPhValue;
                             break;
                     }
@@ -265,6 +269,15 @@ class DataSheetToSQL extends AbstractETLPrototype
             $sql = StringDataType::replacePlaceholder($sql, $tplPh, implode($this->getSqlRowDelimiter(), $sqlRows));
         }
         return $sql;
+    }
+    
+    /**
+     *
+     * @return SqlDataConnectorInterface
+     */
+    protected function getSqlConnection() : SqlDataConnectorInterface
+    {
+        return $this->getToObject()->getDataConnection();
     }
 
     /**

@@ -202,7 +202,19 @@ class SQLRunner extends AbstractETLPrototype
     
     protected function getPlaceholders(ETLStepDataInterface $stepData) : array
     {
-        return array_merge(parent::getPlaceholders($stepData),[
+        $globalPhs = parent::getPlaceholders($stepData);
+        
+        // Make sure to properly escape potentially insecure string placeholders
+        // - e.g. those from parameters passed to the flow run from outside.
+        foreach ($globalPhs as $ph => $val) {
+            if (StringDataType::startsWith($ph, AbstractETLPrototype::PH_PARAMETER_PREFIX)) {
+                if (is_string($val) === true) {
+                    $globalPhs[$ph] = $this->getSqlConnection()->escapeString($val);
+                }
+            }
+        }
+        
+        return array_merge($globalPhs,[
             'from_object_address' => $this->getFromObject()->getDataAddress(),
             'to_object_address' => $this->getToObject()->getDataAddress()
         ]);
