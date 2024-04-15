@@ -173,9 +173,9 @@
     "rows": [
         {
             "CREATED_ON": "2024-04-03 16:00:28",
-            "MODIFIED_ON": "2024-04-03 16:12:34",
+            "MODIFIED_ON": "2024-04-15 16:18:12",
             "CREATED_BY_USER": "0x11e8fe1c902c8ebea23ee4b318306b9a",
-            "MODIFIED_BY_USER": "0x11e8fe1c902c8ebea23ee4b318306b9a",
+            "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
             "UID": "0x11eea8568772a836a856025041000001",
             "SORTABLEFLAG": 1,
             "FILTERABLEFLAG": 1,
@@ -204,7 +204,7 @@
             "UIDFLAG": 0,
             "HIDDENFLAG": 0,
             "EDITABLEFLAG": 1,
-            "REQUIREDFLAG": 0,
+            "REQUIREDFLAG": 1,
             "RELATED_OBJ": "0x11eb90858867906c9085025041000001",
             "SORTERPOS": null,
             "SORTERDIR": "",
@@ -219,9 +219,9 @@
         },
         {
             "CREATED_ON": "2024-04-03 16:00:28",
-            "MODIFIED_ON": "2024-04-03 16:10:56",
+            "MODIFIED_ON": "2024-04-15 16:18:12",
             "CREATED_BY_USER": "0x11e8fe1c902c8ebea23ee4b318306b9a",
-            "MODIFIED_BY_USER": "0x11e8fe1c902c8ebea23ee4b318306b9a",
+            "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
             "UID": "0x11eead9387711d4aad93025041000001",
             "SORTABLEFLAG": 1,
             "FILTERABLEFLAG": 1,
@@ -265,9 +265,9 @@
         },
         {
             "CREATED_ON": "2024-04-03 16:00:28",
-            "MODIFIED_ON": "2024-04-03 16:00:28",
+            "MODIFIED_ON": "2024-04-15 16:18:12",
             "CREATED_BY_USER": "0x11e8fe1c902c8ebea23ee4b318306b9a",
-            "MODIFIED_BY_USER": "0x11e8fe1c902c8ebea23ee4b318306b9a",
+            "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
             "UID": "0x11eeb16c87730880b16c025041000001",
             "SORTABLEFLAG": 1,
             "FILTERABLEFLAG": 1,
@@ -296,15 +296,15 @@
             "UIDFLAG": 0,
             "HIDDENFLAG": 0,
             "EDITABLEFLAG": 1,
-            "REQUIREDFLAG": 0,
+            "REQUIREDFLAG": 1,
             "RELATED_OBJ": "",
             "SORTERPOS": null,
             "SORTERDIR": null,
             "RELATED_OBJ_ATTR": "",
             "SHORT_DESCRIPTION": "",
             "DATA_ADDRESS_PROPS": null,
-            "DEFAULT_VALUE": null,
-            "FIXED_VALUE": null,
+            "DEFAULT_VALUE": "",
+            "FIXED_VALUE": "",
             "CUSTOM_DATA_TYPE": {
                 "length_max": 30
             }

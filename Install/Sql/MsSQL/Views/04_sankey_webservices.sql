@@ -2,7 +2,11 @@ IF OBJECT_ID('dbo.etl_sankey_webservices', 'V') IS NOT NULL
     DROP VIEW dbo.etl_sankey_webservices;
 GO
 
-CREATE VIEW dbo.etl_sankey_webservices AS
+IF OBJECT_ID('dbo.etl_flow_sankey', 'V') IS NOT NULL
+    DROP VIEW dbo.etl_flow_sankey;
+GO
+
+CREATE VIEW dbo.etl_flow_sankey AS
 SELECT
 	source_level,
 	target_level,

@@ -95,9 +95,9 @@
         },
         {
             "CREATED_ON": "2024-02-01 16:34:49",
-            "MODIFIED_ON": "2024-02-01 16:36:14",
+            "MODIFIED_ON": "2024-04-15 16:14:31",
             "CREATED_BY_USER": "0x11e8fe1c902c8ebea23ee4b318306b9a",
-            "MODIFIED_BY_USER": "0x11e8fe1c902c8ebea23ee4b318306b9a",
+            "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
             "UID": "0x11eb9a29656d73f89a29025041000001",
             "OBJECT": "0x11eb90858867906c9085025041000001",
             "ACTION_PROTOTYPE": "exface\/Core\/Actions\/ShowDialog.php",
@@ -111,7 +111,7 @@
                     "maximized": true,
                     "widgets": [
                         {
-                            "object_alias": "axenox.ETL.sankey_flow_view",
+                            "object_alias": "axenox.ETL.flow_sankey",
                             "widget_type": "Chart",
                             "data": {
                                 "paginate": false,

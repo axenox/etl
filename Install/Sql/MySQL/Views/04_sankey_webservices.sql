@@ -1,4 +1,6 @@
-CREATE OR REPLACE VIEW etl_sankey_webservices AS
+DROP VIEW IF EXISTS etl_sankey_webservices;
+
+CREATE OR REPLACE VIEW etl_flow_sankey AS
 SELECT
 	source_level,
 	target_level,
