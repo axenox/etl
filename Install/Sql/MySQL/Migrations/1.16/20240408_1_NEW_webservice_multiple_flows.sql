@@ -19,6 +19,37 @@ WHERE flow_oid IS NOT NULL AND NOT EXISTS (
     WHERE wf.webservice_oid = w.oid
 );
 
+/* Remove flow_oid from table etl_webservice */
+/* Remove foreign key*/
+set @var=if(
+	(
+		SELECT true 
+			FROM information_schema.TABLE_CONSTRAINTS 
+			WHERE CONSTRAINT_SCHEMA = DATABASE()
+			    AND TABLE_NAME        = 'etl_webservice'
+			    AND CONSTRAINT_NAME   = 'FK route to flow'
+			    AND CONSTRAINT_TYPE   = 'FOREIGN KEY'
+    ) = true,
+    'ALTER TABLE etl_webservice DROP FOREIGN KEY `FK route to flow`',
+    'SELECT \'Foreign key "FK route to flow" does not exist!\'');
+prepare stmt from @var;
+execute stmt;
+deallocate prepare stmt;
+/* Remove index */
+set @var=if(
+	(
+		SELECT true 
+			FROM information_schema.statistics 
+  			WHERE table_schema = DATABASE() 
+				AND TABLE_NAME = 'etl_webservice' 
+				AND INDEX_NAME = 'FK route to flow'
+	) = true,
+    'ALTER TABLE etl_webservice DROP INDEX `FK route to flow`',
+    'SELECT \'Index "FK route to flow" does not exist!\'');
+prepare stmt from @var;
+execute stmt;
+deallocate prepare stmt;
+
 CALL execute_sql_on_existing_column('etl_webservice', 'flow_oid', 'ALTER TABLE etl_webservice DROP COLUMN flow_oid');
 
 -- DOWN
