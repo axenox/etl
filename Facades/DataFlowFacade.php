@@ -29,14 +29,6 @@ use axenox\ETL\Facades\Middleware\OpenApiMiddleware;
 use axenox\ETL\Facades\Middleware\SwaggerUiMiddleware;
 use Flow\JSONPath\JSONPath;
 
-// Use local version of JSONPathLexer with edit to
-require_once '..' . DIRECTORY_SEPARATOR
-    . '..' . DIRECTORY_SEPARATOR
-    . 'axenox' . DIRECTORY_SEPARATOR
-    . 'etl' . DIRECTORY_SEPARATOR
-    . 'Common' . DIRECTORY_SEPARATOR
-    . 'JSONPath' . DIRECTORY_SEPARATOR
-    . 'JSONPathLexer.php';
 
 /**
  * 
@@ -58,7 +50,16 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 	 */
 	protected function createResponse(ServerRequestInterface $request): ResponseInterface
 	{
-		$headers = $this->buildHeadersCommon();
+	    // Use local version of JSONPathLexer with edit to
+	    require_once '..' . DIRECTORY_SEPARATOR
+	    . '..' . DIRECTORY_SEPARATOR
+	    . 'axenox' . DIRECTORY_SEPARATOR
+	    . 'etl' . DIRECTORY_SEPARATOR
+	    . 'Common' . DIRECTORY_SEPARATOR
+	    . 'JSONPath' . DIRECTORY_SEPARATOR
+	    . 'JSONPathLexer.php';
+	    
+	    $headers = $this->buildHeadersCommon();
 
 		try {
             $path = $this->getRoutePath($request);
