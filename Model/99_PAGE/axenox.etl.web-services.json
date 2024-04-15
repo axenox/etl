@@ -10,8 +10,8 @@
     "replaces_page_selector": null,
     "created_by_user_selector": "0x31000000000000000000000000000000",
     "created_on": "2023-10-18 16:18:11",
-    "modified_by_user_selector": "0x31000000000000000000000000000000",
-    "modified_on": "2024-02-07 16:34:24",
+    "modified_by_user_selector": "0x11e8fe1c902c8ebea23ee4b318306b9a",
+    "modified_on": "2024-04-05 08:29:32",
     "contents": {
         "widget_type": "SplitVertical",
         "object_alias": "axenox.ETL.webservice",
@@ -41,7 +41,8 @@
                                 "attribute_alias": "name"
                             },
                             {
-                                "attribute_alias": "flow__LABEL"
+                                "caption": "Flows",
+                                "attribute_alias": "webservice_flows__flow:COUNT"
                             },
                             {
                                 "attribute_alias": "type__LABEL"

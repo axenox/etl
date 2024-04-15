@@ -61,7 +61,7 @@
     "rows": [
         {
             "CREATED_ON": "2024-01-09 12:47:29",
-            "MODIFIED_ON": "2024-03-14 09:05:15",
+            "MODIFIED_ON": "2024-04-08 15:50:44",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
             "MODIFIED_BY_USER": "0x11e8fe1c902c8ebea23ee4b318306b9a",
             "UID": "0x11eeb5b6dde235f4b5b6025041000001",
@@ -82,19 +82,15 @@
                     "widgets": [
                         {
                             "widget_type": "InputHidden",
-                            "attribute_alias": "flow",
-                            "id": "flow_uid_field"
-                        },
-                        {
-                            "widget_type": "InputHidden",
-                            "attribute_alias": "UID"
+                            "attribute_alias": "UID",
+                            "id": "uid_field"
                         },
                         {
                             "widget_type": "SplitHorizontal",
                             "panels": [
                                 {
                                     "width": "50%",
-                                    "caption": "Data Flow",
+                                    "caption": "Data Flows",
                                     "widgets": [
                                         {
                                             "widget_type": "SplitVertical",
@@ -106,13 +102,16 @@
                                                             "widget_type": "DataTable",
                                                             "object_alias": "axenox.ETL.step",
                                                             "multi_select": true,
+                                                            "row_grouper": {
+                                                                "group_by_attribute_alias": "flow__LABEL"
+                                                            },
                                                             "filters": [
                                                                 {
-                                                                    "attribute_alias": "flow",
+                                                                    "attribute_alias": "flow__webservice_flows__webservice",
                                                                     "hidden": true,
                                                                     "required": true,
                                                                     "comparator": "==",
-                                                                    "value": "=flow_uid_field"
+                                                                    "value": "=uid_field"
                                                                 },
                                                                 {
                                                                     "attribute_alias": "name"
@@ -130,6 +129,9 @@
                                                                 }
                                                             ],
                                                             "columns": [
+                                                                {
+                                                                    "attribute_alias": "flow__LABEL"
+                                                                },
                                                                 {
                                                                     "attribute_alias": "step_flow_sequence"
                                                                 },
@@ -192,10 +194,10 @@
                                                                 "paginate": false,
                                                                 "filters": [
                                                                     {
-                                                                        "attribute_alias": "flow",
+                                                                        "attribute_alias": "flow__webservice_flows__webservice",
                                                                         "hidden": true,
                                                                         "comparator": "==",
-                                                                        "value": "=flow_uid_field",
+                                                                        "value": "=uid_field",
                                                                         "apply_on_change": true,
                                                                         "required": true
                                                                     }
@@ -294,7 +296,7 @@
         },
         {
             "CREATED_ON": "2024-01-26 12:42:18",
-            "MODIFIED_ON": "2024-02-01 10:29:01",
+            "MODIFIED_ON": "2024-04-05 15:35:21",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
             "MODIFIED_BY_USER": "0x11e8fe1c902c8ebea23ee4b318306b9a",
             "UID": "0x11eea9d6f67e1322a9d6025041000001",
@@ -311,11 +313,6 @@
                 "dialog": {
                     "widgets": [
                         {
-                            "attribute_alias": "flow",
-                            "widget_type": "InputHidden",
-                            "id": "flow_field"
-                        },
-                        {
                             "widget_type": "InputUxon",
                             "height": "100%",
                             "hide_caption": true,
@@ -325,32 +322,6 @@
                     ],
                     "widget_type": "Dialog",
                     "buttons": [
-                        {
-                            "caption": "Edit flow",
-                            "close_dialog": false,
-                            "action": {
-                                "alias": "exface.Core.ShowObjectEditDialog",
-                                "object_alias": "axenox.ETL.flow",
-                                "input_mapper": {
-                                    "column_to_column_mappings": [
-                                        {
-                                            "from": "flow",
-                                            "to": "UID"
-                                        }
-                                    ]
-                                }
-                            },
-                            "disabled_if": {
-                                "operator": "AND",
-                                "conditions": [
-                                    {
-                                        "value_left": "=flow_field!UID",
-                                        "comparator": "==",
-                                        "value_right": ""
-                                    }
-                                ]
-                            }
-                        },
                         {
                             "action_alias": "exface.Core.UpdateData",
                             "visibility": "promoted",

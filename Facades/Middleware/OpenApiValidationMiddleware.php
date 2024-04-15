@@ -3,6 +3,8 @@ namespace axenox\ETL\Facades\Middleware;
 
 use cebe\openapi\exceptions\TypeErrorException;
 use cebe\openapi\exceptions\UnresolvableReferenceException;
+use exface\Core\DataTypes\JsonDataType;
+use GuzzleHttp\Psr7\Response;
 use League\OpenAPIValidation\PSR7\Exception\Validation\InvalidParameter;
 use League\OpenAPIValidation\PSR7\Exception\ValidationFailed;
 use Psr\Http\Message\ResponseInterface;
@@ -17,7 +19,6 @@ use League\OpenAPIValidation\PSR7\ValidatorBuilder;
 use cebe\openapi\ReferenceContext;
 use exface\Core\Exceptions\Facades\HttpBadRequestError;
 use League\OpenAPIValidation\Schema\Exception\SchemaMismatch;
-use League\OpenAPIValidation\Schema\Exception\InvalidSchema;
 use GuzzleHttp\Exception\BadResponseException;
 
 /**
@@ -48,8 +49,9 @@ final class OpenApiValidationMiddleware implements MiddlewareInterface
      * @throws TypeErrorException if request does not contain a valid openapi
      * @throws UnresolvableReferenceException if references within the openapi could not be resolved
      * @throws JsonSchemaValidationError if request  or response did not match json schema
-     * @throws HttpBadRequestError if request contained an validation error
-     * @throws BadResponseException if response contained an validation error
+     * @throws HttpBadRequestError if request contained an unknown validation error
+     * @throws BadResponseException if response contained an unknown validation error
+     * @throws \Flow\JSONPath\JSONPathException if json path for schema produces an error
      */
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
@@ -81,20 +83,26 @@ final class OpenApiValidationMiddleware implements MiddlewareInterface
                 $msg = $prev->getMessage();
                 switch (true) {
                     case $prev instanceof SchemaMismatch && str_contains($exception->getMessage(), 'Body'):
-                        $source = $this->getSource($prev);
+                        $schema = $this->facade->getRequestBodySchemaForCurrentRoute($request);
                         $context = 'Invalid request body';
-                        $msg = $source . '. ' . $msg;
-                        $json = json_encode($request->getBody());
-                        break;
+                        $json = $request->getBody()->__toString();
+                        try {
+                            JsonDataType::validateJsonSchema($json, $schema);
+                        } catch (JsonSchemaValidationError $e) {
+                            $errors = [];
+                            $errors['error'] = $exception->getMessage();
+                            $errors['details'] = $e->getErrors();
+
+                            throw new JsonSchemaValidationError($errors, 'Invalid request body', null, null, $json);
+                        }
+
+                        throw new HttpBadRequestError($request, $exception->getMessage(), null, $exception);
                     case $prev instanceof InvalidParameter:
                         $schemaError = $prev->getPrevious();
                         $context = 'Invalid request parameter';
                         $msg = $prev->getMessage() . '. ' . $schemaError->getMessage();
-                        $json = json_encode($request->getQueryParams());
-
+                        return new Response(400, ['content-type' => 'plain/text'], $context . $msg);
                 }
-
-                throw new JsonSchemaValidationError([$msg], $msg, null, $exception, $context, $json);
             }
 
             throw new HttpBadRequestError($request, $msg, null, $exception);
@@ -109,40 +117,23 @@ final class OpenApiValidationMiddleware implements MiddlewareInterface
             try {
                 $responseValidator->validate($matchedOASOperation, $response);
             } catch (ValidationFailed $exception) {
-            	$prev = $exception->getPrevious();
-            	$msg = $exception->getMessage();
-            	if ($this->isSchemaValidationException($prev)){
-                    $source = $this->getSource($prev);
-                    $context = 'Response validation failed';
-                    $msg = $source . ': ' . $prev->getMessage();
-            		throw new JsonSchemaValidationError([$msg], $msg, null, $exception, $context, $response->getBody()->__toString());
-            	}
-            	
-            	throw new BadResponseException($msg, $request, null, $exception);
+                $schema = $this->facade->getResponseBodySchemaForCurrentRoute($request, $response->getStatusCode());
+                $json = $response->getBody()->__toString();
+                try {
+                    JsonDataType::validateJsonSchema($json, $schema);
+                } catch (JsonSchemaValidationError $e) {
+                    $errors = [];
+                    $errors['error'] = $exception->getMessage();
+                    $errors['details'] = $e->getErrors();
+
+                    throw new JsonSchemaValidationError($errors, 'Invalid response body', null, null, $json);
+                }
+
+                throw new HttpBadRequestError($request, $exception->getMessage(), null, $exception);
             }
         }
         
         return $response;
-    }
-
-    private function getSource(\Throwable $exception) : ?string
-    {
-        if ($exception->dataBreadCrumb()->buildChain()[0] !== null) {
-            return 'Invalid input found in `$.'
-                . implode('.', $exception->dataBreadCrumb()->buildChain())
-                . '`';
-        }
-    }
-    
-    private function isSchemaValidationException($exception) : bool
-    {
-    	switch (true){
-    		case $exception instanceof InvalidSchema:
-            case $exception instanceof SchemaMismatch:
-    			return true;
-    		default:
-    			return false;
-    	}
     }
     
     protected function getWorkbench() : WorkbenchInterface
