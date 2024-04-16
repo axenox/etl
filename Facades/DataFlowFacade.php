@@ -282,7 +282,7 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 
     protected function getFlowAlias(string $routeUid, string $routePath) : string
     {
-        $ds = DataSheetFactory::createFromObjectIdOrAlias($this->getWorkbench(), 'axenox.ETL.webservice_flows');
+        $ds = DataSheetFactory::createFromObjectIdOrAlias($this->getWorkbench(), 'axenox.ETL.webservice_flow');
         $ds->getColumns()->addMultiple(['webservice', 'flow__alias', 'route']);
         $ds->getFilters()->addConditionFromString('webservice', $routeUid);
         $ds->dataRead();
