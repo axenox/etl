@@ -20,6 +20,7 @@ use cebe\openapi\ReferenceContext;
 use exface\Core\Exceptions\Facades\HttpBadRequestError;
 use League\OpenAPIValidation\Schema\Exception\SchemaMismatch;
 use GuzzleHttp\Exception\BadResponseException;
+use Psr\Http\Message\MessageInterface;
 
 /**
  * This middleware adds request and response validation to facades implementing OpenApiFacadeInterface
@@ -33,10 +34,13 @@ final class OpenApiValidationMiddleware implements MiddlewareInterface
     
     private array $excludePatterns = [];
     
-    public function __construct(OpenApiFacadeInterface $facade, array $excludePatterns = [])
+    private $verbose = null;
+    
+    public function __construct(OpenApiFacadeInterface $facade, array $excludePatterns = [], $verbose = null)
     {
         $this->facade = $facade;
         $this->excludePatterns = $excludePatterns;
+        $this->verbose = $verbose ?? true;
     }
 
     /**
@@ -83,17 +87,20 @@ final class OpenApiValidationMiddleware implements MiddlewareInterface
                 $msg = $prev->getMessage();
                 switch (true) {
                     case $prev instanceof SchemaMismatch && str_contains($exception->getMessage(), 'Body'):
-                        $schema = $this->facade->getRequestBodySchemaForCurrentRoute($request);
-                        $context = 'Invalid request body';
-                        $json = $request->getBody()->__toString();
-                        try {
-                            JsonDataType::validateJsonSchema($json, $schema);
-                        } catch (JsonSchemaValidationError $e) {
-                            $errors = [];
-                            $errors['error'] = $exception->getMessage();
-                            $errors['details'] = $e->getErrors();
-
-                            throw new JsonSchemaValidationError($errors, 'Invalid request body', null, null, $json);
+                        if ($this->isVerbose($request) && $this->hasJsonBody($request)) {
+                            try {
+                                $schema = $this->facade->getRequestBodySchemaForCurrentRoute($request);
+                                $json = $request->getBody()->__toString();
+                                JsonDataType::validateJsonSchema($json, $schema);
+                            } catch (JsonSchemaValidationError $e) {
+                                $errors = [
+                                    'error' => $exception->getMessage(),
+                                    'details' => $e->getErrors()
+                                ];
+                                throw new JsonSchemaValidationError($errors, 'Invalid request body', null, null, $json);
+                            } catch (\Throwable $e) {
+                                $this->getWorkbench()->getLogger()->logException($e);
+                            }
                         }
 
                         throw new HttpBadRequestError($request, $exception->getMessage(), null, $exception);
@@ -117,16 +124,21 @@ final class OpenApiValidationMiddleware implements MiddlewareInterface
             try {
                 $responseValidator->validate($matchedOASOperation, $response);
             } catch (ValidationFailed $exception) {
-                $schema = $this->facade->getResponseBodySchemaForCurrentRoute($request, $response->getStatusCode());
-                $json = $response->getBody()->__toString();
-                try {
-                    JsonDataType::validateJsonSchema($json, $schema);
-                } catch (JsonSchemaValidationError $e) {
-                    $errors = [];
-                    $errors['error'] = $exception->getMessage();
-                    $errors['details'] = $e->getErrors();
+                if ($this->isVerbose($request) && $this->hasJsonBody($request)) {
+                    try {
+                        $schema = $this->facade->getResponseBodySchemaForCurrentRoute($request, $response->getStatusCode());
+                        $json = $response->getBody()->__toString();
+                        JsonDataType::validateJsonSchema($json, $schema);
+                    } catch (JsonSchemaValidationError $e) {
+                        $errors = [
+                            'error' => $exception->getMessage(),
+                            'details' => $e->getErrors()
+                        ];
 
-                    throw new JsonSchemaValidationError($errors, 'Invalid response body', null, null, $json);
+                        throw new JsonSchemaValidationError($errors, 'Invalid response body', null, null, $json);
+                    } catch (\Throwable $e) {
+                        $this->getWorkbench()->getLogger()->logException($e);
+                    }
                 }
 
                 throw new HttpBadRequestError($request, $exception->getMessage(), null, $exception);
@@ -136,8 +148,23 @@ final class OpenApiValidationMiddleware implements MiddlewareInterface
         return $response;
     }
     
+    protected function hasJsonBody(MessageInterface $message) : bool
+    {
+        $contentType = implode(';', $message->getHeader('Content-Type'));
+        return stripos($contentType, 'json') !== false;
+    }
+    
     protected function getWorkbench() : WorkbenchInterface
     {
         return $this->facade->getWorkbench();
+    }
+    
+    protected function isVerbose(ServerRequestInterface $request) : bool
+    {
+        if (is_bool($this->verbose) === true) {
+            return $this->verbose;
+        } else {
+            return $request->getQueryParams()[$this->verbose] === 'true';
+        }
     }
 }

@@ -318,7 +318,15 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 		
 		$middleware = parent::getMiddleware();
 		$middleware[] = new RouteConfigLoader($this, $ds, 'local_url', 'config_uxon', self::REQUEST_ATTRIBUTE_NAME_ROUTE);
-		$middleware[] = new OpenApiValidationMiddleware($this, ['/.*swaggerui$/', '/.*openapi\\.json$/']);
+		$middleware[] = new OpenApiValidationMiddleware(
+		    $this, 
+		    [
+    		    '/.*swaggerui$/',
+                '/.*openapi\\.json$/' 
+            ],
+		    // TODO allow to customize the URL parameter for verbose output in service UXON
+		    true
+	    );
 		$middleware[] = new OpenApiMiddleware($this, $this->buildHeadersCommon(), '/.*openapi\\.json$/');
 		$middleware[] = new SwaggerUiMiddleware($this, $this->buildHeadersCommon(), '/.*swaggerui$/', 'openapi.json');
 		
@@ -593,9 +601,9 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 
     /**
      * @param ServerRequestInterface $request
-     * @return bool|string
+     * @return string
      */
-    public function getRoutePath(ServerRequestInterface $request): string|bool
+    public function getRoutePath(ServerRequestInterface $request): string
     {
         $path = $request->getUri()->getPath();
         return StringDataType::substringAfter($path, $this->getUrlRouteDefault() . '/', '');
