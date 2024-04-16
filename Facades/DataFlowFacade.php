@@ -49,16 +49,7 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 	 * @see \exface\Core\Facades\AbstractHttpFacade\AbstractHttpFacade::createResponse()
 	 */
 	protected function createResponse(ServerRequestInterface $request): ResponseInterface
-	{
-	    // Use local version of JSONPathLexer with edit to
-	    require_once '..' . DIRECTORY_SEPARATOR
-	    . '..' . DIRECTORY_SEPARATOR
-	    . 'axenox' . DIRECTORY_SEPARATOR
-	    . 'etl' . DIRECTORY_SEPARATOR
-	    . 'Common' . DIRECTORY_SEPARATOR
-	    . 'JSONPath' . DIRECTORY_SEPARATOR
-	    . 'JSONPathLexer.php';
-	    
+	{    
 	    $headers = $this->buildHeadersCommon();
 
 		try {
@@ -309,6 +300,17 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 	 */
 	protected function getMiddleware(): array
 	{
+	    // Use local version of JSONPathLexer with edit to
+	    // Make sure to require BEFORE the JSONPath classes are loaded, so that the custom lexer replaces
+	    // the one shipped with the library.
+	    require_once '..' . DIRECTORY_SEPARATOR
+	    . '..' . DIRECTORY_SEPARATOR
+	    . 'axenox' . DIRECTORY_SEPARATOR
+	    . 'etl' . DIRECTORY_SEPARATOR
+	    . 'Common' . DIRECTORY_SEPARATOR
+	    . 'JSONPath' . DIRECTORY_SEPARATOR
+	    . 'JSONPathLexer.php';
+	    
 		$ds = DataSheetFactory::createFromObjectIdOrAlias($this->getWorkbench(), 'axenox.ETL.webservice');
 		$ds->getColumns()->addMultiple(
 			['UID', 'local_url', 'type__schema_json', 'type__default_response_path', 'swagger_json', 'config_uxon']);
