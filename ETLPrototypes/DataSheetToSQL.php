@@ -17,6 +17,8 @@ use axenox\ETL\Events\Flow\OnBeforeETLStepRun;
 use axenox\ETL\Interfaces\ETLStepDataInterface;
 use exface\Core\Exceptions\UnexpectedValueException;
 use exface\Core\Interfaces\DataSources\SqlDataConnectorInterface;
+use exface\Core\CommonLogic\Model\Expression;
+use exface\Core\Factories\FormulaFactory;
 
 /**
  * Reads a data sheet from the from-object and generates an SQL query from its rows.
@@ -224,6 +226,14 @@ class DataSheetToSQL extends AbstractETLPrototype
                     $colExists = array_key_exists($ph, $row);
                     $rowPhValue = $row[$ph];
                     switch (true) {
+                        // Formula placeholders like `[#=Substitue(Sektionen, ',', ';')#]`
+                        // TODO #DataCollector this will only work if all attributes used in the formulas 
+                        // are already present in the data sheet. We should probably implement some more 
+                        // logic to read missing ones - ideally after this has been centralized.
+                        case Expression::detectFormula($ph):
+                            $formula = FormulaFactory::createFromString($this->getWorkbench(), $ph);
+                            $rowPhValue = $formula->evaluate($sheet, $i);
+                            break;
                         // Leave the placeholder as-is if there is no matching data column
                         case $colExists === false:
                             $rowPhValues[$ph] = '[#' . $ph . '#]';
