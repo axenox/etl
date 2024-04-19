@@ -232,7 +232,7 @@ class DataSheetToSQL extends AbstractETLPrototype
                         // logic to read missing ones - ideally after this has been centralized.
                         case Expression::detectFormula($ph):
                             $formula = FormulaFactory::createFromString($this->getWorkbench(), $ph);
-                            $rowPhValue = $formula->evaluate($sheet, $i);
+                            $rowPhValues[$ph] = $formula->evaluate($sheet, $i);
                             break;
                         // Leave the placeholder as-is if there is no matching data column
                         case $colExists === false:
