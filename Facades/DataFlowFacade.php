@@ -1,6 +1,7 @@
 <?php
 namespace axenox\ETL\Facades;
 
+use axenox\ETL\Facades\Middleware\RequestLoggingMiddleware;
 use exface\Core\Exceptions\InvalidArgumentException;
 use Flow\JSONPath\JSONPathException;
 use GuzzleHttp\Psr7\Response;
@@ -43,6 +44,8 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 	const REQUEST_ATTRIBUTE_NAME_ROUTE = 'route';
 
 	private $openApiCache = [];
+    private $logData = null;
+    private RequestLoggingMiddleware $loggingMiddleware;
 
     /**
 	 * {@inheritDoc}
@@ -51,49 +54,41 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 	protected function createResponse(ServerRequestInterface $request): ResponseInterface
 	{    
 	    $headers = $this->buildHeadersCommon();
+        $response = null;
 
 		try {
             $path = $this->getRoutePath($request);
             $routePath = rtrim(strstr($path, '/'), '/');
 			$routeModel = $this->getRouteData($request);
-			$requestLogData = $this->logRequestReceived($request);
 
 			// process flow
 			$routeUID = $routeModel['UID'];
 			$flowAlias = $this->getFlowAlias($routeUID, $routePath);
 			$flowRunUID = RunETLFlow::generateFlowRunUid();
-			$requestLogData = $this->logRequestProcessing($requestLogData, $routeUID, $flowRunUID); // flow data update
-			$flowResult = $this->runFlow($flowAlias, $request, $requestLogData); // flow data update
+            $this->loggingMiddleware->logRequestProcessing($request, $routeUID, $flowRunUID);
+			$flowResult = $this->runFlow($flowAlias, $request); // flow data update
 			$flowOutput = $flowResult->getMessage();
-	
-			// get changes by flow
-			$this->reloadRequestData($requestLogData);
+            $requestWithBody = $this->loadRequestDataWithBody($request);
 				
-			if ($requestLogData->countRows() == 1) {
-				$body = $this->createRequestResponseBody($requestLogData, $request, $headers, $routeModel, $routePath);
+			if ($requestWithBody->countRows() == 1) {
+				$body = $this->createRequestResponseBody($requestWithBody, $request, $headers, $routeModel, $routePath);
 				$response = new Response(200, $headers, $body);
 			}
 			
 		} catch (\Throwable $e) {
-			if ($requestLogData === null) {
-				$requestLogData = $this->logRequestReceived($request);
-			}
-			
-			// get changes by flow
-			$this->reloadRequestData($requestLogData);
+            $this->loadRequestDataWithBody($request);
 			if (!$e instanceof ExceptionInterface) {
 				$e = new InternalError($e->getMessage(), null, $e);
 			}
 
-			$response = $this->createResponseFromError($e, $request, $requestLogData);
-			return $response;
+            return $this->createResponseFromError($e, $request);
 		}
 
 		if ($response === null) {
 			$response = new Response(200, $headers, 'Dataflow successfull.');
 		}
 
-		$requestLogData = $this->logRequestDone($requestLogData, $flowOutput, $response);
+        $this->loggingMiddleware->logRequestDone($request, $flowOutput, $response);
 		return $response;
 	}
 
@@ -106,103 +101,40 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 		return 'api/dataflow';
 	}
 
-	/**
-	 * @param string $flowAlias
-	 * @param ServerRequestInterface $request
-	 * @param DataSheetInterface $requestLogData
-	 * @return ResultInterface
-	 */
-	protected function runFlow(
-		string $flowAlias,
-		ServerRequestInterface $request,
-		DataSheetInterface $requestLogData): ResultInterface
+    /**
+     * @param string $flowAlias
+     * @param ServerRequestInterface $request
+     * @param DataSheetInterface $requestLogData
+     * @return ResultInterface
+     * @throws \Throwable
+     */
+	protected function runFlow(string $flowAlias, ServerRequestInterface $request): ResultInterface
 	{
+        $taskData = $this->loggingMiddleware->getTaskData($request);
 		$task = new HttpTask($this->getWorkbench(), $this, $request);
-		$task->setInputData($requestLogData);
+		$task->setInputData($taskData);
 
 		$actionSelector = new ActionSelector($this->getWorkbench(), RunETLFlow::class);
 		/* @var $action \axenox\ETL\Actions\RunETLFlow */
 		$action = ActionFactory::createFromPrototype($actionSelector, $this->getApp());
-		$action->setMetaObject($requestLogData->getMetaObject());
+		$action->setMetaObject($taskData->getMetaObject());
 		$action->setFlowAlias($flowAlias);
 		$action->setInputFlowRunUid('flow_run');
 		$result = $action->handle($task);
 		return $result;
 	}
 
-	/**
-	 * @param string $routeUID
-	 * @param string $flowRunUID
-	 * @param ServerRequestInterface $request
-	 * @return DataSheetInterface
-	 */
-	protected function logRequestReceived(
-		ServerRequestInterface $request): DataSheetInterface
-	{
-		$ds = DataSheetFactory::createFromObjectIdOrAlias($this->getWorkbench(), 'axenox.ETL.webservice_request');
-		$ds->addRow([
-			'status' => WebRequestStatusDataType::RECEIVED, 
-			'url' => $request->getUri()->__toString(), 
-			'url_path' => StringDataType::substringAfter(
-				$request->getUri()->getPath(), 
-				$this->getUrlRouteDefault() . '/', 
-				$request->getUri()->getPath()),
-			'http_method' => $request->getMethod(), 
-			'http_headers' => JsonDataType::encodeJson($request->getHeaders()), 
-			'http_body' => $request->getBody()->__toString(), 
-			'http_content_type' => implode(';', $request->getHeader('Content-Type'))]);
-		
-		$ds->dataCreate(false);
-		return $ds;
-	}
-
-	/**
-	 * @param string $routeUID
-	 * @param string $flowRunUID
-	 * @param ServerRequestInterface $request
-	 * @return DataSheetInterface
-	 */
-	protected function logRequestProcessing(
-		DataSheetInterface $requestLogData,
-		string $routeUID,
-		string $flowRunUID): DataSheetInterface
-	{
-		$ds = $requestLogData->extractSystemColumns();
-		$ds->setCellValue('route', 0, $routeUID);
-		$ds->setCellValue('status', 0, WebRequestStatusDataType::PROCESSING);
-		$ds->setCellValue('flow_run', 0, $flowRunUID);
-		$ds->dataUpdate(false);
-		return $ds;
-	}
-
-	/**
-	 * @param string $requestLogUID
-	 * @param ExceptionInterface $e
-	 * @return DataSheetInterface
-	 */
-	protected function logRequestFailed(
-		DataSheetInterface $requestLogData,
-		\Throwable $e,
-		ResponseInterface $response = null): DataSheetInterface
-	{
-		$ds = $requestLogData->extractSystemColumns();
-		$ds->setCellValue('status', 0, WebRequestStatusDataType::ERROR);
-		$ds->setCellValue('error_message', 0, $e->getMessage());
-		$ds->setCellValue('error_logid', 0, $e->getId());
-		$ds->setCellValue('http_response_code', 0, $response !== null ? $response->getStatusCode() : $e->getStatusCode());
-		$ds->setCellValue('response_header', 0, json_encode($response->getHeaders()));
-		$ds->setCellValue('response_body', 0, $response->getBody()->__toString());
-		$ds->dataUpdate(false);
-		return $ds;
-	}
-	
-	/**
-	 * @param DataSheetInterface $requestLogData
-	 * @param ServerRequestInterface $request
-	 * @param array $headers
-	 * @param array $routeModel
-	 * @param array $routePath
-	 */
+    /**
+     *
+     * /**
+     * @param DataSheetInterface $requestLogData
+     * @param ServerRequestInterface $request
+     * @param array $headers
+     * @param array $routeModel
+     * @param string $routePath
+     * @return string|null
+     * @throws JSONPathException
+     */
 	private function createRequestResponseBody(
 		DataSheetInterface $requestLogData,
 		ServerRequestInterface $request,
@@ -211,6 +143,7 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 		string $routePath) : ?string
 	{
 		$flowResponse = json_decode($requestLogData->getRow()['response_body'], true);
+        $responseModel = null;
 		
 		// load response model from swagger
 		$methodType = strtolower($request->getMethod());
@@ -230,7 +163,7 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 
         $headers['Content-Type'] = 'application/json';
 		// merge flow response into empty model
-        if ($flowResponse !== null && empty($flowResponse) === false){
+        if (empty($flowResponse) === false){
             $body = array_merge($responseModel, $flowResponse);
         } else {
             $body = $responseModel;
@@ -239,32 +172,10 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 		return json_encode($body);
 	}
 
-	/**
-	 * @param string $requestLogUID
-	 * @param string $output
-	 * @return DataSheetInterface
-	 */
-	protected function logRequestDone(
-		DataSheetInterface $requestLogData,
-		string $output,
-		ResponseInterface $response): DataSheetInterface
-	{
-		$ds = $requestLogData->extractSystemColumns();
-		$ds->setCellValue('status', 0, WebRequestStatusDataType::DONE);
-		$ds->setCellValue('result_text', 0, $output);
-		$ds->setCellValue('http_response_code', 0, $response->getStatusCode());
-		$ds->setCellValue('response_header', 0, json_encode($response->getHeaders()));
-		$ds->setCellValue('response_body', 0, $response->getBody()
-			->__toString());
-		$ds->dataUpdate(false);
-		return $ds;
-	}
-
-	/**
-	 * @param string $route
-	 * @throws FacadeRoutingError
-	 * @return string[]
-	 */
+    /**
+     * @param ServerRequestInterface $request
+     * @return string[]|null
+     */
 	protected function getRouteData(
 		ServerRequestInterface $request) : ?array
 	{
@@ -315,15 +226,15 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 		$ds->getColumns()->addMultiple(
 			['UID', 'local_url', 'type__schema_json', 'type__default_response_path', 'swagger_json', 'config_uxon']);
 		$ds->dataRead();
-		
+
+        $excludePattern = ['/.*swaggerui$/', '/.*openapi\\.json$/'];
+        $loggingMiddleware = new RequestLoggingMiddleware($this, $excludePattern);
+        $this->loggingMiddleware = $loggingMiddleware;
+
 		$middleware = parent::getMiddleware();
 		$middleware[] = new RouteConfigLoader($this, $ds, 'local_url', 'config_uxon', self::REQUEST_ATTRIBUTE_NAME_ROUTE);
-		$middleware[] = new OpenApiValidationMiddleware(
-		    $this, 
-		    [
-    		    '/.*swaggerui$/',
-                '/.*openapi\\.json$/' 
-            ],
+		$middleware[] = $loggingMiddleware;
+        $middleware[] = new OpenApiValidationMiddleware($this, $excludePattern,
 		    // TODO allow to customize the URL parameter for verbose output in service UXON
 		    true
 	    );
@@ -352,59 +263,35 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
             return $response;
 		}
         */
-		
-		/*
-		 * How to get the current route here? The route is determined by the RouteConfigLoader middleware
-		 * and saved in an attribute of the request. This is NOT the request passed to the method, however,
-		 * but rather a later version of it. The request here does not know the route because it is the
-		 * version, that the handler receives for processing in the AbstractHttpFacade. 
-		 * 
-		 * This is not critical, but leaves the request log without a proper relation to the route making
-		 * searching for requests for specific routes incomplete.
-		 * 
-		 * Ideas:
-		 * - pass an error handler callable to HttpRequestHandler to make it call the error handler with
-		 * the most current request instance
-		 * - fire an OnRouteMatched event in the RouteConfigLoader middlware and remember the route here
-		 * in the facade
-		 * - wrap all exceptions in some HttpRequestException in the HttpRequestHandler and attach the
-		 * request to that exception
-		 * - place exceptions in the request attribute bag instead of handling them directly and use a
-		 * middleware to render them at the very end of the middlware stack. This would also help with
-		 * exceptions thrown to early (in index.php) or to late.
-		 */
-		
-		if ($exception instanceof JsonSchemaValidationError) {			
-			$headers['Content-Type'] = 'application/json';
 
-
+        $headers['Content-Type'] = 'application/json';
+        if ($exception instanceof JsonSchemaValidationError) {
             $response = new Response(400, $headers, json_encode($exception->getFormattedErrors()));
-            $logData = $this->logRequestReceived($request);
-            $this->logRequestFailed($logData, $exception, $response);
+            $this->loggingMiddleware->logRequestFailed($request, $exception, $response);
             return $response;
 		}
 
-		$headers['Content-Type'] = 'application/json';
-		$errorData = json_encode(['Error' => [
+        $errorData = json_encode(['Error' => [
 			'Message' => $exception->getMessage(), 
 			'Log-Id' => $exception->getId()]
 		]);
 
 		$response = new Response($code, $headers, $errorData);
 
-		$logData = $this->logRequestReceived($request);
-        $this->logRequestFailed($logData, $exception, $response);
+        $this->loggingMiddleware->logRequestFailed($request, $exception, $response);
         return $response;
 	}
 
 	/**
 	 * @param DataSheetInterface $requestLogData
 	 */
-	private function reloadRequestData(DataSheetInterface $requestLogData)
+	private function loadRequestDataWithBody(ServerRequestInterface $request) : DataSheetInterface
 	{
+        $requestLogData = $this->loggingMiddleware->getLogData($request);
 		$requestLogData->getFilters()->addConditionFromColumnValues($requestLogData->getUidColumn());
 		$requestLogData->getColumns()->addFromExpression('response_body');
 		$requestLogData->dataRead();
+        return $requestLogData;
 	}
 
 	/**
