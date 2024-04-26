@@ -29,6 +29,7 @@ use axenox\ETL\Facades\Middleware\OpenApiValidationMiddleware;
 use axenox\ETL\Facades\Middleware\OpenApiMiddleware;
 use axenox\ETL\Facades\Middleware\SwaggerUiMiddleware;
 use Flow\JSONPath\JSONPath;
+use axenox\ETL\Facades\Middleware\RouteAuthenticationMiddleware;
 
 
 /**
@@ -233,6 +234,7 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 
 		$middleware = parent::getMiddleware();
 		$middleware[] = new RouteConfigLoader($this, $ds, 'local_url', 'config_uxon', self::REQUEST_ATTRIBUTE_NAME_ROUTE);
+		$middleware[] = new RouteAuthenticationMiddleware($this, [], true);
 		$middleware[] = $loggingMiddleware;
         $middleware[] = new OpenApiValidationMiddleware($this, $excludePattern,
 		    // TODO allow to customize the URL parameter for verbose output in service UXON

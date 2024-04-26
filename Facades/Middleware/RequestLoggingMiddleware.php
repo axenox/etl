@@ -22,6 +22,7 @@ final class RequestLoggingMiddleware implements MiddlewareInterface
 {
     private $facade = null;
     private $excludePatterns = [];
+    private $finished = false;
 
     private DataSheetInterface|null $logData = null;
 
@@ -55,7 +56,15 @@ final class RequestLoggingMiddleware implements MiddlewareInterface
         }
 
         $this->logRequestReceived($request);
-        return $handler->handle($request);
+        $response = $handler->handle($request);
+        if ($this->finished === false) {
+            if ($response->getStatusCode() < 300) {
+                $this->logRequestDone($request, '', $response);
+            } else {
+                $this->logRequestFailed($request, null, $response);
+            }
+        }
+        return $response;
     }
 
     /**
@@ -105,24 +114,30 @@ final class RequestLoggingMiddleware implements MiddlewareInterface
 
     /**
      * @param ServerRequestInterface $request
-     * @param \Throwable $e
+     * @param \Throwable|NULL $e
      * @param ResponseInterface|null $response
      * @return void
      */
     public function logRequestFailed(
         ServerRequestInterface $request,
-        \Throwable $e,
+        \Throwable $e = null,
         ResponseInterface $response = null): void
     {
         $logData = $this->logData->extractSystemColumns();
         $logData->setCellValue('status', 0, WebRequestStatusDataType::ERROR);
-        $logData->setCellValue('error_message', 0, $e->getMessage());
-        $logData->setCellValue('error_logid', 0, $e->getId());
-        $logData->setCellValue('http_response_code', 0, $response !== null ? $response->getStatusCode() : $e->getStatusCode());
-        $logData->setCellValue('response_header', 0, json_encode($response->getHeaders()));
-        $logData->setCellValue('response_body', 0, $response->getBody()->__toString());
+        if ($e !== null) {
+            $logData->setCellValue('error_message', 0, $e->getMessage());
+            $logData->setCellValue('error_logid', 0, $e->getId());
+            $logData->setCellValue('http_response_code', 0, $e->getStatusCode());
+        }
+        if ($response !== null) {
+            $logData->setCellValue('http_response_code', 0, $response->getStatusCode());
+            $logData->setCellValue('response_header', 0, json_encode($response->getHeaders()));
+            $logData->setCellValue('response_body', 0, $response->getBody()->__toString());
+        }
         $logData->dataUpdate(false);
         $this->logData->merge($logData);
+        $this->finished = true;
     }
 
     /**
@@ -144,6 +159,7 @@ final class RequestLoggingMiddleware implements MiddlewareInterface
         $logData->setCellValue('response_body', 0, $response->getBody()->__toString());
         $logData->dataUpdate(false);
         $this->logData->merge($logData);
+        $this->finished = true;
     }
 
     /**
