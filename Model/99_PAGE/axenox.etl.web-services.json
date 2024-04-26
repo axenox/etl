@@ -11,7 +11,7 @@
     "created_by_user_selector": "0x31000000000000000000000000000000",
     "created_on": "2023-10-18 16:18:11",
     "modified_by_user_selector": "0x31000000000000000000000000000000",
-    "modified_on": "2024-02-07 16:34:24",
+    "modified_on": "2024-04-15 17:06:40",
     "contents": {
         "widget_type": "SplitVertical",
         "object_alias": "axenox.ETL.webservice",
@@ -41,7 +41,8 @@
                                 "attribute_alias": "name"
                             },
                             {
-                                "attribute_alias": "flow__LABEL"
+                                "caption": "Flows",
+                                "attribute_alias": "webservice_flow__UID:COUNT"
                             },
                             {
                                 "attribute_alias": "type__LABEL"
@@ -83,7 +84,7 @@
                                 "action_alias": "exface.Core.ShowObjectCreateDialog"
                             },
                             {
-                                "caption": "Edit route",
+                                "caption": "Edit service",
                                 "action_alias": "exface.Core.ShowObjectEditDialog"
                             },
                             {
@@ -125,76 +126,8 @@
                         "widget_type": "SplitHorizontal",
                         "panels": [
                             {
-                                "caption": "Policies",
-                                "width": "40%",
-                                "widgets": [
-                                    {
-                                        "widget_type": "DataTable",
-                                        "object_alias": "exface.Core.AUTHORIZATION_POLICY",
-                                        "filters": [
-                                            {
-                                                "attribute_alias": "TARGET_FACADE",
-                                                "hidden": true,
-                                                "value": "axenox\/etl\/Facades\/DataFlowFacade.php"
-                                            }
-                                        ],
-                                        "columns": [
-                                            {
-                                                "attribute_alias": "EFFECT"
-                                            },
-                                            {
-                                                "attribute_alias": "NAME"
-                                            },
-                                            {
-                                                "attribute_alias": "DISABLED_FLAG"
-                                            },
-                                            {
-                                                "attribute_alias": "AUTHORIZATION_POINT__LABEL"
-                                            },
-                                            {
-                                                "attribute_alias": "TARGET_USER_ROLE__LABEL"
-                                            },
-                                            {
-                                                "attribute_alias": "TARGET_OBJECT__LABEL"
-                                            },
-                                            {
-                                                "attribute_alias": "CONDITION_FLAG"
-                                            },
-                                            {
-                                                "attribute_alias": "APP__LABEL"
-                                            }
-                                        ],
-                                        "sorters": [
-                                            {
-                                                "attribute_alias": "TARGET_USER_ROLE__LABEL",
-                                                "direction": "asc"
-                                            },
-                                            {
-                                                "attribute_alias": "NAME",
-                                                "direction": "asc"
-                                            }
-                                        ],
-                                        "buttons": [
-                                            {
-                                                "action_alias": "exface.Core.ShowObjectCreateDialog"
-                                            },
-                                            {
-                                                "action_alias": "exface.Core.ShowObjectEditDialog",
-                                                "bind_to_double_click": true
-                                            },
-                                            {
-                                                "action_alias": "exface.Core.ShowObjectCopyDialog"
-                                            },
-                                            {
-                                                "action_alias": "exface.Core.DeleteObject",
-                                                "visibility": "optional"
-                                            }
-                                        ]
-                                    }
-                                ]
-                            },
-                            {
                                 "caption": "Roles",
+                                "width": "20%",
                                 "widgets": [
                                     {
                                         "widget_type": "DataTable",
@@ -243,7 +176,6 @@
                             },
                             {
                                 "caption": "Users",
-                                "width": "40%",
                                 "widgets": [
                                     {
                                         "widget_type": "DataTable",
@@ -278,6 +210,76 @@
                                         "sorters": [
                                             {
                                                 "attribute_alias": "USERNAME",
+                                                "direction": "asc"
+                                            }
+                                        ],
+                                        "buttons": [
+                                            {
+                                                "action_alias": "exface.Core.ShowObjectCreateDialog"
+                                            },
+                                            {
+                                                "action_alias": "exface.Core.ShowObjectEditDialog",
+                                                "bind_to_double_click": true
+                                            },
+                                            {
+                                                "action_alias": "exface.Core.ShowObjectCopyDialog"
+                                            },
+                                            {
+                                                "action_alias": "exface.Core.DeleteObject",
+                                                "visibility": "optional"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                "caption": "Policies",
+                                "width": "40%",
+                                "widgets": [
+                                    {
+                                        "widget_type": "DataTable",
+                                        "object_alias": "exface.Core.AUTHORIZATION_POLICY",
+                                        "paginate": false,
+                                        "filters": [
+                                            {
+                                                "attribute_alias": "TARGET_FACADE",
+                                                "hidden": true,
+                                                "value": "axenox\/etl\/Facades\/DataFlowFacade.php"
+                                            }
+                                        ],
+                                        "columns": [
+                                            {
+                                                "attribute_alias": "EFFECT"
+                                            },
+                                            {
+                                                "attribute_alias": "NAME"
+                                            },
+                                            {
+                                                "attribute_alias": "DISABLED_FLAG"
+                                            },
+                                            {
+                                                "attribute_alias": "AUTHORIZATION_POINT__LABEL"
+                                            },
+                                            {
+                                                "attribute_alias": "TARGET_USER_ROLE__LABEL"
+                                            },
+                                            {
+                                                "attribute_alias": "TARGET_OBJECT__LABEL"
+                                            },
+                                            {
+                                                "attribute_alias": "CONDITION_FLAG"
+                                            },
+                                            {
+                                                "attribute_alias": "APP__LABEL"
+                                            }
+                                        ],
+                                        "sorters": [
+                                            {
+                                                "attribute_alias": "TARGET_USER_ROLE__LABEL",
+                                                "direction": "asc"
+                                            },
+                                            {
+                                                "attribute_alias": "NAME",
                                                 "direction": "asc"
                                             }
                                         ],

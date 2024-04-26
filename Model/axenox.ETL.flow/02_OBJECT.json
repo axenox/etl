@@ -81,7 +81,7 @@
     "rows": [
         {
             "CREATED_ON": "2021-02-26 16:44:37",
-            "MODIFIED_ON": "2024-02-06 20:37:20",
+            "MODIFIED_ON": "2024-03-15 17:50:29",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
             "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
             "UID": "0x11eb90858867906c9085025041000001",
@@ -164,17 +164,19 @@
                                                                 "attribute_alias": "etl_prototype"
                                                             }
                                                         ],
-                                                        "row_grouper": {
-                                                            "group_by_attribute_alias": "type",
-                                                            "hide_caption": true
-                                                        },
                                                         "columns": [
+                                                            {
+                                                                "attribute_alias": "step_flow_sequence"
+                                                            },
                                                             {
                                                                 "attribute_alias": "disabled",
                                                                 "caption": "Off"
                                                             },
                                                             {
                                                                 "attribute_alias": "name"
+                                                            },
+                                                            {
+                                                                "attribute_alias": "type"
                                                             },
                                                             {
                                                                 "attribute_alias": "from_object__ALIAS_WITH_NS",
@@ -185,22 +187,12 @@
                                                                 "caption": "To"
                                                             },
                                                             {
-                                                                "attribute_alias": "run_after_step__LABEL"
-                                                            },
-                                                            {
                                                                 "attribute_alias": "etl_prototype"
-                                                            },
-                                                            {
-                                                                "attribute_alias": "type"
                                                             }
                                                         ],
                                                         "sorters": [
                                                             {
-                                                                "attribute_alias": "level",
-                                                                "direction": "asc"
-                                                            },
-                                                            {
-                                                                "attribute_alias": "name",
+                                                                "attribute_alias": "step_flow_sequence",
                                                                 "direction": "asc"
                                                             }
                                                         ],
@@ -227,6 +219,10 @@
                                                             },
                                                             {
                                                                 "action_alias": "axenox.ETL.EtlStepOnOffToggle"
+                                                            },
+                                                            {
+                                                                "action_alias": "axenox.ETL.FlowQuickEditDialog",
+                                                                "input_widget_id": "uid_field"
                                                             },
                                                             {
                                                                 "action_alias": "exface.Core.DeleteObject"

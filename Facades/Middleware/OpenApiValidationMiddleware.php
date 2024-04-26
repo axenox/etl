@@ -3,6 +3,8 @@ namespace axenox\ETL\Facades\Middleware;
 
 use cebe\openapi\exceptions\TypeErrorException;
 use cebe\openapi\exceptions\UnresolvableReferenceException;
+use exface\Core\DataTypes\JsonDataType;
+use GuzzleHttp\Psr7\Response;
 use League\OpenAPIValidation\PSR7\Exception\Validation\InvalidParameter;
 use League\OpenAPIValidation\PSR7\Exception\ValidationFailed;
 use Psr\Http\Message\ResponseInterface;
@@ -17,14 +19,8 @@ use League\OpenAPIValidation\PSR7\ValidatorBuilder;
 use cebe\openapi\ReferenceContext;
 use exface\Core\Exceptions\Facades\HttpBadRequestError;
 use League\OpenAPIValidation\Schema\Exception\SchemaMismatch;
-use League\OpenAPIValidation\Schema\Exception\ContentTypeMismatch;
-use League\OpenAPIValidation\Schema\Exception\FormatMismatch;
-use League\OpenAPIValidation\Schema\Exception\InvalidSchema;
-use League\OpenAPIValidation\Schema\Exception\KeywordMismatch;
-use League\OpenAPIValidation\Schema\Exception\NotEnoughValidSchemas;
-use League\OpenAPIValidation\Schema\Exception\TooManyValidSchemas;
-use League\OpenAPIValidation\Schema\Exception\TypeMismatch;
 use GuzzleHttp\Exception\BadResponseException;
+use Psr\Http\Message\MessageInterface;
 
 /**
  * This middleware adds request and response validation to facades implementing OpenApiFacadeInterface
@@ -38,10 +34,13 @@ final class OpenApiValidationMiddleware implements MiddlewareInterface
     
     private array $excludePatterns = [];
     
-    public function __construct(OpenApiFacadeInterface $facade, array $excludePatterns = [])
+    private $verbose = null;
+    
+    public function __construct(OpenApiFacadeInterface $facade, array $excludePatterns = [], $verbose = null)
     {
         $this->facade = $facade;
         $this->excludePatterns = $excludePatterns;
+        $this->verbose = $verbose ?? true;
     }
 
     /**
@@ -54,8 +53,9 @@ final class OpenApiValidationMiddleware implements MiddlewareInterface
      * @throws TypeErrorException if request does not contain a valid openapi
      * @throws UnresolvableReferenceException if references within the openapi could not be resolved
      * @throws JsonSchemaValidationError if request  or response did not match json schema
-     * @throws HttpBadRequestError if request contained an validation error
-     * @throws BadResponseException if response contained an validation error
+     * @throws HttpBadRequestError if request contained an unknown validation error
+     * @throws BadResponseException if response contained an unknown validation error
+     * @throws \Flow\JSONPath\JSONPathException if json path for schema produces an error
      */
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
@@ -87,20 +87,29 @@ final class OpenApiValidationMiddleware implements MiddlewareInterface
                 $msg = $prev->getMessage();
                 switch (true) {
                     case $prev instanceof SchemaMismatch && str_contains($exception->getMessage(), 'Body'):
-                        $source = $this->getSource($prev);
-                        $context = 'Invalid request body';
-                        $msg = $source . '. ' . $msg;
-                        $json = json_encode($request->getBody());
-                        break;
+                        if ($this->isVerbose($request) && $this->hasJsonBody($request)) {
+                            try {
+                                $schema = $this->facade->getRequestBodySchemaForCurrentRoute($request);
+                                $json = $request->getBody()->__toString();
+                                JsonDataType::validateJsonSchema($json, $schema);
+                            } catch (JsonSchemaValidationError $e) {
+                                $errors = [
+                                    'error' => $exception->getMessage(),
+                                    'details' => $e->getErrors()
+                                ];
+                                throw new JsonSchemaValidationError($errors, 'Invalid request body', null, null, $json);
+                            } catch (\Throwable $e) {
+                                $this->getWorkbench()->getLogger()->logException($e);
+                            }
+                        }
+
+                        throw new HttpBadRequestError($request, $exception->getMessage(), null, $exception);
                     case $prev instanceof InvalidParameter:
                         $schemaError = $prev->getPrevious();
                         $context = 'Invalid request parameter';
                         $msg = $prev->getMessage() . '. ' . $schemaError->getMessage();
-                        $json = json_encode($request->getQueryParams());
-
+                        return new Response(400, ['content-type' => 'plain/text'], $context . $msg);
                 }
-
-                throw new JsonSchemaValidationError([$msg], $msg, null, $exception, $context, $json);
             }
 
             throw new HttpBadRequestError($request, $msg, null, $exception);
@@ -115,44 +124,47 @@ final class OpenApiValidationMiddleware implements MiddlewareInterface
             try {
                 $responseValidator->validate($matchedOASOperation, $response);
             } catch (ValidationFailed $exception) {
-            	$prev = $exception->getPrevious();
-            	$msg = $exception->getMessage();
-            	if ($this->isSchemaValidationException($prev)){
-                    $source = $this->getSource($prev);
-                    $context = 'Response validation failed';
-                    $msg = $source . ': ' . $prev->getMessage();
-            		throw new JsonSchemaValidationError([$msg], $msg, null, $exception, $context, $response->getBody()->__toString());
-            	}
-            	
-            	throw new BadResponseException($msg, $request, null, $exception);
+                if ($this->isVerbose($request) && $this->hasJsonBody($request)) {
+                    try {
+                        $schema = $this->facade->getResponseBodySchemaForCurrentRoute($request, $response->getStatusCode());
+                        $json = $response->getBody()->__toString();
+                        JsonDataType::validateJsonSchema($json, $schema);
+                    } catch (JsonSchemaValidationError $e) {
+                        $errors = [
+                            'error' => $exception->getMessage(),
+                            'details' => $e->getErrors()
+                        ];
+
+                        throw new JsonSchemaValidationError($errors, 'Invalid response body', null, null, $json);
+                    } catch (\Throwable $e) {
+                        $this->getWorkbench()->getLogger()->logException($e);
+                    }
+                }
+
+                throw new HttpBadRequestError($request, $exception->getMessage(), null, $exception);
             }
         }
         
         return $response;
     }
-
-    private function getSource(\Throwable $exception) : ?string
-    {
-        if ($exception->dataBreadCrumb()->buildChain()[0] !== null) {
-            return 'Invalid input found in `$.'
-                . implode('.', $exception->dataBreadCrumb()->buildChain())
-                . '`';
-        }
-    }
     
-    private function isSchemaValidationException($exception) : bool
+    protected function hasJsonBody(MessageInterface $message) : bool
     {
-    	switch (true){
-    		case $exception instanceof InvalidSchema:
-            case $exception instanceof SchemaMismatch:
-    			return true;
-    		default:
-    			return false;
-    	}
+        $contentType = implode(';', $message->getHeader('Content-Type'));
+        return stripos($contentType, 'json') !== false;
     }
     
     protected function getWorkbench() : WorkbenchInterface
     {
         return $this->facade->getWorkbench();
+    }
+    
+    protected function isVerbose(ServerRequestInterface $request) : bool
+    {
+        if (is_bool($this->verbose) === true) {
+            return $this->verbose;
+        } else {
+            return $request->getQueryParams()[$this->verbose] === 'true';
+        }
     }
 }

@@ -10,8 +10,9 @@
     "replaces_page_selector": null,
     "created_by_user_selector": "0x31000000000000000000000000000000",
     "created_on": "2021-02-26 16:55:01",
-    "modified_by_user_selector": "0x11e8fe1c902c8ebea23ee4b318306b9a",
-    "modified_on": "2024-02-26 15:22:03",
+    "modified_by_user_selector": "0x31000000000000000000000000000000",
+    "modified_on": "2024-04-15 16:22:45",
+    "icon": "exchange",
     "contents": {
         "widget_type": "SplitHorizontal",
         "object_alias": "axenox.ETL.flow",
@@ -54,9 +55,9 @@
                                                 "attribute_alias": "flow_run_latest__flow_run__status"
                                             },
                                             {
-                                                "attribute_alias": "webservice__UID:COUNT",
-                                                "caption": "Web",
-                                                "hint": "Web services"
+                                                "attribute_alias": "webservice_flow__webservice:COUNT",
+                                                "caption": "Webservices",
+                                                "hint": "Number of webservice routes"
                                             },
                                             {
                                                 "attribute_alias": "scheduler__SCHEDULE"
@@ -166,7 +167,7 @@
                                 "caption": "Flow diagram",
                                 "widgets": [
                                     {
-                                        "object_alias": "axenox.ETL.sankey_flow_view",
+                                        "object_alias": "axenox.ETL.flow_sankey",
                                         "widget_type": "Chart",
                                         "hide_header": true,
                                         "data": {

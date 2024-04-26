@@ -2,7 +2,11 @@ IF OBJECT_ID('dbo.etl_sankey_webservices', 'V') IS NOT NULL
     DROP VIEW dbo.etl_sankey_webservices;
 GO
 
-CREATE VIEW dbo.etl_sankey_webservices AS
+IF OBJECT_ID('dbo.etl_flow_sankey', 'V') IS NOT NULL
+    DROP VIEW dbo.etl_flow_sankey;
+GO
+
+CREATE VIEW dbo.etl_flow_sankey AS
 SELECT
 	source_level,
 	target_level,
@@ -40,8 +44,9 @@ FROM
 		    fot.flow_oid AS flow_oid
 		FROM
 		    etl_step s
-		    INNER JOIN etl_webservice wr ON wr.flow_oid = s.flow_oid 
-		    	AND wr.flow_direction = 'OUT'
+		    INNER JOIN etl_webservice_flow wf ON wf.flow_oid = s.flow_oid
+            INNER JOIN etl_webservice ws ON ws.oid = wf.webservice_oid
+		    	AND ws.flow_direction = 'OUT'
 		    INNER JOIN etl_flow_objects fot ON s.flow_oid = fot.flow_oid 
 		    	AND fot.object_oid = s.to_object_oid
 		WHERE 
@@ -60,8 +65,9 @@ FROM
 		    fof.flow_oid AS flow_oid
 		FROM
 		    etl_step s
-		    INNER JOIN etl_webservice wr ON wr.flow_oid = s.flow_oid 
-		    	AND wr.flow_direction = 'IN'
+            INNER JOIN etl_webservice_flow wf ON wf.flow_oid = s.flow_oid
+            INNER JOIN etl_webservice ws ON ws.oid = wf.webservice_oid
+		    	AND ws.flow_direction = 'IN'
 		    INNER JOIN etl_flow_objects fof ON s.flow_oid = fof.flow_oid 
 		    	AND fof.object_oid = s.from_object_oid
 		WHERE 
