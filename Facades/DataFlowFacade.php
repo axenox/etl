@@ -332,7 +332,7 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 		
 		JsonDataType::validateJsonSchema($json, $routeData['type__schema_json']);		
 		$jsonArray = json_decode($json, true);
-		$jsonArray = $this->addServerPaths($path, $jsonArray);
+		$jsonArray = $this->prependLocalServerPaths($path, $jsonArray);
 		$this->openApiCache[$path] = $jsonArray;
 		return $jsonArray;
 	}
@@ -450,16 +450,15 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 	 * @param array $swaggerArray
 	 * @return array
 	 */
-	private function addServerPaths(string $path, array $swaggerArray): array
+	private function prependLocalServerPaths(string $path, array $swaggerArray): array
 	{
 		$basePath = $this->getUrlRouteDefault();
 		$routePath = StringDataType::substringAfter($path, $basePath, $path);
 		$webserviceBase = StringDataType::substringBefore($routePath, '/', '', true, true) . '/';
 		$basePath .= '/' . ltrim($webserviceBase, "/");
-		foreach ($this->getWorkbench()
-			->getConfig()
-			->getOption('SERVER.BASE_URLS') as $baseUrl) {
-				$swaggerArray['servers'][] = ['url' => $baseUrl . $basePath];
+		foreach ($this->getWorkbench()->getConfig()->getOption('SERVER.BASE_URLS') as $baseUrl) {
+            // prepend entry to array
+            array_unshift($swaggerArray['servers'], ['url' => $baseUrl . $basePath]);
 		}
 			
 		return $swaggerArray;
