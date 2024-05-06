@@ -390,6 +390,23 @@
             "WRAP_PATH": "",
             "UXON_SCHEMA": "\\axenox\\ETL\\Uxon\\OpenAPISchema",
             "THUMBNAIL": ""
+        },
+        {
+            "CREATED_ON": "2024-05-06 15:32:17",
+            "MODIFIED_ON": "2024-05-06 15:32:17",
+            "CREATED_BY_USER": "0x31000000000000000000000000000000",
+            "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
+            "UID": "0x11ef80190e9704708019025041000001",
+            "APP": "0x11ebbc50679eacdabc50025041000001",
+            "NAME": "Custom SQL statement",
+            "DESCRIPTION": "",
+            "PROTOTYPE": "axenox\/etl\/ETLPrototypes\/SQLRunner.php",
+            "UXON": {
+                "sql": ""
+            },
+            "WRAP_PATH": "",
+            "UXON_SCHEMA": "\\axenox\\ETL\\Uxon\\ETLPrototypeSchema",
+            "THUMBNAIL": ""
         }
     ],
     "totals_rows": [],
