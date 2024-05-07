@@ -89,7 +89,7 @@ class OpenAPISchema implements UxonSchemaInterface
      * {@inheritDoc}
      * @see \exface\Core\Interfaces\UxonSchemaInterface::getPropertyValueRecursive()
      */
-    public function getPropertyValueRecursive(UxonObject $uxon, array $path, string $propertyName, string $rootValue = '')
+    public function getPropertyValueRecursive(UxonObject $uxon, array $path, string $propertyName, string $rootValue = '', string $prototypeClass = null)
     {
         return null;
     }
