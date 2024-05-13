@@ -81,7 +81,7 @@
     "rows": [
         {
             "CREATED_ON": "2024-04-03 16:00:07",
-            "MODIFIED_ON": "2024-05-06 15:25:17",
+            "MODIFIED_ON": "2024-05-13 16:18:05",
             "CREATED_BY_USER": "0x11e8fe1c902c8ebea23ee4b318306b9a",
             "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
             "UID": "0x11ee81f57aaf6a1281f5025041000001",
@@ -89,7 +89,7 @@
             "WRITABLE_FLAG": 1,
             "COMMENTS": "",
             "DOCS": "",
-            "NAME": "Web service flow",
+            "NAME": "Web route",
             "INHERIT_DATA_SOURCE_BASE_OBJECT": 1,
             "DATA_SOURCE": "0x32000000000000000000000000000000",
             "APP": "0x11ebbc50679eacdabc50025041000001",
