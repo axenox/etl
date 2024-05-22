@@ -407,6 +407,132 @@
             "WRAP_PATH": "",
             "UXON_SCHEMA": "\\axenox\\ETL\\Uxon\\ETLPrototypeSchema",
             "THUMBNAIL": ""
+        },
+        {
+            "CREATED_ON": "2024-05-22 15:21:54",
+            "MODIFIED_ON": "2024-05-22 15:21:54",
+            "CREATED_BY_USER": "0x11e8fe1c902c8ebea23ee4b318306b9a",
+            "MODIFIED_BY_USER": "0x11e8fe1c902c8ebea23ee4b318306b9a",
+            "UID": "0x11ef85f541f8fa8885f5025041000001",
+            "APP": "0x11ebbc50679eacdabc50025041000001",
+            "NAME": "OpenAPI 3.0.3 Export",
+            "DESCRIPTION": "Base template for an OpenAPI Export with a single route",
+            "PROTOTYPE": "",
+            "UXON": {
+                "openapi": "3.0.3",
+                "info": {
+                    "title": "Import",
+                    "description": "",
+                    "version": "1.0.0"
+                },
+                "servers": [],
+                "tags": [
+                    {
+                        "name": "Daten",
+                        "description": "Daten export"
+                    }
+                ],
+                "paths": {
+                    "\/object": {
+                        "get": {
+                            "tags": [
+                                "Daten"
+                            ],
+                            "description": "Liefert Daten aus Onelink.",
+                            "parameters": [
+                                {
+                                    "name": "limit",
+                                    "in": "query",
+                                    "description": "Definiere die maximale Anzahl der Eintr\u00e4ge.",
+                                    "required": false,
+                                    "schema": {
+                                        "type": "integer",
+                                        "example": 100
+                                    }
+                                },
+                                {
+                                    "name": "offset",
+                                    "in": "query",
+                                    "description": "Definiere die Startposition ab dem die Eintr\u00e4ge geladen werden.",
+                                    "required": false,
+                                    "schema": {
+                                        "type": "integer",
+                                        "example": 0
+                                    }
+                                }
+                            ],
+                            "responses": {
+                                "200": {
+                                    "description": "Erfolgreiche Abfrage",
+                                    "content": {
+                                        "application\/json": {
+                                            "schema": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "objects": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#\/components\/schemas\/Object"
+                                                            },
+                                                            "x-object-alias": "full.namespace.object"
+                                                        },
+                                                        "page_limit": {
+                                                            "type": "integer",
+                                                            "nullable": true,
+                                                            "x-placeholder": "[#~parameter:limit#]"
+                                                        },
+                                                        "page_offset": {
+                                                            "type": "integer",
+                                                            "nullable": true,
+                                                            "x-placeholder": "[#~parameter:offset#]"
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            "examples": {
+                                                "standard": {
+                                                    "summary": "Antwort mit Daten"
+                                                },
+                                                "defaultResponse": {
+                                                    "summary": "Antwort ohne Daten",
+                                                    "value": {
+                                                        "tranchen": [],
+                                                        "page_limit": null,
+                                                        "page_offset": null
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "components": {
+                    "schemas": {
+                        "Object": {
+                            "type": "object",
+                            "x-object-alias": "full.namespace.object",
+                            "properties": {
+                                "prop1": {
+                                    "type": "integer",
+                                    "x-attribute-alias": "prop1alias"
+                                },
+                                "prop2": {
+                                    "type": "string",
+                                    "x-attribute-alias": "prop2alias"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "WRAP_PATH": "",
+            "UXON_SCHEMA": "\\axenox\\ETL\\Uxon\\OpenAPISchema",
+            "THUMBNAIL": ""
         }
     ],
     "totals_rows": [],
