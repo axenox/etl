@@ -115,7 +115,8 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI, 
     private $inputFlowAlias = null;
     
     private $inputFlowRunUidExpr = null;
-    
+    private ?string $openApiJson = null;
+
     /**
      *
      * {@inheritDoc}
@@ -176,7 +177,7 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI, 
                 yield 'disabled' . PHP_EOL;
             } else {
                 $log = '';
-                $stepData = new ETLStepData($task, $flowRunUid, $stepRunUid, $prevStepResult, $prevRunResult);
+                $stepData = new ETLStepData($task, $flowRunUid, $stepRunUid, $prevStepResult, $prevRunResult, $this->openApiJson);
                 $this->getWorkbench()->eventManager()->addListener(OnBeforeETLStepRun::getEventName(), function(OnBeforeETLStepRun $event) use (&$logRow, $step) {
                     if ($event->getStep() !== $step) {
                         return;
@@ -676,5 +677,10 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI, 
     {
         $this->inputFlowRunUidExpr = ExpressionFactory::createForObject($this->getMetaObject(), $value);
         return $this;
+    }
+
+    public function setOpenApiJson(string $openApiJson) : void
+    {
+        $this->openApiJson = $openApiJson;
     }
 }

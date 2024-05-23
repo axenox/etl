@@ -124,7 +124,7 @@ final class OpenApiValidationMiddleware implements MiddlewareInterface
             try {
                 $responseValidator->validate($matchedOASOperation, $response);
             } catch (ValidationFailed $exception) {
-                if ($this->isVerbose($request) && $this->hasJsonBody($request)) {
+                if ($this->isVerbose($request) && $this->hasJsonBody($response)) {
                     try {
                         $schema = $this->facade->getResponseBodySchemaForCurrentRoute($request, $response->getStatusCode());
                         $json = $response->getBody()->__toString();
@@ -148,9 +148,9 @@ final class OpenApiValidationMiddleware implements MiddlewareInterface
         return $response;
     }
     
-    protected function hasJsonBody(MessageInterface $message) : bool
+    protected function hasJsonBody(ServerRequestInterface|ResponseInterface $response) : bool
     {
-        $contentType = implode(';', $message->getHeader('Content-Type'));
+        $contentType = implode(';', $response->getHeader('Content-Type'));
         return stripos($contentType, 'json') !== false;
     }
     

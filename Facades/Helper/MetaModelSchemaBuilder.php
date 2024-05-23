@@ -71,10 +71,16 @@ class MetaModelSchemaBuilder
     {
         $objectName = $metaObject->getAliasWithNamespace();
         if ($this->onlyReturnProperties) {
-            $jsonSchema = ['type' => 'object', 'properties' => []];
+            $jsonSchema = [
+                'type' => 'object',
+                'x-object-alias' => $objectName,
+                'properties' => []];
             $subArray = &$jsonSchema['properties'];
         } else {
-            $jsonSchema = [$objectName => ['type' => 'object', 'properties' => []]];
+            $jsonSchema = [$objectName => [
+                'type' => 'object',
+                'x-object-alias' => $objectName,
+                'properties' => []]];
             $subArray = &$jsonSchema[$objectName]['properties'];
         }
 
@@ -161,6 +167,12 @@ class MetaModelSchemaBuilder
             if (empty($richestRow) === false && ($rowValue = $richestRow[$attribute->getAlias()]) !== null){
                 $schema['example'] = $rowValue;
             }
+
+            if ($attribute->isRelation()) {
+                $schema['x-foreign-key'] = $attribute->getDataAddress();
+            }
+
+            $schema['x-attribute-alias'] = $attribute->getAlias();
 
             $subArray[$attribute->getAlias()] = $schema;
         }

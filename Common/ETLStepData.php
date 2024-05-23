@@ -16,19 +16,23 @@ class ETLStepData implements ETLStepDataInterface
 	private ?ETLStepResultInterface $previousStepResult;
 	
 	private ?ETLStepResultInterface $lastResult;
-	
-	public function __construct(
+
+    private ?string $openApiJson;
+
+    public function __construct(
 		TaskInterface $task,
-		string $flowRunUid, 
-		string $stepRunUid, 
+		string $flowRunUid,
+		string $stepRunUid,
 		ETLStepResultInterface $previousStepResult = null, 
-		ETLStepResultInterface $lastResult = null)
+		ETLStepResultInterface $lastResult = null,
+        string $openApiJson = null)
 	{
 		$this->task = $task;
 		$this->flowRunUid = $flowRunUid;
 		$this->stepRunUid = $stepRunUid;
 		$this->previousStepResult = $previousStepResult;
 		$this->lastResult = $lastResult;
+        $this->openApiJson = $openApiJson;
 	}
 	
 	public function getFlowRunUid() : string 
@@ -55,4 +59,9 @@ class ETLStepData implements ETLStepDataInterface
 	{
 		return $this->task;
 	}
+
+    public function getOpenApiJson() : ?string
+    {
+        return $this->openApiJson;
+    }
 }

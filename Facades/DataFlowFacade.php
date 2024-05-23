@@ -43,6 +43,7 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
     // TODO: move all OpenApiFacadeInterface methods into a separate OpenApiWebserviceType class
 
 	const REQUEST_ATTRIBUTE_NAME_ROUTE = 'route';
+    const REQUEST_ATTRIBUTE_FORMATTED_RESPONSE = 'FORMATTED_RESPONSE';
 
 	private $openApiCache = [];
     private $logData = null;
@@ -121,6 +122,10 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 		$action->setMetaObject($taskData->getMetaObject());
 		$action->setFlowAlias($flowAlias);
 		$action->setInputFlowRunUid('flow_run');
+
+        $routeData = $request->getAttribute(self::REQUEST_ATTRIBUTE_NAME_ROUTE);
+        $action->setOpenApiJson($routeData['swagger_json']);
+
 		$result = $action->handle($task);
 		return $result;
 	}
@@ -143,6 +148,13 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 		array $routeModel,
 		string $routePath) : ?string
 	{
+        // body already created in step
+        $responseHeader = $requestLogData->getRow()['response_header'];
+        if ($responseHeader  !== null) {
+            $headers['Content-Type'] = $responseHeader;
+            return $requestLogData->getRow()['response_body'];
+        }
+
 		$flowResponse = json_decode($requestLogData->getRow()['response_body'], true);
         $responseModel = null;
 		
@@ -193,7 +205,7 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
         $alias = null;
         $rows = $ds->getRows();
         foreach ($rows as $row){
-            if (str_contains($routePath, $row['route'])) {
+            if (str_contains($row['route'], ltrim($routePath,'/'))) {
                 $alias = $row['flow__alias'];
                 return $alias;
             }
@@ -292,6 +304,7 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
         $requestLogData = $this->loggingMiddleware->getLogData($request);
 		$requestLogData->getFilters()->addConditionFromColumnValues($requestLogData->getUidColumn());
 		$requestLogData->getColumns()->addFromExpression('response_body');
+        $requestLogData->getColumns()->addFromExpression('response_header');
 		$requestLogData->dataRead();
         return $requestLogData;
 	}
