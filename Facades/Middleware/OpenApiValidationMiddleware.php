@@ -81,7 +81,6 @@ final class OpenApiValidationMiddleware implements MiddlewareInterface
         try {
             $matchedOASOperation = $requestValidator->validate($request);
         } catch (ValidationFailed $exception) {
-            $msg = $exception->getMessage();
             $prev = $exception->getPrevious();
             if ($prev) {
                 $msg = $prev->getMessage();
@@ -112,7 +111,7 @@ final class OpenApiValidationMiddleware implements MiddlewareInterface
                 }
             }
 
-            throw new HttpBadRequestError($request, $msg, null, $exception);
+            throw new HttpBadRequestError($request, $exception->getMessage(), null, $exception);
         }
         
         // 2. Process request
