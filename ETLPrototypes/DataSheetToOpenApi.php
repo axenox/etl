@@ -154,14 +154,22 @@ class DataSheetToOpenApi extends AbstractETLPrototype
         $schemas = json_decode(json_encode($schemas), true);
 
         $fromObjectSchema = $this->findObjectSchema($fromSheet, $schemas);
-        foreach ($this->findAttributesInSchema($fromObjectSchema) as $propName => $attrAlias) {
+        $requestedColumns = $this->findAttributesInSchema($fromObjectSchema);
+        foreach ($requestedColumns as $propName => $attrAlias) {
             $fromSheet->getColumns()->addFromExpression($attrAlias, $propName);
         }
         $fromSheet->dataRead();
 
         // enforce from sheet defined data types
-        $rows = $fromSheet->getRows();
         $index = 0;
+        foreach ($fromSheet->getColumns() as $column) {
+            // remove data that was not requested but loaded anyway
+            if (array_key_exists($column->getName(), $requestedColumns) === false) {
+                $fromSheet->getColumns()->remove($column);
+            }
+        }
+
+        $rows = $fromSheet->getRows();
         foreach ($fromSheet->getColumns() as $column) {
             $values = $column->getValuesNormalized();
             foreach ($rows as &$row) {
@@ -284,7 +292,11 @@ class DataSheetToOpenApi extends AbstractETLPrototype
     protected function createBodyFromSchema(array $responseSchema, array $newContent, string $objectAlias, array $placeholders) : array
     {
         if ($responseSchema['type'] == 'array') {
-            $body[] = $this->createBodyFromSchema($responseSchema['items'], $newContent, $objectAlias, $placeholders);
+            $result = $this->createBodyFromSchema($responseSchema['items'], $newContent, $objectAlias, $placeholders);
+
+            if (empty($result) === false) {
+                $body[] = $result;
+            }
         }
 
         if ($responseSchema['type'] == 'object') {
@@ -317,6 +329,10 @@ class DataSheetToOpenApi extends AbstractETLPrototype
             }
         }
 
+        if ($body === null) {
+            return [];
+        }
+
         return $body;
     }
 
@@ -338,13 +354,28 @@ class DataSheetToOpenApi extends AbstractETLPrototype
         string $objectAlias,
         array $placeholders): void
     {
-        $currentBody = json_decode(json_encode($requestLogData->getCellValue('response_body', 0)), true);
+        $currentBody = json_decode($requestLogData->getCellValue('response_body', 0), true);
         $responseSchema = $this->getResponseSchema($request, $openApiJson);
         $newBody = $this->createBodyFromSchema($responseSchema, $rows, $objectAlias, $placeholders);
-        $newBody = $currentBody === null ? $newBody : array_merge($currentBody, $responseSchema);
+        $newBody = $currentBody === null ? $newBody : $this->deepMerge($currentBody, $newBody);
         $requestLogData->setCellValue('response_header', 0, 'application/json');
         $requestLogData->setCellValue('response_body', 0, json_encode($newBody));
         $requestLogData->dataUpdate();
+    }
+
+    protected function deepMerge(array $first, array $second) {
+        $result = [];
+        foreach ($first as $key => $entry) {
+            if (is_array($entry) && array_key_exists($key, $second)){
+                $result[$key] = array_merge($entry, $second[$key]);
+            } else if (array_key_exists($key, $second)) {
+                $result[$key] = $second[$key];
+            } else {
+                $result[$key] = $entry;
+            }
+        }
+
+        return $result;
     }
 
     /**
