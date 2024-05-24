@@ -154,14 +154,22 @@ class DataSheetToOpenApi extends AbstractETLPrototype
         $schemas = json_decode(json_encode($schemas), true);
 
         $fromObjectSchema = $this->findObjectSchema($fromSheet, $schemas);
-        foreach ($this->findAttributesInSchema($fromObjectSchema) as $propName => $attrAlias) {
+        $requestedColumns = $this->findAttributesInSchema($fromObjectSchema);
+        foreach ($requestedColumns as $propName => $attrAlias) {
             $fromSheet->getColumns()->addFromExpression($attrAlias, $propName);
         }
         $fromSheet->dataRead();
 
         // enforce from sheet defined data types
-        $rows = $fromSheet->getRows();
         $index = 0;
+        foreach ($fromSheet->getColumns() as $column) {
+            // remove data that was not requested but loaded anyway
+            if (array_key_exists($column->getName(), $requestedColumns) === false) {
+                $fromSheet->getColumns()->remove($column);
+            }
+        }
+
+        $rows = $fromSheet->getRows();
         foreach ($fromSheet->getColumns() as $column) {
             $values = $column->getValuesNormalized();
             foreach ($rows as &$row) {
