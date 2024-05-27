@@ -111,7 +111,7 @@ class DataSheetToOpenApi extends AbstractETLPrototype
 
     private $rowLimit = null;
 
-    private $baseSheet = 0;
+    private $baseSheet = null;
 
     private $rowOffset = 0;
 
