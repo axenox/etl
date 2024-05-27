@@ -158,6 +158,9 @@ class DataSheetToOpenApi extends AbstractETLPrototype
         foreach ($requestedColumns as $propName => $attrAlias) {
             $fromSheet->getColumns()->addFromExpression($attrAlias, $propName);
         }
+        if ((! $fromSheet->hasSorters()) && $fromSheet->getMetaObject()->hasUidAttribute()) {
+            $fromSheet->getSorters()->addFromString($fromSheet->getMetaObject()->getUidAttributeAlias());
+        }
         $fromSheet->dataRead();
 
         // enforce from sheet defined data types
