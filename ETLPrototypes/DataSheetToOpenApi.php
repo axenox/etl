@@ -108,6 +108,8 @@ class DataSheetToOpenApi extends AbstractOpenApiPrototype
 
     private $rowLimit = null;
 
+    private $baseSheet = null;
+
     private $rowOffset = 0;
 
 
@@ -152,6 +154,9 @@ class DataSheetToOpenApi extends AbstractOpenApiPrototype
         $requestedColumns = $this->findAttributesInSchema($fromObjectSchema);
         foreach ($requestedColumns as $propName => $attrAlias) {
             $fromSheet->getColumns()->addFromExpression($attrAlias, $propName);
+        }
+        if ((! $fromSheet->hasSorters()) && $fromSheet->getMetaObject()->hasUidAttribute()) {
+            $fromSheet->getSorters()->addFromString($fromSheet->getMetaObject()->getUidAttributeAlias());
         }
         $fromSheet->dataRead();
 
