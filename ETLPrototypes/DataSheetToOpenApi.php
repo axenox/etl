@@ -1,6 +1,8 @@
 <?php
 namespace axenox\ETL\ETLPrototypes;
 
+use axenox\ETL\Common\AbstractOpenApiPrototype;
+use exface\Core\CommonLogic\DataSheets\DataSheet;
 use exface\Core\Exceptions\InvalidArgumentException;
 use exface\Core\Exceptions\NotImplementedError;
 use exface\Core\Interfaces\DataSheets\DataSheetInterface;
@@ -101,13 +103,8 @@ use Psr\Http\Message\ServerRequestInterface;
  *
  * @author miriam.seitz
  */
-class DataSheetToOpenApi extends AbstractETLPrototype
+class DataSheetToOpenApi extends AbstractOpenApiPrototype
 {
-    const JSON_PATH_TO_OPEN_API_SCHEMAS = '$.components.schemas';
-
-    const OPEN_API_ATTRIBUTE_TO_OBJECT_ALIAS = 'x-object-alias';
-
-    const OPEN_API_ATTRIBUTE_TO_ATTRIBUTE_ALIAS = 'x-attribute-alias';
 
     private $rowLimit = null;
 
@@ -182,7 +179,7 @@ class DataSheetToOpenApi extends AbstractETLPrototype
             $index = 0;
         }
 
-        $requestLogData = $this->loadRequestData($stepData);
+        $requestLogData = $this->loadRequestData($stepData, ['response_body', 'response_header']);
         $request = $stepTask->getHttpRequest();
         $this->updateRequestData($requestLogData, $request, $openApiJson, $rows, $fromObjectSchema[self::OPEN_API_ATTRIBUTE_TO_OBJECT_ALIAS], $placeholders);
         $transformedElementCount = $fromSheet->countRows();
@@ -191,41 +188,6 @@ class DataSheetToOpenApi extends AbstractETLPrototype
         return $result->setProcessedRowsCounter($transformedElementCount);
     }
 
-    /**
-     * Finds the object schema by mapping the from-object to the ´x-object-alias´ in the OpenApi schema.
-     *
-     * @param DataSheetInterface $fromSheet
-     * @param array $schemas
-     * @return array
-     * @throws InvalidArgumentException
-     */
-    protected function findObjectSchema(DataSheetInterface $fromSheet, array $schemas): array
-    {
-        switch(true) {
-            case array_key_exists($fromSheet->getMetaObject()->getAliasWithNamespace(), $schemas):
-                $fromObjectSchema = $schemas[$fromSheet->getMetaObject()->getAliasWithNamespace()];
-                break;
-            case array_key_exists($fromSheet->getMetaObject()->getAlias(), $schemas):
-                $fromObjectSchema = $schemas[$key[0] ?? $fromSheet->getMetaObject()->getAlias()];
-
-                if ($fromObjectSchema[self::OPEN_API_ATTRIBUTE_TO_OBJECT_ALIAS] !== $fromSheet->getMetaObject()->getAliasWithNamespace()) {
-                    throw new InvalidArgumentException('From sheet does not match ' .
-                        self::OPEN_API_ATTRIBUTE_TO_OBJECT_ALIAS .
-                        ' of found schema in the OpenApi definition!');
-                }
-                break;
-            default:
-                foreach ($schemas as $schema) {
-                    if ($schema[self::OPEN_API_ATTRIBUTE_TO_OBJECT_ALIAS] === $fromSheet->getMetaObject()->getAliasWithNamespace()) {
-                        return $schema;
-                    }
-                }
-
-                throw new InvalidArgumentException('From object not found in OpenApi schema!');
-        }
-
-        return $fromObjectSchema;
-    }
 
     /**
      * @param array $fromObjectSchema
@@ -249,48 +211,11 @@ class DataSheetToOpenApi extends AbstractETLPrototype
     }
 
     /**
-     * Finds success response of the current route in the given OpenApi json.
-     *
-     * @param ServerRequestInterface $request
-     * @param string $openApiJson
-     * @return array
-     * @throws JSONPathException
-     * @throws InvalidArgumentException
-     */
-    protected function getResponseSchema(ServerRequestInterface $request, string $openApiJson) : array
-    {
-        // Use local version of JSONPathLexer with edit to
-        // Make sure to require BEFORE the JSONPath classes are loaded, so that the custom lexer replaces
-        // the one shipped with the library.
-        require_once '..' . DIRECTORY_SEPARATOR
-            . '..' . DIRECTORY_SEPARATOR
-            . 'axenox' . DIRECTORY_SEPARATOR
-            . 'etl' . DIRECTORY_SEPARATOR
-            . 'Common' . DIRECTORY_SEPARATOR
-            . 'JSONPath' . DIRECTORY_SEPARATOR
-            . 'JSONPathLexer.php';
-
-        $path = $request->getUri()->getPath();
-        $path = StringDataType::substringAfter($path, 'dataflow' . '/', '');
-        $routePath = rtrim(strstr($path, '/'), '/');
-        $methodType = strtolower($request->getMethod());
-        $contentType = $request->getHeader('accept')[0];
-        $jsonPath = "$.paths.{$routePath}.{$methodType}.responses.200.content.{$contentType}.schema";
-        $jsonPathFinder = new JSONPath(json_decode($openApiJson, false));
-        $data = $jsonPathFinder->find($jsonPath)->getData()[0];
-
-        if ($data === null) {
-            throw new InvalidArgumentException('Cannot find response schema in OpenApi. Please check the route definition!');
-        }
-
-        return json_decode(json_encode($data), true);
-    }
-
-    /**
      * @param array $responseSchema
      * @param array $newContent
      * @param string $objectAlias
-     * @return
+     * @param array $placeholders
+     * @return array
      */
     protected function createBodyFromSchema(array $responseSchema, array $newContent, string $objectAlias, array $placeholders) : array
     {
@@ -358,7 +283,8 @@ class DataSheetToOpenApi extends AbstractETLPrototype
         array $placeholders): void
     {
         $currentBody = json_decode($requestLogData->getCellValue('response_body', 0), true);
-        $responseSchema = $this->getResponseSchema($request, $openApiJson);
+        $jsonPath = '$.paths.[#routePath#].[#methodType#].responses.200.content.[#ContentType#].schema';
+        $responseSchema = $this->getSchema($request, $openApiJson, $jsonPath);
         $newBody = $this->createBodyFromSchema($responseSchema, $rows, $objectAlias, $placeholders);
         $newBody = $currentBody === null ? $newBody : $this->deepMerge($currentBody, $newBody);
         $requestLogData->setCellValue('response_header', 0, 'application/json');
@@ -366,7 +292,13 @@ class DataSheetToOpenApi extends AbstractETLPrototype
         $requestLogData->dataUpdate();
     }
 
-    protected function deepMerge(array $first, array $second) {
+    /**
+     * @param array $first
+     * @param array $second
+     * @return array
+     */
+    protected function deepMerge(array $first, array $second): array
+    {
         $result = [];
         foreach ($first as $key => $entry) {
             if (is_array($entry) && array_key_exists($key, $second)){
@@ -382,24 +314,8 @@ class DataSheetToOpenApi extends AbstractETLPrototype
     }
 
     /**
-     * @param ETLStepDataInterface $stepData
-     * @return \exface\Core\CommonLogic\DataSheets\DataSheet|DataSheetInterface
-     */
-    protected function loadRequestData(ETLStepDataInterface $stepData): \exface\Core\CommonLogic\DataSheets\DataSheet|DataSheetInterface
-    {
-        $requestLogData = DataSheetFactory::createFromObjectIdOrAlias($this->getWorkbench(), 'axenox.ETL.webservice_request');
-        $requestLogData->getColumns()->addFromSystemAttributes();
-        $requestLogData->getColumns()->addMultiple([
-            'response_body',
-            'response_header'
-        ]);
-        $requestLogData->getFilters()->addConditionFromString('flow_run', $stepData->getFlowRunUid());
-        $requestLogData->dataRead();
-        return $requestLogData;
-    }
-
-    /**
      *
+     * @param $placeholders
      * @return int|NULL
      */
     protected function getRowLimit($placeholders) : ?int
