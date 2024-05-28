@@ -81,7 +81,7 @@
     "rows": [
         {
             "CREATED_ON": "2023-10-18 16:06:50",
-            "MODIFIED_ON": "2024-04-15 17:02:44",
+            "MODIFIED_ON": "2024-05-06 15:27:07",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
             "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
             "UID": "0x11eebdc39597022cbdc3025041000001",
@@ -180,19 +180,7 @@
                                 ]
                             },
                             {
-                                "caption": "OpenAPI",
-                                "widgets": [
-                                    {
-                                        "widget_type": "InputUxon",
-                                        "height": "100%",
-                                        "hide_caption": true,
-                                        "attribute_alias": "swagger_json",
-                                        "schema": "\\axenox\\ETL\\Uxon\\OpenAPISchema"
-                                    }
-                                ]
-                            },
-                            {
-                                "caption": "Flows",
+                                "caption": "Routes & Flows",
                                 "widgets": [
                                     {
                                         "widget_type": "DataTable",
@@ -218,7 +206,7 @@
                                             },
                                             {
                                                 "caption": "Steps",
-                                                "attribute_alias": "flow__UID:COUNT"
+                                                "attribute_alias": "flow__step__UID:COUNT"
                                             },
                                             {
                                                 "attribute_alias": "flow__description"
@@ -246,6 +234,18 @@
                                                 "action_alias": "exface.Core.DeleteObject"
                                             }
                                         ]
+                                    }
+                                ]
+                            },
+                            {
+                                "caption": "OpenAPI",
+                                "widgets": [
+                                    {
+                                        "widget_type": "InputUxon",
+                                        "height": "100%",
+                                        "hide_caption": true,
+                                        "attribute_alias": "swagger_json",
+                                        "schema": "\\axenox\\ETL\\Uxon\\OpenAPISchema"
                                     }
                                 ]
                             }

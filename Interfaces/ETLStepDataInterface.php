@@ -17,5 +17,7 @@ interface ETLStepDataInterface
 	
 	public function getLastResult() : ?ETLStepResultInterface;
 	
-	public function getTask() : TaskInterface;	
+	public function getTask() : TaskInterface;
+
+    public function getOpenApiJson() : ?string;
 }

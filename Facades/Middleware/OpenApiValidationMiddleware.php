@@ -81,7 +81,6 @@ final class OpenApiValidationMiddleware implements MiddlewareInterface
         try {
             $matchedOASOperation = $requestValidator->validate($request);
         } catch (ValidationFailed $exception) {
-            $msg = $exception->getMessage();
             $prev = $exception->getPrevious();
             if ($prev) {
                 $msg = $prev->getMessage();
@@ -112,7 +111,7 @@ final class OpenApiValidationMiddleware implements MiddlewareInterface
                 }
             }
 
-            throw new HttpBadRequestError($request, $msg, null, $exception);
+            throw new HttpBadRequestError($request, $exception->getMessage(), null, $exception);
         }
         
         // 2. Process request
@@ -124,14 +123,15 @@ final class OpenApiValidationMiddleware implements MiddlewareInterface
             try {
                 $responseValidator->validate($matchedOASOperation, $response);
             } catch (ValidationFailed $exception) {
-                if ($this->isVerbose($request) && $this->hasJsonBody($request)) {
+                $message = $exception->getVerboseMessage();
+                if ($this->isVerbose($request) && $this->hasJsonBody($response)) {
                     try {
                         $schema = $this->facade->getResponseBodySchemaForCurrentRoute($request, $response->getStatusCode());
                         $json = $response->getBody()->__toString();
                         JsonDataType::validateJsonSchema($json, $schema);
                     } catch (JsonSchemaValidationError $e) {
                         $errors = [
-                            'error' => $exception->getMessage(),
+                            'error' => $message,
                             'details' => $e->getErrors()
                         ];
 
@@ -141,16 +141,16 @@ final class OpenApiValidationMiddleware implements MiddlewareInterface
                     }
                 }
 
-                throw new HttpBadRequestError($request, $exception->getMessage(), null, $exception);
+                throw new HttpBadRequestError($request, $message, null, $exception);
             }
         }
         
         return $response;
     }
     
-    protected function hasJsonBody(MessageInterface $message) : bool
+    protected function hasJsonBody(ServerRequestInterface|ResponseInterface $response) : bool
     {
-        $contentType = implode(';', $message->getHeader('Content-Type'));
+        $contentType = implode(';', $response->getHeader('Content-Type'));
         return stripos($contentType, 'json') !== false;
     }
     

@@ -390,6 +390,232 @@
             "WRAP_PATH": "",
             "UXON_SCHEMA": "\\axenox\\ETL\\Uxon\\OpenAPISchema",
             "THUMBNAIL": ""
+        },
+        {
+            "CREATED_ON": "2024-05-06 15:32:17",
+            "MODIFIED_ON": "2024-05-06 15:32:17",
+            "CREATED_BY_USER": "0x31000000000000000000000000000000",
+            "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
+            "UID": "0x11ef80190e9704708019025041000001",
+            "APP": "0x11ebbc50679eacdabc50025041000001",
+            "NAME": "Custom SQL statement",
+            "DESCRIPTION": "",
+            "PROTOTYPE": "axenox\/etl\/ETLPrototypes\/SQLRunner.php",
+            "UXON": {
+                "sql": ""
+            },
+            "WRAP_PATH": "",
+            "UXON_SCHEMA": "\\axenox\\ETL\\Uxon\\ETLPrototypeSchema",
+            "THUMBNAIL": ""
+        },
+        {
+            "CREATED_ON": "2024-05-22 15:16:33",
+            "MODIFIED_ON": "2024-05-22 15:16:33",
+            "CREATED_BY_USER": "0x11e8fe1c902c8ebea23ee4b318306b9a",
+            "MODIFIED_BY_USER": "0x11e8fe1c902c8ebea23ee4b318306b9a",
+            "UID": "0x11ef927082f249d29270025041000001",
+            "APP": "0x11ebbc50679eacdabc50025041000001",
+            "NAME": "OpenAPI 3.0.3 Import",
+            "DESCRIPTION": "Base template for an OpenAPI Import with a single route",
+            "PROTOTYPE": "",
+            "UXON": {
+                "openapi": "3.0.3",
+                "info": {
+                    "title": "Import",
+                    "description": "",
+                    "version": "1.0.0"
+                },
+                "servers": [],
+                "tags": [
+                    {
+                        "name": "Objekte",
+                        "description": "\u00dcbermittlung von allen Objekten zu OneLink."
+                    }
+                ],
+                "paths": {
+                    "\/import": {
+                        "post": {
+                            "tags": [
+                                "Objekte"
+                            ],
+                            "description": "Route zum Upload von Objekt-Daten GIS zu OneLink.",
+                            "parameters": [],
+                            "requestBody": {
+                                "description": "Die zu importierenden Daten im Json format.",
+                                "required": true,
+                                "content": {
+                                    "application\/json": {
+                                        "schema": {
+                                            "type": "object",
+                                            "properties": {
+                                                "Objekte": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#\/components\/schemas\/Object"
+                                                    },
+                                                    "x-object-alias": "full.namespace.object"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "responses": {
+                                "200": {
+                                    "description": "Die Daten wurden erfolgreich hochgeladen."
+                                }
+                            }
+                        }
+                    }
+                },
+                "components": {
+                    "schemas": {
+                        "Object": {
+                            "type": "object",
+                            "x-object-alias": "full.namespace.object",
+                            "properties": {
+                                "prop1": {
+                                    "type": "integer",
+                                    "x-attribute-alias": "prop1alias"
+                                },
+                                "prop2": {
+                                    "type": "string",
+                                    "x-attribute-alias": "prop2alias"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "WRAP_PATH": "",
+            "UXON_SCHEMA": "\\axenox\\ETL\\Uxon\\OpenAPISchema",
+            "THUMBNAIL": ""
+        },
+        {
+            "CREATED_ON": "2024-05-22 15:21:54",
+            "MODIFIED_ON": "2024-05-22 15:21:54",
+            "CREATED_BY_USER": "0x11e8fe1c902c8ebea23ee4b318306b9a",
+            "MODIFIED_BY_USER": "0x11e8fe1c902c8ebea23ee4b318306b9a",
+            "UID": "0x11ef85f541f8fa8885f5025041000001",
+            "APP": "0x11ebbc50679eacdabc50025041000001",
+            "NAME": "OpenAPI 3.0.3 Export",
+            "DESCRIPTION": "Base template for an OpenAPI Export with a single route",
+            "PROTOTYPE": "",
+            "UXON": {
+                "openapi": "3.0.3",
+                "info": {
+                    "title": "Import",
+                    "description": "",
+                    "version": "1.0.0"
+                },
+                "servers": [],
+                "tags": [
+                    {
+                        "name": "Daten",
+                        "description": "Daten export"
+                    }
+                ],
+                "paths": {
+                    "\/object": {
+                        "get": {
+                            "tags": [
+                                "Daten"
+                            ],
+                            "description": "Liefert Daten aus Onelink.",
+                            "parameters": [
+                                {
+                                    "name": "limit",
+                                    "in": "query",
+                                    "description": "Definiere die maximale Anzahl der Eintr\u00e4ge.",
+                                    "required": false,
+                                    "schema": {
+                                        "type": "integer",
+                                        "example": 100
+                                    }
+                                },
+                                {
+                                    "name": "offset",
+                                    "in": "query",
+                                    "description": "Definiere die Startposition ab dem die Eintr\u00e4ge geladen werden.",
+                                    "required": false,
+                                    "schema": {
+                                        "type": "integer",
+                                        "example": 0
+                                    }
+                                }
+                            ],
+                            "responses": {
+                                "200": {
+                                    "description": "Erfolgreiche Abfrage",
+                                    "content": {
+                                        "application\/json": {
+                                            "schema": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "objects": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#\/components\/schemas\/Object"
+                                                            },
+                                                            "x-object-alias": "full.namespace.object"
+                                                        },
+                                                        "page_limit": {
+                                                            "type": "integer",
+                                                            "nullable": true,
+                                                            "x-placeholder": "[#~parameter:limit#]"
+                                                        },
+                                                        "page_offset": {
+                                                            "type": "integer",
+                                                            "nullable": true,
+                                                            "x-placeholder": "[#~parameter:offset#]"
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            "examples": {
+                                                "standard": {
+                                                    "summary": "Antwort mit Daten"
+                                                },
+                                                "defaultResponse": {
+                                                    "summary": "Antwort ohne Daten",
+                                                    "value": {
+                                                        "tranchen": [],
+                                                        "page_limit": null,
+                                                        "page_offset": null
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "components": {
+                    "schemas": {
+                        "Object": {
+                            "type": "object",
+                            "x-object-alias": "full.namespace.object",
+                            "properties": {
+                                "prop1": {
+                                    "type": "integer",
+                                    "x-attribute-alias": "prop1alias"
+                                },
+                                "prop2": {
+                                    "type": "string",
+                                    "x-attribute-alias": "prop2alias"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "WRAP_PATH": "",
+            "UXON_SCHEMA": "\\axenox\\ETL\\Uxon\\OpenAPISchema",
+            "THUMBNAIL": ""
         }
     ],
     "totals_rows": [],

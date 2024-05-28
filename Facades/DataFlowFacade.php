@@ -43,6 +43,7 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
     // TODO: move all OpenApiFacadeInterface methods into a separate OpenApiWebserviceType class
 
 	const REQUEST_ATTRIBUTE_NAME_ROUTE = 'route';
+    const REQUEST_ATTRIBUTE_FORMATTED_RESPONSE = 'FORMATTED_RESPONSE';
 
 	private $openApiCache = [];
     private $logData = null;
@@ -121,6 +122,10 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 		$action->setMetaObject($taskData->getMetaObject());
 		$action->setFlowAlias($flowAlias);
 		$action->setInputFlowRunUid('flow_run');
+
+        $routeData = $request->getAttribute(self::REQUEST_ATTRIBUTE_NAME_ROUTE);
+        $action->setOpenApiJson($routeData['swagger_json']);
+
 		$result = $action->handle($task);
 		return $result;
 	}
@@ -143,6 +148,13 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 		array $routeModel,
 		string $routePath) : ?string
 	{
+        // body already created in step
+        $responseHeader = $requestLogData->getRow()['response_header'];
+        if ($responseHeader  !== null) {
+            $headers['Content-Type'] = $responseHeader;
+            return $requestLogData->getRow()['response_body'];
+        }
+
 		$flowResponse = json_decode($requestLogData->getRow()['response_body'], true);
         $responseModel = null;
 		
@@ -193,7 +205,7 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
         $alias = null;
         $rows = $ds->getRows();
         foreach ($rows as $row){
-            if (str_contains($routePath, $row['route'])) {
+            if (strcasecmp($row['route'], ltrim($routePath,'/')) === 0) {
                 $alias = $row['flow__alias'];
                 return $alias;
             }
@@ -292,6 +304,7 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
         $requestLogData = $this->loggingMiddleware->getLogData($request);
 		$requestLogData->getFilters()->addConditionFromColumnValues($requestLogData->getUidColumn());
 		$requestLogData->getColumns()->addFromExpression('response_body');
+        $requestLogData->getColumns()->addFromExpression('response_header');
 		$requestLogData->dataRead();
         return $requestLogData;
 	}
@@ -332,7 +345,7 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 		
 		JsonDataType::validateJsonSchema($json, $routeData['type__schema_json']);		
 		$jsonArray = json_decode($json, true);
-		$jsonArray = $this->addServerPaths($path, $jsonArray);
+		$jsonArray = $this->prependLocalServerPaths($path, $jsonArray);
 		$this->openApiCache[$path] = $jsonArray;
 		return $jsonArray;
 	}
@@ -450,16 +463,15 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 	 * @param array $swaggerArray
 	 * @return array
 	 */
-	private function addServerPaths(string $path, array $swaggerArray): array
+	private function prependLocalServerPaths(string $path, array $swaggerArray): array
 	{
 		$basePath = $this->getUrlRouteDefault();
 		$routePath = StringDataType::substringAfter($path, $basePath, $path);
 		$webserviceBase = StringDataType::substringBefore($routePath, '/', '', true, true) . '/';
 		$basePath .= '/' . ltrim($webserviceBase, "/");
-		foreach ($this->getWorkbench()
-			->getConfig()
-			->getOption('SERVER.BASE_URLS') as $baseUrl) {
-				$swaggerArray['servers'][] = ['url' => $baseUrl . $basePath];
+		foreach ($this->getWorkbench()->getConfig()->getOption('SERVER.BASE_URLS') as $baseUrl) {
+            // prepend entry to array
+            array_unshift($swaggerArray['servers'], ['url' => $baseUrl . $basePath]);
 		}
 			
 		return $swaggerArray;

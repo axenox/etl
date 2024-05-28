@@ -81,7 +81,7 @@
     "rows": [
         {
             "CREATED_ON": "2021-03-04 20:31:23",
-            "MODIFIED_ON": "2023-10-23 11:41:07",
+            "MODIFIED_ON": "2024-05-24 08:10:49",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
             "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
             "UID": "0x11ebbb7534237cb0bb75025041000001",
@@ -131,13 +131,16 @@
                     {
                         "widget_type": "DataTable",
                         "object_alias": "axenox.ETL.step_run",
-                        "id": "table_step_runs",
+                        "paginate": false,
                         "filters": [
                             {
                                 "attribute_alias": "flow_run",
                                 "hidden": true,
                                 "required": true,
                                 "comparator": "=="
+                            },
+                            {
+                                "attribute_alias": "step__name"
                             }
                         ],
                         "columns": [
@@ -208,7 +211,7 @@
                                     "operator": "AND",
                                     "conditions": [
                                         {
-                                            "value_left": "=table_step_runs!error_flag",
+                                            "value_left": "=~input!error_flag",
                                             "comparator": "==",
                                             "value_right": 0
                                         }
@@ -234,7 +237,7 @@
                                     "operator": "AND",
                                     "conditions": [
                                         {
-                                            "value_left": "=table_step_runs!monitor_error__UID",
+                                            "value_left": "=~input!monitor_error__UID",
                                             "comparator": "==",
                                             "value_right": ""
                                         }
@@ -242,9 +245,9 @@
                                 }
                             },
                             {
-                                "caption": "Step config (current)",
+                                "caption": "Edit step",
                                 "action": {
-                                    "alias": "exface.Core.ShowObjectInfoDialog",
+                                    "alias": "exface.Core.ShowObjectEditDialog",
                                     "object_alias": "axenox.ETL.step",
                                     "input_mapper": {
                                         "column_to_column_mappings": [
