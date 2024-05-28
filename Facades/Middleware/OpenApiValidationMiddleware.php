@@ -123,6 +123,7 @@ final class OpenApiValidationMiddleware implements MiddlewareInterface
             try {
                 $responseValidator->validate($matchedOASOperation, $response);
             } catch (ValidationFailed $exception) {
+                $message = $exception->getVerboseMessage();
                 if ($this->isVerbose($request) && $this->hasJsonBody($response)) {
                     try {
                         $schema = $this->facade->getResponseBodySchemaForCurrentRoute($request, $response->getStatusCode());
@@ -130,7 +131,7 @@ final class OpenApiValidationMiddleware implements MiddlewareInterface
                         JsonDataType::validateJsonSchema($json, $schema);
                     } catch (JsonSchemaValidationError $e) {
                         $errors = [
-                            'error' => $exception->getMessage(),
+                            'error' => $message,
                             'details' => $e->getErrors()
                         ];
 
@@ -140,7 +141,7 @@ final class OpenApiValidationMiddleware implements MiddlewareInterface
                     }
                 }
 
-                throw new HttpBadRequestError($request, $exception->getMessage(), null, $exception);
+                throw new HttpBadRequestError($request, $message, null, $exception);
             }
         }
         
