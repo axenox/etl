@@ -108,8 +108,6 @@ class DataSheetToOpenApi extends AbstractOpenApiPrototype
 
     private $rowLimit = null;
 
-    private $baseSheet = null;
-
     private $rowOffset = 0;
 
 
