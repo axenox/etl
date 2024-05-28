@@ -205,7 +205,7 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
         $alias = null;
         $rows = $ds->getRows();
         foreach ($rows as $row){
-            if (str_contains($row['route'], ltrim($routePath,'/'))) {
+            if (strcasecmp($row['route'], ltrim($routePath,'/')) === 0) {
                 $alias = $row['flow__alias'];
                 return $alias;
             }
