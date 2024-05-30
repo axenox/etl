@@ -4,6 +4,7 @@ namespace axenox\ETL\ETLPrototypes;
 use axenox\ETL\Common\AbstractOpenApiPrototype;
 use exface\Core\CommonLogic\UxonObject;
 use exface\Core\Exceptions\InvalidArgumentException;
+use exface\Core\Exceptions\NotImplementedError;
 use exface\Core\Factories\FormulaFactory;
 use exface\Core\Factories\DataSheetFactory;
 use axenox\ETL\Interfaces\ETLStepResultInterface;
@@ -102,7 +103,12 @@ class OpenApiToDataSheet extends AbstractOpenApiPrototype
         $this->baseSheet = $baseSheet;
         $this->getWorkbench()->eventManager()->dispatch(new OnBeforeETLStepRun($this));
 
-        $requestLogData = $this->loadRequestData($stepData, ['http_body', 'http_content_type']);
+        $requestLogData = $this->loadRequestData($stepData, ['http_body', 'http_content_type'])->getRow();
+
+        if ($requestLogData['http_content_type'] !== 'application/json') {
+            throw new NotImplementedError('Content type \'' . $requestLogData['http_content_type'] . '\' has not been implemented for ' . get_class($this));
+        }
+
         $requestBody = json_decode($requestLogData['http_body'], true);
         $toSheet = $baseSheet->copy();
 
