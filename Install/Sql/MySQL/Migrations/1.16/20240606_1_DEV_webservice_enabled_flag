@@ -1,0 +1,5 @@
+-- UP
+CALL execute_sql_on_missing_column('etl_webservice', 'enabled_flag', 'ALTER TABLE etl_webservice ADD enabled_flag TINYINT NOT NULL DEFAULT 1');
+
+-- DOWN
+CALL execute_sql_on_existing_column('etl_webservice', 'enabled_flag', 'ALTER TABLE etl_webservice DROP enabled_flag');

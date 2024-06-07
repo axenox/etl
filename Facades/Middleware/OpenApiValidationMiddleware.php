@@ -30,17 +30,15 @@ use Psr\Http\Message\MessageInterface;
  */
 final class OpenApiValidationMiddleware implements MiddlewareInterface
 {
+
     private OpenApiFacadeInterface $facade;
     
     private array $excludePatterns = [];
     
-    private $verbose = null;
-    
-    public function __construct(OpenApiFacadeInterface $facade, array $excludePatterns = [], $verbose = null)
+    public function __construct(OpenApiFacadeInterface $facade, array $excludePatterns = [])
     {
         $this->facade = $facade;
         $this->excludePatterns = $excludePatterns;
-        $this->verbose = $verbose ?? true;
     }
 
     /**
@@ -119,7 +117,10 @@ final class OpenApiValidationMiddleware implements MiddlewareInterface
         
         // 3. Validate response
         $responseValidator = $builder->getResponseValidator();
-        if ($response->getStatusCode() >= 200 && $response->getStatusCode() < 300) {
+        $statusCode = $response->getStatusCode();
+        if ($statusCode >= 200 && $statusCode < 300 &&
+            // skip validation if response is already verified
+            $response->getReasonPhrase() !== 'verified') {
             try {
                 $responseValidator->validate($matchedOASOperation, $response);
             } catch (ValidationFailed $exception) {
@@ -161,8 +162,9 @@ final class OpenApiValidationMiddleware implements MiddlewareInterface
     
     protected function isVerbose(ServerRequestInterface $request) : bool
     {
-        if (is_bool($this->verbose) === true) {
-            return $this->verbose;
+        $verbose = $this->facade->getVerbose();
+        if (is_bool($verbose) === true) {
+            return $verbose;
         } else {
             return $request->getQueryParams()[$this->verbose] === 'true';
         }
