@@ -158,10 +158,14 @@ class DataSheetToOpenApi extends AbstractOpenApiPrototype
             $fromSheet->getColumns()->addFromExpression($attrAlias, $propName);
         }
 
-        $fromSheet->setFilters($this->getFilters($placeholders));
+        if (($filters =$this->getFilters($placeholders)) != null) {
+            $fromSheet->setFilters($filters);
+        }
+
         if ((! $fromSheet->hasSorters()) && $fromSheet->getMetaObject()->hasUidAttribute()) {
             $fromSheet->getSorters()->addFromString($fromSheet->getMetaObject()->getUidAttributeAlias());
         }
+        
         $fromSheet->dataRead();
 
         // enforce from sheet defined data types
@@ -401,9 +405,14 @@ class DataSheetToOpenApi extends AbstractOpenApiPrototype
      * @param $placeholders
      * @return ConditionGroup
      */
-    public function getFilters($placeholders) : ConditionGroup
+    public function getFilters($placeholders) : ?ConditionGroup
     {
-        $json = $this->filters->toJson();
+        $filters = $this->filters;
+        if ($filters == null) {
+            return $filters;
+        }
+
+        $json = $filters->toJson();
         $json = StringDataType::replacePlaceholders($json, $placeholders);
         $conditionGroup = new ConditionGroup($this->getWorkbench());
         $conditionGroup->importUxonObject(UxonObject::fromJson($json));
