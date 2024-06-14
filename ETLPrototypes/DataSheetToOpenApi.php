@@ -3,6 +3,9 @@ namespace axenox\ETL\ETLPrototypes;
 
 use axenox\ETL\Common\AbstractOpenApiPrototype;
 use exface\Core\CommonLogic\DataSheets\DataSheet;
+use exface\Core\CommonLogic\Model\Condition;
+use exface\Core\CommonLogic\Model\ConditionGroup;
+use exface\Core\CommonLogic\UxonObject;
 use exface\Core\Exceptions\InvalidArgumentException;
 use exface\Core\Exceptions\NotImplementedError;
 use exface\Core\Interfaces\DataSheets\DataSheetInterface;
@@ -109,6 +112,7 @@ class DataSheetToOpenApi extends AbstractOpenApiPrototype
     private $rowLimit = null;
 
     private $rowOffset = 0;
+    private $filters = null;
 
 
     /**
@@ -133,7 +137,7 @@ class DataSheetToOpenApi extends AbstractOpenApiPrototype
             $baseSheet->setRowsLimit($limit);
         }
         $baseSheet->setAutoCount(false);
-        
+
         $this->baseSheet = $baseSheet;
         $this->getWorkbench()->eventManager()->dispatch(new OnBeforeETLStepRun($this));
 
@@ -153,6 +157,8 @@ class DataSheetToOpenApi extends AbstractOpenApiPrototype
         foreach ($requestedColumns as $propName => $attrAlias) {
             $fromSheet->getColumns()->addFromExpression($attrAlias, $propName);
         }
+
+        $fromSheet->setFilters($this->getFilters($placeholders));
         if ((! $fromSheet->hasSorters()) && $fromSheet->getMetaObject()->hasUidAttribute()) {
             $fromSheet->getSorters()->addFromString($fromSheet->getMetaObject()->getUidAttributeAlias());
         }
@@ -374,6 +380,34 @@ class DataSheetToOpenApi extends AbstractOpenApiPrototype
     {
         $this->rowOffset = $startPosition;
         return $this;
+    }
+
+
+    /**
+     * Condition group to filter the data when reading from the data source.
+     *
+     * @uxon-property filters
+     * @uxon-type \exface\Core\CommonLogic\UxonObject
+     * @uxon-template {"filters":{"operator": "AND","conditions":[{"expression": "","comparator": "=","value": ""}]}}
+     * @return DataSheetToOpenApi
+     */
+    public function setFilters(UxonObject $filters) : DataSheetToOpenApi
+    {
+        $this->filters = $filters;
+        return $this;
+    }
+
+    /**
+     * @param $placeholders
+     * @return ConditionGroup
+     */
+    public function getFilters($placeholders) : ConditionGroup
+    {
+        $json = $this->filters->toJson();
+        $json = StringDataType::replacePlaceholders($json, $placeholders);
+        $conditionGroup = new ConditionGroup($this->getWorkbench());
+        $conditionGroup->importUxonObject(UxonObject::fromJson($json));
+        return $conditionGroup;
     }
 
     /**
