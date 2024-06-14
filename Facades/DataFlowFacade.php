@@ -83,6 +83,9 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 			}
 			
 		} catch (\Throwable $e) {
+		    // Make sure, the exception is logged as an error - e.g. in the Logs, Monitor, etc.
+		    $this->getWorkbench()->getLogger()->logException($e);
+		    
             $this->loadRequestDataWithBody($request);
 			if (!$e instanceof ExceptionInterface) {
 				$e = new InternalError($e->getMessage(), null, $e);
