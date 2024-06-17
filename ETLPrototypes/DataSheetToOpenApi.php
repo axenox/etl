@@ -167,8 +167,6 @@ class DataSheetToOpenApi extends AbstractOpenApiPrototype
         }
         
         $fromSheet->dataRead();
-
-        // enforce from sheet defined data types
         foreach ($fromSheet->getColumns() as $column) {
             // remove data that was not requested but loaded anyway
             if (array_key_exists($column->getName(), $requestedColumns) === false) {
@@ -179,6 +177,7 @@ class DataSheetToOpenApi extends AbstractOpenApiPrototype
         $index = 0;
         $content = [];
         $rows = $fromSheet->getRows();
+        // enforce from sheet defined data types
         foreach ($fromSheet->getColumns() as $column) {
             $values = $column->getValuesNormalized();
             foreach ($rows as &$row) {
@@ -210,7 +209,12 @@ class DataSheetToOpenApi extends AbstractOpenApiPrototype
         }
 
         foreach ($fromObjectSchema['properties'] as $propName => $property) {
-            if (array_key_exists(self::OPEN_API_ATTRIBUTE_TO_ATTRIBUTE_ALIAS, $property)) {
+            // computations like =SUM(attribute_alias) or (SELECT CASE [#~alias#].Flag = 1 THEN 'JA' ELSE 'Nein' END)
+            if (array_key_exists(self::OPEN_API_ATTRIBUTE_TO_COMPUTED_ATTRIBUTE, $property)) {
+                $attributes[$propName] = $property[self::OPEN_API_ATTRIBUTE_TO_COMPUTED_ATTRIBUTE];
+            }
+            // attribute alias like attribute_alias or related_attribute__LABEL:LIST
+            else if (array_key_exists(self::OPEN_API_ATTRIBUTE_TO_ATTRIBUTE_ALIAS, $property)) {
                 $attributes[$propName] = $property[self::OPEN_API_ATTRIBUTE_TO_ATTRIBUTE_ALIAS];
             }
         }
