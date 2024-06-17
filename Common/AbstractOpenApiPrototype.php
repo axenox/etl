@@ -115,6 +115,11 @@ abstract class AbstractOpenApiPrototype extends AbstractETLPrototype
         $requestLogData->getColumns()->addMultiple($requestedColumns);
         $requestLogData->getFilters()->addConditionFromString('flow_run', $stepData->getFlowRunUid());
         $requestLogData->dataRead();
+
+        if ($requestLogData->countRows() > 1) {
+            throw new InvalidArgumentException('Ambiguous web requests!');
+        }
+
         return $requestLogData;
     }
 }

@@ -43,7 +43,7 @@ class ETLApp extends App
         }
         
         $dataInstaller = new DataInstaller($this->getSelector(), 'Data');
-        $dataInstaller->addDataToMerge('axenox.ETL.webservice_type', 'CREATED_ON', 'app');
+        $dataInstaller->addDataToReplace('axenox.ETL.webservice_type', 'CREATED_ON', 'app');
         $installer->addInstaller($dataInstaller);
         
         return $installer;

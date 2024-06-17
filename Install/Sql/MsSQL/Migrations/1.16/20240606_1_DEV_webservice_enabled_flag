@@ -1,0 +1,7 @@
+-- UP
+IF COL_LENGTH('dbo.etl_webservice','enabled_flag') IS NULL
+    ALTER TABLE etl_webservice ADD enabled_flag TINYINT NOT NULL DEFAULT 1;
+
+-- DOWN
+IF COL_LENGTH('dbo.etl_webservice','enabled_flag') IS NOT NULL
+    ALTER TABLE etl_webservice DROP enabled_flag;

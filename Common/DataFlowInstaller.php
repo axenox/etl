@@ -1,11 +1,10 @@
 <?php
 namespace axenox\ETL\Common;
 
-use exface\Core\CommonLogic\AppInstallers\MetaModelAdditionInstaller;
 use exface\Core\Interfaces\Selectors\SelectorInterface;
 use exface\Core\Interfaces\InstallerContainerInterface;
-use exface\Core\Interfaces\Iterator;
-use exface\Core\CommonLogic\AppInstallers\AbstractAppInstaller;
+use exface\Core\CommonLogic\AppInstallers\DataInstaller;
+use exface\Core\CommonLogic\AppInstallers\MetaModelInstaller;
 
 /**
  * Makes sure data flows and their steps are exported with the apps metamodel
@@ -24,52 +23,21 @@ use exface\Core\CommonLogic\AppInstallers\AbstractAppInstaller;
  * @author Andrej Kabachnik
  *
  */
-class DataFlowInstaller extends AbstractAppInstaller
+class DataFlowInstaller extends DataInstaller
 {
-    private $additionInstaller = null;
-    
     /**
      * 
      * @param SelectorInterface $selectorToInstall
      * @param InstallerContainerInterface $installerContainer
      */
-    public function __construct(SelectorInterface $selectorToInstall, InstallerContainerInterface $installerContainer)
+    public function __construct(SelectorInterface $selectorToInstall)
     {
-        $this->additionInstaller = (new MetaModelAdditionInstaller($selectorToInstall, $installerContainer, 'ETL'))
-            ->addDataToReplace('axenox.ETL.flow', 'CREATED_ON', 'app')
-            ->addDataToReplace('axenox.ETL.step', 'CREATED_ON', 'flow__app')
-            ->addDataToReplace('axenox.ETL.webservice_type', 'CREATED_ON', 'app')
-            ->addDataToReplace('axenox.ETL.webservice', 'CREATED_ON', 'app')
-            ->addDataToReplace('axenox.ETL.webservice_flow', 'CREATED_ON', 'webservice__app');
-    }
-    
-    /**
-     * 
-     * {@inheritDoc}
-     * @see \exface\Core\Interfaces\InstallerInterface::backup()
-     */
-    public function backup(string $absolute_path): \Iterator
-    {
-        return $this->additionInstaller->backup($absolute_path);
-    }
-
-    /**
-     * 
-     * {@inheritDoc}
-     * @see \exface\Core\Interfaces\InstallerInterface::uninstall()
-     */
-    public function uninstall(): \Iterator
-    {
-        return $this->additionInstaller->uninstall();
-    }
-
-    /**
-     * 
-     * {@inheritDoc}
-     * @see \exface\Core\Interfaces\InstallerInterface::install()
-     */
-    public function install(string $source_absolute_path): \Iterator
-    {
-        return $this->additionInstaller->install($source_absolute_path);
+        parent::__construct($selectorToInstall, MetaModelInstaller::FOLDER_NAME_MODEL . DIRECTORY_SEPARATOR . 'ETL');
+        
+        $this->addDataToReplace('axenox.ETL.flow', 'CREATED_ON', 'app', [], 'Flows/[#alias#]/01_flow.json');
+        $this->addDataToReplace('axenox.ETL.step', 'CREATED_ON', 'flow__app', [], 'Flows/[#flow__alias#]/02_steps.json');
+        $this->addDataToReplace('axenox.ETL.webservice_type', 'CREATED_ON', 'app');
+        $this->addDataToReplace('axenox.ETL.webservice', 'CREATED_ON', 'app', [], 'WebServices/[#alias#]/04_webservice.json');
+        $this->addDataToReplace('axenox.ETL.webservice_flow', 'CREATED_ON', 'webservice__app', [], 'WebServices/[#webservice__alias#]/05_webservice_flows.json');
     }
 }

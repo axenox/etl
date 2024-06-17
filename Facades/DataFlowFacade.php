@@ -2,6 +2,7 @@
 namespace axenox\ETL\Facades;
 
 use axenox\ETL\Facades\Middleware\RequestLoggingMiddleware;
+use exface\Core\CommonLogic\UxonObject;
 use exface\Core\Exceptions\InvalidArgumentException;
 use Flow\JSONPath\JSONPathException;
 use GuzzleHttp\Psr7\Response;
@@ -46,15 +47,15 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
     const REQUEST_ATTRIBUTE_FORMATTED_RESPONSE = 'FORMATTED_RESPONSE';
 
 	private $openApiCache = [];
-    private $logData = null;
     private RequestLoggingMiddleware $loggingMiddleware;
+    private $verbose = null;
 
     /**
 	 * {@inheritDoc}
 	 * @see \exface\Core\Facades\AbstractHttpFacade\AbstractHttpFacade::createResponse()
 	 */
 	protected function createResponse(ServerRequestInterface $request): ResponseInterface
-	{    
+	{
 	    $headers = $this->buildHeadersCommon();
         $response = null;
 
@@ -62,6 +63,10 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
             $path = $this->getRoutePath($request);
             $routePath = rtrim(strstr($path, '/'), '/');
 			$routeModel = $this->getRouteData($request);
+
+            if ((bool)$routeModel['enabled'] === false) {
+                return new Response(200, $headers, 'Dataflow inactive.', reason: 'verified');
+            }
 
 			// process flow
 			$routeUID = $routeModel['UID'];
@@ -78,6 +83,9 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 			}
 			
 		} catch (\Throwable $e) {
+		    // Make sure, the exception is logged as an error - e.g. in the Logs, Monitor, etc.
+		    $this->getWorkbench()->getLogger()->logException($e);
+		    
             $this->loadRequestDataWithBody($request);
 			if (!$e instanceof ExceptionInterface) {
 				$e = new InternalError($e->getMessage(), null, $e);
@@ -87,7 +95,7 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 		}
 
 		if ($response === null) {
-			$response = new Response(200, $headers, 'Dataflow successfull.');
+			$response = new Response(200, $headers, 'Dataflow successfull.', reason: 'verified');
 		}
 
         $this->loggingMiddleware->logRequestDone($request, $flowOutput, $response);
@@ -237,7 +245,7 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 	    
 		$ds = DataSheetFactory::createFromObjectIdOrAlias($this->getWorkbench(), 'axenox.ETL.webservice');
 		$ds->getColumns()->addMultiple(
-			['UID', 'local_url', 'type__schema_json', 'type__default_response_path', 'swagger_json', 'config_uxon']);
+			['UID', 'local_url', 'type__schema_json', 'type__default_response_path', 'swagger_json', 'config_uxon', 'enabled']);
 		$ds->dataRead();
 
         $excludePattern = ['/.*swaggerui$/', '/.*openapi\\.json$/'];
@@ -248,10 +256,7 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 		$middleware[] = new RouteConfigLoader($this, $ds, 'local_url', 'config_uxon', self::REQUEST_ATTRIBUTE_NAME_ROUTE);
 		$middleware[] = new RouteAuthenticationMiddleware($this, [], true);
 		$middleware[] = $loggingMiddleware;
-        $middleware[] = new OpenApiValidationMiddleware($this, $excludePattern,
-		    // TODO allow to customize the URL parameter for verbose output in service UXON
-		    true
-	    );
+        $middleware[] = new OpenApiValidationMiddleware($this, $excludePattern);
 		$middleware[] = new OpenApiMiddleware($this, $this->buildHeadersCommon(), '/.*openapi\\.json$/');
 		$middleware[] = new SwaggerUiMiddleware($this, $this->buildHeadersCommon(), '/.*swaggerui$/', 'openapi.json');
 		
@@ -508,5 +513,31 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
     {
         $path = $request->getUri()->getPath();
         return StringDataType::substringAfter($path, $this->getUrlRouteDefault() . '/', '');
+    }
+
+    /**
+     * Configure the validation options for this facade.
+     * Set verbose true if the validation should produce a detailed multiple result error message on error.
+     * Set to false if you want the request to be fast, resulting in a short and single error message on error.
+     *
+     * @uxon-property validation
+     * @uxon-type object
+     * @uxon-template {"verbose": false}
+     *
+     * @param UxonObject $uxon
+     * @return AbstractHttpFacade
+     */
+    protected function setValidation(UxonObject $uxon) : AbstractHttpFacade
+    {
+        if (($verbose = $uxon->getProperty('verbose')) !== null) {
+            $this->verbose = $verbose;
+        }
+
+        return $this;
+    }
+
+    public function getVerbose(): ?bool
+    {
+        return $this->verbose;
     }
 }
