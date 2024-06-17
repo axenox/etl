@@ -536,7 +536,7 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
         return $this;
     }
 
-    public function getVerbose(): bool
+    public function getVerbose(): ?bool
     {
         return $this->verbose;
     }

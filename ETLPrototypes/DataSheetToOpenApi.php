@@ -169,7 +169,6 @@ class DataSheetToOpenApi extends AbstractOpenApiPrototype
         $fromSheet->dataRead();
 
         // enforce from sheet defined data types
-        $index = 0;
         foreach ($fromSheet->getColumns() as $column) {
             // remove data that was not requested but loaded anyway
             if (array_key_exists($column->getName(), $requestedColumns) === false) {
@@ -177,11 +176,13 @@ class DataSheetToOpenApi extends AbstractOpenApiPrototype
             }
         }
 
+        $index = 0;
+        $content = [];
         $rows = $fromSheet->getRows();
         foreach ($fromSheet->getColumns() as $column) {
             $values = $column->getValuesNormalized();
             foreach ($rows as &$row) {
-                $row[$column->getName()] = $values[$index];
+                $content[$index][$column->getName()] = $values[$index];
                 $index++;
             }
             $index = 0;
@@ -189,11 +190,10 @@ class DataSheetToOpenApi extends AbstractOpenApiPrototype
 
         $requestLogData = $this->loadRequestData($stepData, ['response_body', 'response_header']);
         $request = $stepTask->getHttpRequest();
-        $this->updateRequestData($requestLogData, $request, $openApiJson, $rows, $fromObjectSchema[self::OPEN_API_ATTRIBUTE_TO_OBJECT_ALIAS], $placeholders);
-        $transformedElementCount = $fromSheet->countRows();
+        $this->updateRequestData($requestLogData, $request, $openApiJson, $content, $fromObjectSchema[self::OPEN_API_ATTRIBUTE_TO_OBJECT_ALIAS], $placeholders);
 
 
-        return $result->setProcessedRowsCounter($transformedElementCount);
+        return $result->setProcessedRowsCounter(count($content));
     }
 
 
