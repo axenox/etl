@@ -3,6 +3,7 @@ namespace axenox\ETL\Facades;
 
 use axenox\ETL\Facades\Middleware\RequestLoggingMiddleware;
 use exface\Core\CommonLogic\UxonObject;
+use exface\Core\DataTypes\ArrayDataType;
 use exface\Core\Exceptions\InvalidArgumentException;
 use Flow\JSONPath\JSONPathException;
 use GuzzleHttp\Psr7\Response;
@@ -349,10 +350,11 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 		}
 		
 		JsonDataType::validateJsonSchema($json, $routeData['type__schema_json']);		
-		$jsonArray = json_decode($json, true);
-		$jsonArray = $this->prependLocalServerPaths($path, $jsonArray);
-		$this->openApiCache[$path] = $jsonArray;
-		return $jsonArray;
+		$openApiJson = json_decode($json, true);
+        $openApiJson = $this->removeComputedAttributes($openApiJson);
+		$openApiJson = $this->prependLocalServerPaths($path, $openApiJson);
+		$this->openApiCache[$path] = $openApiJson;
+		return $openApiJson;
 	}
 
     /**
@@ -464,10 +466,12 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
     }
 	
 	/**
+     *
 	 * @param string $path
 	 * @param array $swaggerArray
 	 * @return array
 	 */
+    // TODO: move with OpenApiFacadeInterface functions
 	private function prependLocalServerPaths(string $path, array $swaggerArray): array
 	{
 		$basePath = $this->getUrlRouteDefault();
@@ -481,6 +485,29 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 			
 		return $swaggerArray;
 	}
+
+    /**
+     *
+     * @param array $swaggerArray
+     * @return array
+     */
+    // TODO: move with OpenApiFacadeInterface functions
+    private function removeComputedAttributes(array $swaggerArray) : array
+    {
+        $newSwaggerDefinition = [];
+        foreach($swaggerArray as $name => $value){
+            if (is_array($value)) {
+                $newSwaggerDefinition[$name] = $this->removeComputedAttributes($value);
+                continue;
+            }
+            if ($name === 'x-computed-attribute') {
+                continue;
+            }
+            $newSwaggerDefinition[$name] = $value;
+        }
+
+        return $newSwaggerDefinition;
+    }
 
     /**
      * Selects data from a swaggerJson with the given json path.
