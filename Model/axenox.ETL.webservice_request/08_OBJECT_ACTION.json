@@ -61,7 +61,7 @@
     "rows": [
         {
             "CREATED_ON": "2023-10-23 15:44:51",
-            "MODIFIED_ON": "2023-10-23 15:44:51",
+            "MODIFIED_ON": "2024-06-26 13:22:22",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
             "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
             "UID": "0x11ee8e5457a817328e54025041000001",
@@ -84,16 +84,21 @@
                                 {
                                     "from": "=UniqueId()",
                                     "to": "flow_run"
+                                },
+                                {
+                                    "from": "flow_run__flow__alias",
+                                    "to": "_flow_alias"
                                 }
                             ]
                         }
                     },
                     {
                         "alias": "axenox.etl.RunETLFlow",
-                        "input_flow_alias": "route__flow__alias",
+                        "input_flow_alias": "_flow_alias",
                         "input_flow_run_uid": "flow_run"
                     }
-                ]
+                ],
+                "use_single_transaction": true
             },
             "APP": "0x11ebbc50679eacdabc50025041000001",
             "USE_IN_OBJECT_BASKET_FLAG": 0,
