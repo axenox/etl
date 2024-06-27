@@ -10,8 +10,8 @@
     "replaces_page_selector": null,
     "created_by_user_selector": "0x31000000000000000000000000000000",
     "created_on": "2023-10-18 16:18:11",
-    "modified_by_user_selector": "0x11e8fe1c902c8ebea23ee4b318306b9a",
-    "modified_on": "2024-06-07 08:30:01",
+    "modified_by_user_selector": "0x11eca7f5b092f284a7f5005056bea39f",
+    "modified_on": "2024-06-27 15:12:30",
     "contents": {
         "widget_type": "SplitVertical",
         "object_alias": "axenox.ETL.webservice",
@@ -21,7 +21,7 @@
                 "widgets": [
                     {
                         "widget_type": "DataTable",
-                        "caption": "Routes",
+                        "caption": "Web services",
                         "filters": [
                             {
                                 "attribute_alias": "name"

@@ -61,9 +61,9 @@
     "rows": [
         {
             "CREATED_ON": "2023-10-23 15:44:51",
-            "MODIFIED_ON": "2024-06-26 13:22:22",
+            "MODIFIED_ON": "2024-06-26 13:18:46",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
-            "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
+            "MODIFIED_BY_USER": "0x11eca7f5b092f284a7f5005056bea39f",
             "UID": "0x11ee8e5457a817328e54025041000001",
             "OBJECT": "0x11eeae4695964d78ae46025041000001",
             "ACTION_PROTOTYPE": "exface\/Core\/Actions\/ActionChain.php",
@@ -75,6 +75,7 @@
                 "input_rows_min": 1,
                 "input_rows_max": 1,
                 "icon": "cogs",
+                "use_single_transaction": true,
                 "actions": [
                     {
                         "alias": "exface.Core.UpdateData",
@@ -97,8 +98,7 @@
                         "input_flow_alias": "_flow_alias",
                         "input_flow_run_uid": "flow_run"
                     }
-                ],
-                "use_single_transaction": true
+                ]
             },
             "APP": "0x11ebbc50679eacdabc50025041000001",
             "USE_IN_OBJECT_BASKET_FLAG": 0,
