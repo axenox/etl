@@ -61,13 +61,12 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
         $response = null;
 
 		try {
-            $path = $this->getRoutePath($request);
-            $routePath = rtrim(strstr($path, '/'), '/');
 			$routeModel = $this->getRouteData($request);
 
             if ((bool)$routeModel['enabled'] === false) {
                 return new Response(200, $headers, 'Dataflow inactive.', reason: 'verified');
             }
+            $routePath = $this->getRoutePath($request,$routeModel);
 
 			// process flow
 			$routeUID = $routeModel['UID'];
@@ -246,7 +245,7 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 	    
 		$ds = DataSheetFactory::createFromObjectIdOrAlias($this->getWorkbench(), 'axenox.ETL.webservice');
 		$ds->getColumns()->addMultiple(
-			['UID', 'local_url', 'type__schema_json', 'type__default_response_path', 'swagger_json', 'config_uxon', 'enabled']);
+			['UID', 'local_url', 'full_url', 'version', 'type__schema_json', 'type__default_response_path', 'swagger_json', 'config_uxon', 'enabled']);
 		$ds->dataRead();
 
         $excludePattern = ['/.*swaggerui$/', '/.*openapi\\.json$/'];
@@ -254,7 +253,7 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
         $this->loggingMiddleware = $loggingMiddleware;
 
 		$middleware = parent::getMiddleware();
-		$middleware[] = new RouteConfigLoader($this, $ds, 'local_url', 'config_uxon', self::REQUEST_ATTRIBUTE_NAME_ROUTE);
+		$middleware[] = new RouteConfigLoader($this, $ds, 'local_url', 'config_uxon','version', self::REQUEST_ATTRIBUTE_NAME_ROUTE );
 		$middleware[] = new RouteAuthenticationMiddleware($this, [], true);
 		$middleware[] = $loggingMiddleware;
         $middleware[] = new OpenApiValidationMiddleware($this, $excludePattern);
@@ -536,10 +535,11 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
      * @param ServerRequestInterface $request
      * @return string
      */
-    public function getRoutePath(ServerRequestInterface $request): string
+    public function getRoutePath(ServerRequestInterface $request, array $routeModel): string
     {
         $path = $request->getUri()->getPath();
-        return StringDataType::substringAfter($path, $this->getUrlRouteDefault() . '/', '');
+        $serviceUrl = StringDataType::substringAfter($routeModel['full_url'], $this->getWorkbench()->getUrl(), $this->getUrlRouteDefault());
+        return StringDataType::substringAfter($path, $serviceUrl . '/', '');
     }
 
     /**
