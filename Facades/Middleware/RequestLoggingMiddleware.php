@@ -104,9 +104,9 @@ final class RequestLoggingMiddleware implements MiddlewareInterface
         string $routeUID,
         string $flowRunUID): void
     {
-        // do not log errors in request log prior to a valid request
+        // create request log if missing
         if ($this->logData === null) {
-            return;
+            $this->logRequestReceived($request);
         }
 
         $taskData = $this->logData->extractSystemColumns();
