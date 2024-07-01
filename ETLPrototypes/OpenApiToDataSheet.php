@@ -118,7 +118,15 @@ class OpenApiToDataSheet extends AbstractOpenApiPrototype
         $schemas = json_decode(json_encode($schemas), true);
 
         $toObjectSchema = $this->findObjectSchema($toSheet, $schemas);
-        $requestSchema = $this->getSchema($stepTask->getHttpRequest(), $openApiJson, '$.paths.[#routePath#].[#methodType#].requestBody.content.[#ContentType#].schema');
+        $jsonPath = '$.paths.[#routePath#].[#methodType#].requestBody.content.[#ContentType#].schema';
+        $requestSchema = $this->getSchema($stepTask->getHttpRequest(), $openApiJson, $jsonPath);
+
+        if ($requestSchema === null) {
+            throw new InvalidArgumentException('Cannot find necessary request schema in OpenApi. Please check the OpenApi definition!´.'
+                . $jsonPath
+                . '´ Please check the OpenApi definition!');
+        }
+
         $key = $this->getArrayKeyToImportDataFromSchema($requestSchema, $toObjectSchema[self::OPEN_API_ATTRIBUTE_TO_OBJECT_ALIAS]);
         $importData = $this->getImportData($requestBody, $key, $toObjectSchema, $placeholders);
         $dsToImport = DataSheetFactory::createFromObjectIdOrAlias($this->getWorkbench(), $toObjectSchema[self::OPEN_API_ATTRIBUTE_TO_OBJECT_ALIAS]);

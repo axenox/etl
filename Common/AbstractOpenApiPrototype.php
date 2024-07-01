@@ -69,7 +69,7 @@ abstract class AbstractOpenApiPrototype extends AbstractETLPrototype
      * @return array
      * @throws JSONPathException
      */
-    function getSchema(ServerRequestInterface $request, string $openApiJson, string $jsonPath) : array
+    function getSchema(ServerRequestInterface $request, string $openApiJson, string &$jsonPath) : ?array
     {
         // Use local version of JSONPathLexer with edit to
         // Make sure to require BEFORE the JSONPath classes are loaded, so that the custom lexer replaces
@@ -82,9 +82,12 @@ abstract class AbstractOpenApiPrototype extends AbstractETLPrototype
             . 'JSONPath' . DIRECTORY_SEPARATOR
             . 'JSONPathLexer.php';
 
+        // This works for strict formated urls like ´dataflow/bmdb-export/1.25.1/massnahmen/´
+        // TODO: any sub path parameter like /{id} are not yet possible, we need the API to specify its path components without their values
         $path = $request->getUri()->getPath();
         $path = StringDataType::substringAfter($path, 'dataflow' . '/', '');
-        $routePath = rtrim(strstr($path, '/'), '/');
+        $routePath = explode('/', $path, 3);
+        $routePath = '/' . end($routePath);
         $methodType = strtolower($request->getMethod());
         $contentType = $request->getHeader('Content-Type')[0];
         $jsonPath = str_replace(
@@ -93,11 +96,6 @@ abstract class AbstractOpenApiPrototype extends AbstractETLPrototype
             $jsonPath);
         $jsonPathFinder = new JSONPath(json_decode($openApiJson, false));
         $data = $jsonPathFinder->find($jsonPath)->getData()[0];
-
-        if ($data === null) {
-            throw new InvalidArgumentException('Cannot find request schema in OpenApi. Please check the route definition!');
-        }
-
         return json_decode(json_encode($data), true);
     }
 
