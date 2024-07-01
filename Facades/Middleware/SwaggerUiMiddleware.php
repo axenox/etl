@@ -18,11 +18,8 @@ use GuzzleHttp\Psr7\Response;
 final class SwaggerUiMiddleware implements MiddlewareInterface
 {
     private $facade = null;
-    
     private $headers;
-    
     private $routePattern;
-    
     private $openApiRouteName;
     
     public function __construct(OpenApiFacadeInterface $facade, array $headers, string $routePattern, string $openApiRouteName)
@@ -60,7 +57,7 @@ final class SwaggerUiMiddleware implements MiddlewareInterface
      */
     protected function buildHtmlSwaggerUI(string $openapiUrl): string
     	{
-    		$siteRoot = '../../../';
+            $siteRoot = $this->facade->getWorkbench()->getUrl();
     		$swaggerUI = $siteRoot . 'vendor/npm-asset/swagger-ui-dist';
     		
     		return <<<HTML
