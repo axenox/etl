@@ -548,7 +548,7 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
             $serviceUrl = StringDataType::substringAfter($path, $this->getUrlRouteDefault() . '/', '');
         }
 
-        $this->routePath = StringDataType::substringAfter($path, $serviceUrl . '/', '');
+        $this->routePath = StringDataType::substringAfter($path, $serviceUrl, '');
         return $this->routePath;
     }
 
