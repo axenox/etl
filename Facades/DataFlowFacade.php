@@ -541,14 +541,11 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
             return $this->routePath;
         }
 
+        // This works for strict formatted urls like ´dataflow/bmdb-export/1.25.1/massnahmen´
+        // TODO: any sub path parameter like /{id} are not yet possible, we need the API to specify its path components without their values
         $path = $request->getUri()->getPath();
-        if ($routeModel !== null) {
-            $serviceUrl = StringDataType::substringAfter($routeModel['full_url'], $this->getWorkbench()->getUrl(), $this->getUrlRouteDefault());
-        } else {
-            $serviceUrl = StringDataType::substringAfter($path, $this->getUrlRouteDefault() . '/', '');
-        }
-
-        $this->routePath = StringDataType::substringAfter($path, $serviceUrl, '');
+        $pathArray = explode('/', $path);
+        $this->routePath = '/' . end($pathArray);
         return $this->routePath;
     }
 

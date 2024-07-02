@@ -82,7 +82,7 @@ abstract class AbstractOpenApiPrototype extends AbstractETLPrototype
             . 'JSONPath' . DIRECTORY_SEPARATOR
             . 'JSONPathLexer.php';
 
-        // This works for strict formated urls like ´dataflow/bmdb-export/1.25.1/massnahmen/´
+        // This works for strict formatted urls like ´dataflow/bmdb-export/1.25.1/massnahmen´
         // TODO: any sub path parameter like /{id} are not yet possible, we need the API to specify its path components without their values
         $path = $request->getUri()->getPath();
         $path = StringDataType::substringAfter($path, 'dataflow' . '/', '');
