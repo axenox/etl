@@ -44,8 +44,6 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
     // TODO: move all OpenApiFacadeInterface methods into a separate OpenApiWebserviceType class
 
 	const REQUEST_ATTRIBUTE_NAME_ROUTE = 'route';
-    const REQUEST_ATTRIBUTE_FORMATTED_RESPONSE = 'FORMATTED_RESPONSE';
-
 	private $openApiCache = [];
     private RequestLoggingMiddleware $loggingMiddleware;
     private $verbose = null;
@@ -61,12 +59,13 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
         $response = null;
 
 		try {
-			$routeModel = $this->getRouteData($request);
+			$routeModel = $request->getAttribute(self::REQUEST_ATTRIBUTE_NAME_ROUTE);;
 
             if ((bool)$routeModel['enabled'] === false) {
                 return new Response(200, $headers, 'Dataflow inactive.', reason: 'verified');
             }
-            $routePath = $this->getRoutePath($request,$routeModel);
+
+            $routePath = RouteConfigLoader::getRoutePath($request);
 
 			// process flow
 			$routeUID = $routeModel['UID'];
@@ -193,16 +192,6 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 		return json_encode($body);
 	}
 
-    /**
-     * @param ServerRequestInterface $request
-     * @return string[]|null
-     */
-	protected function getRouteData(
-		ServerRequestInterface $request) : ?array
-	{
-		return $request->getAttribute(self::REQUEST_ATTRIBUTE_NAME_ROUTE, null);
-	}
-
     protected function getFlowAlias(string $routeUid, string $routePath) : string
     {
         $ds = DataSheetFactory::createFromObjectIdOrAlias($this->getWorkbench(), 'axenox.ETL.webservice_flow');
@@ -253,7 +242,7 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
         $this->loggingMiddleware = $loggingMiddleware;
 
 		$middleware = parent::getMiddleware();
-		$middleware[] = new RouteConfigLoader($this, $ds, 'local_url', 'config_uxon','version', self::REQUEST_ATTRIBUTE_NAME_ROUTE );
+		$middleware[] = new RouteConfigLoader($this, $ds, 'local_url', 'config_uxon','version', $this->getUrlRouteDefault(), self::REQUEST_ATTRIBUTE_NAME_ROUTE );
 		$middleware[] = new RouteAuthenticationMiddleware($this, [], true);
 		$middleware[] = $loggingMiddleware;
         $middleware[] = new OpenApiValidationMiddleware($this, $excludePattern);
@@ -541,11 +530,9 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
             return $this->routePath;
         }
 
-        // This works for strict formatted urls like ´dataflow/bmdb-export/1.25.1/massnahmen´
-        // TODO: any sub path parameter like /{id} are not yet possible, we need the API to specify its path components without their values
         $path = $request->getUri()->getPath();
-        $pathArray = explode('/', $path);
-        $this->routePath = '/' . end($pathArray);
+        $routeComponents = AbstractOpenApiPrototype::extractUrlComponents($path);
+        $this->routePath = $routeComponents['route'];
         return $this->routePath;
     }
 
