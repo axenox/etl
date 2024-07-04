@@ -8,6 +8,7 @@ use axenox\ETL\Interfaces\ETLStepResultInterface;
 use exface\Core\CommonLogic\DataSheets\DataSheet;
 use exface\Core\DataTypes\StringDataType;
 use exface\Core\Exceptions\InvalidArgumentException;
+use exface\Core\Facades\AbstractHttpFacade\Middleware\RouteConfigLoader;
 use exface\Core\Factories\DataSheetFactory;
 use exface\Core\Interfaces\DataSheets\DataSheetInterface;
 use exface\Core\Widgets\DebugMessage;
@@ -69,7 +70,7 @@ abstract class AbstractOpenApiPrototype extends AbstractETLPrototype
      * @return array
      * @throws JSONPathException
      */
-    function getSchema(ServerRequestInterface $request, string $openApiJson, string $jsonPath) : array
+    function getSchema(ServerRequestInterface $request, string $openApiJson, string &$jsonPath) : ?array
     {
         // Use local version of JSONPathLexer with edit to
         // Make sure to require BEFORE the JSONPath classes are loaded, so that the custom lexer replaces
@@ -82,9 +83,7 @@ abstract class AbstractOpenApiPrototype extends AbstractETLPrototype
             . 'JSONPath' . DIRECTORY_SEPARATOR
             . 'JSONPathLexer.php';
 
-        $path = $request->getUri()->getPath();
-        $path = StringDataType::substringAfter($path, 'dataflow' . '/', '');
-        $routePath = rtrim(strstr($path, '/'), '/');
+        $routePath = RouteConfigLoader::getRoutePath($request);
         $methodType = strtolower($request->getMethod());
         $contentType = $request->getHeader('Content-Type')[0];
         $jsonPath = str_replace(
@@ -93,11 +92,6 @@ abstract class AbstractOpenApiPrototype extends AbstractETLPrototype
             $jsonPath);
         $jsonPathFinder = new JSONPath(json_decode($openApiJson, false));
         $data = $jsonPathFinder->find($jsonPath)->getData()[0];
-
-        if ($data === null) {
-            throw new InvalidArgumentException('Cannot find request schema in OpenApi. Please check the route definition!');
-        }
-
         return json_decode(json_encode($data), true);
     }
 

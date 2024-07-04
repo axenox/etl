@@ -1,9 +1,9 @@
 <?php
 namespace axenox\ETL\Facades;
 
+use axenox\ETL\Common\AbstractOpenApiPrototype;
 use axenox\ETL\Facades\Middleware\RequestLoggingMiddleware;
 use exface\Core\CommonLogic\UxonObject;
-use exface\Core\DataTypes\ArrayDataType;
 use exface\Core\Exceptions\InvalidArgumentException;
 use Flow\JSONPath\JSONPathException;
 use GuzzleHttp\Psr7\Response;
@@ -11,7 +11,6 @@ use Intervention\Image\Exception\NotFoundException;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use axenox\ETL\Actions\RunETLFlow;
-use axenox\ETL\DataTypes\WebRequestStatusDataType;
 use exface\Core\CommonLogic\Selectors\ActionSelector;
 use exface\Core\CommonLogic\Tasks\HttpTask;
 use exface\Core\DataTypes\JsonDataType;
@@ -45,11 +44,10 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
     // TODO: move all OpenApiFacadeInterface methods into a separate OpenApiWebserviceType class
 
 	const REQUEST_ATTRIBUTE_NAME_ROUTE = 'route';
-    const REQUEST_ATTRIBUTE_FORMATTED_RESPONSE = 'FORMATTED_RESPONSE';
-
 	private $openApiCache = [];
     private RequestLoggingMiddleware $loggingMiddleware;
     private $verbose = null;
+    private $routePath = null;
 
     /**
 	 * {@inheritDoc}
@@ -61,12 +59,13 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
         $response = null;
 
 		try {
-			$routeModel = $this->getRouteData($request);
+			$routeModel = $request->getAttribute(self::REQUEST_ATTRIBUTE_NAME_ROUTE);;
 
             if ((bool)$routeModel['enabled'] === false) {
                 return new Response(200, $headers, 'Dataflow inactive.', reason: 'verified');
             }
-            $routePath = $this->getRoutePath($request,$routeModel);
+
+            $routePath = RouteConfigLoader::getRoutePath($request);
 
 			// process flow
 			$routeUID = $routeModel['UID'];
@@ -193,16 +192,6 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 		return json_encode($body);
 	}
 
-    /**
-     * @param ServerRequestInterface $request
-     * @return string[]|null
-     */
-	protected function getRouteData(
-		ServerRequestInterface $request) : ?array
-	{
-		return $request->getAttribute(self::REQUEST_ATTRIBUTE_NAME_ROUTE, null);
-	}
-
     protected function getFlowAlias(string $routeUid, string $routePath) : string
     {
         $ds = DataSheetFactory::createFromObjectIdOrAlias($this->getWorkbench(), 'axenox.ETL.webservice_flow');
@@ -253,7 +242,7 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
         $this->loggingMiddleware = $loggingMiddleware;
 
 		$middleware = parent::getMiddleware();
-		$middleware[] = new RouteConfigLoader($this, $ds, 'local_url', 'config_uxon','version', self::REQUEST_ATTRIBUTE_NAME_ROUTE );
+		$middleware[] = new RouteConfigLoader($this, $ds, 'local_url', 'config_uxon','version', $this->getUrlRouteDefault(), self::REQUEST_ATTRIBUTE_NAME_ROUTE );
 		$middleware[] = new RouteAuthenticationMiddleware($this, [], true);
 		$middleware[] = $loggingMiddleware;
         $middleware[] = new OpenApiValidationMiddleware($this, $excludePattern);
@@ -387,7 +376,7 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
      */
     public function getJsonSchemaFromOpenApiByRef(ServerRequestInterface $request, string $jsonPath, string $contentType): object
     {
-        $openApiSchema = $this->getOpenApiJson($request);
+        $openApiSchema = $this->openApiCache[$request->getUri()->getPath()];
         $jsonPath = $this->findSchemaPathInOpenApiJson($request, $jsonPath, $contentType);
         $schema = $this->findJsonDataByRef($openApiSchema, $jsonPath);
         if ($schema === null) {
@@ -535,11 +524,16 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
      * @param ServerRequestInterface $request
      * @return string
      */
-    public function getRoutePath(ServerRequestInterface $request, array $routeModel): string
+    public function getRoutePath(ServerRequestInterface $request, array $routeModel = null): string
     {
+        if ($this->routePath !== null) {
+            return $this->routePath;
+        }
+
         $path = $request->getUri()->getPath();
-        $serviceUrl = StringDataType::substringAfter($routeModel['full_url'], $this->getWorkbench()->getUrl(), $this->getUrlRouteDefault());
-        return StringDataType::substringAfter($path, $serviceUrl . '/', '');
+        $routeComponents = AbstractOpenApiPrototype::extractUrlComponents($path);
+        $this->routePath = $routeComponents['route'];
+        return $this->routePath;
     }
 
     /**

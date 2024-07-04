@@ -297,6 +297,13 @@ class DataSheetToOpenApi extends AbstractOpenApiPrototype
         $currentBody = json_decode($requestLogData->getCellValue('response_body', 0), true);
         $jsonPath = '$.paths.[#routePath#].[#methodType#].responses.200.content.[#ContentType#].schema';
         $responseSchema = $this->getSchema($request, $openApiJson, $jsonPath);
+
+        if ($responseSchema === null) {
+            throw new InvalidArgumentException('Cannot find necessary response schema in OpenApi with json path: ´.'
+                . $jsonPath
+                . '´ Please check the OpenApi definition!');
+        }
+
         $newBody = $this->createBodyFromSchema($responseSchema, $rows, $objectAlias, $placeholders);
         $newBody = $currentBody === null ? $newBody : $this->deepMerge($currentBody, $newBody);
         $requestLogData->setCellValue('response_header', 0, 'application/json');
