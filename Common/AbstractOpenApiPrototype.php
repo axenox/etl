@@ -8,6 +8,7 @@ use axenox\ETL\Interfaces\ETLStepResultInterface;
 use exface\Core\CommonLogic\DataSheets\DataSheet;
 use exface\Core\DataTypes\StringDataType;
 use exface\Core\Exceptions\InvalidArgumentException;
+use exface\Core\Facades\AbstractHttpFacade\Middleware\RouteConfigLoader;
 use exface\Core\Factories\DataSheetFactory;
 use exface\Core\Interfaces\DataSheets\DataSheetInterface;
 use exface\Core\Widgets\DebugMessage;
@@ -82,12 +83,7 @@ abstract class AbstractOpenApiPrototype extends AbstractETLPrototype
             . 'JSONPath' . DIRECTORY_SEPARATOR
             . 'JSONPathLexer.php';
 
-        // This works for strict formated urls like ´dataflow/bmdb-export/1.25.1/massnahmen/´
-        // TODO: any sub path parameter like /{id} are not yet possible, we need the API to specify its path components without their values
-        $path = $request->getUri()->getPath();
-        $path = StringDataType::substringAfter($path, 'dataflow' . '/', '');
-        $routePath = explode('/', $path, 3);
-        $routePath = '/' . end($routePath);
+        $routePath = RouteConfigLoader::getRoutePath($request);
         $methodType = strtolower($request->getMethod());
         $contentType = $request->getHeader('Content-Type')[0];
         $jsonPath = str_replace(
