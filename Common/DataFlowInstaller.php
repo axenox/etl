@@ -34,10 +34,10 @@ class DataFlowInstaller extends DataInstaller
     {
         parent::__construct($selectorToInstall, MetaModelInstaller::FOLDER_NAME_MODEL . DIRECTORY_SEPARATOR . 'ETL');
         
-        $this->addDataToReplace('axenox.ETL.flow', 'CREATED_ON', 'app', [], 'Flows/[#alias#]/01_flow.json');
-        $this->addDataToReplace('axenox.ETL.step', 'CREATED_ON', 'flow__app', [], 'Flows/[#flow__alias#]/02_steps.json');
+        $this->addDataToReplace('axenox.ETL.flow', 'CREATED_ON', 'app', [], 'Flows/[#alias#]/[#version#]/01_flow.json');
+        $this->addDataToReplace('axenox.ETL.step', 'CREATED_ON', 'flow__app', [], 'Flows/[#flow__alias#]/[#flow__version#]/02_steps.json');
         $this->addDataToReplace('axenox.ETL.webservice_type', 'CREATED_ON', 'app');
-        $this->addDataToReplace('axenox.ETL.webservice', 'CREATED_ON', 'app', [], 'WebServices/[#alias#]/04_webservice.json');
-        $this->addDataToReplace('axenox.ETL.webservice_flow', 'CREATED_ON', 'webservice__app', [], 'WebServices/[#webservice__alias#]/05_webservice_flows.json');
+        $this->addDataToReplace('axenox.ETL.webservice', 'CREATED_ON', 'app', [], 'WebServices/[#alias#]/[#version#]/04_webservice.json');
+        $this->addDataToReplace('axenox.ETL.webservice_flow', 'CREATED_ON', 'webservice__app', [], 'WebServices/[#webservice__alias#]/[#webservice__version#]/05_webservice_flows.json');
     }
 }
