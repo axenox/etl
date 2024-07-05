@@ -128,7 +128,7 @@ class OpenApiToDataSheet extends AbstractOpenApiPrototype
         }
 
         $key = $this->getArrayKeyToImportDataFromSchema($requestSchema, $toObjectSchema[self::OPEN_API_ATTRIBUTE_TO_OBJECT_ALIAS]);
-        $importData = $this->getImportData($requestBody, $key, $toObjectSchema, $placeholders);
+        $importData = $this->getImportData($requestBody, $toObjectSchema, $placeholders, $key);
         $dsToImport = DataSheetFactory::createFromObjectIdOrAlias($this->getWorkbench(), $toObjectSchema[self::OPEN_API_ATTRIBUTE_TO_OBJECT_ALIAS]);
         $dsToImport->getColumns()->addFromSystemAttributes();
 
@@ -153,6 +153,14 @@ class OpenApiToDataSheet extends AbstractOpenApiPrototype
         yield from [];
     }
 
+    /**
+     * Searches through the request schema looking for the object reference and returning its name.
+     * This key can than be used to find the object within the request body.
+     *
+     * @param array $requestSchema
+     * @param string $objectAlias
+     * @return string|null
+     */
     protected function getArrayKeyToImportDataFromSchema(array $requestSchema, string $objectAlias) : ?string
     {
         $key = null;
@@ -177,14 +185,18 @@ class OpenApiToDataSheet extends AbstractOpenApiPrototype
         return $key;
     }
 
-    protected function getImportData(mixed $requestBody, string $key, array $toObjectSchema, array $placeholder) : array
+    /**
+     * Reads import data from the request body. If no key is specified, it will search the response body for the right object.
+     * Otherwise, it will try to read the whole request body content as the import data for the object of this step.
+     *
+     * @param mixed $requestBody
+     * @param string|null $key
+     * @param array $toObjectSchema
+     * @param array $placeholder
+     * @return array
+     */
+    protected function getImportData(mixed $requestBody, array $toObjectSchema, array $placeholder, ?string $key = null) : array
     {
-        $importData = [];
-
-        if (array_key_exists($key, $requestBody) === false) {
-            throw new InvalidArgumentException('Cannot find import data in request body!');
-        }
-
         $attributeAliasByPropertyName = [];
         foreach ($toObjectSchema['properties'] as $propertyName => $propertyValue) {
             $attributeAliasByPropertyName[$propertyName] = $propertyValue[self::OPEN_API_ATTRIBUTE_TO_ATTRIBUTE_ALIAS];
@@ -206,11 +218,17 @@ class OpenApiToDataSheet extends AbstractOpenApiPrototype
         return $importData;
     }
 
-    /** @noinspection PhpDuplicateSwitchCaseBodyInspection */
-    protected function getImportDataFromRequestBody($requestBody, $attributeAliasByPropertyName)
+    /**
+     * @param $requestBody
+     * @param $attributeAliasByPropertyName
+     * @return array
+     */
+    protected function getImportDataFromRequestBody($requestBody, $attributeAliasByPropertyName) : array
     {
+        $importData = [];
         foreach ($requestBody as $propertyName => $value) {
             switch(true) {
+                case array_key_exists($propertyName, $attributeAliasByPropertyName) === false && is_array($value):
                 case is_numeric($propertyName):
                     $importData = $this->getImportDataFromRequestBody($value, $attributeAliasByPropertyName);
                     break;
@@ -226,10 +244,6 @@ class OpenApiToDataSheet extends AbstractOpenApiPrototype
 
                     $importData[$attributeAliasByPropertyName[$propertyName]] = $value;
                     break;
-                // must be last to check because array can be the type of the value if found!
-                case is_array($value):
-                    $importData = $this->getImportDataFromRequestBody($value, $attributeAliasByPropertyName);
-                    break;
             }
         }
 
@@ -237,9 +251,11 @@ class OpenApiToDataSheet extends AbstractOpenApiPrototype
     }
 
     /**
+     * Adds additional data provided by the ´additional_rows´ config within the step to every row.
+     *
      * @param array $placeholder
-     * @param $row
-     * @return mixed
+     * @param array $row
+     * @return void
      */
     public function addAdditionalColumnsToRow(array $placeholder, array &$row) : void
     {
