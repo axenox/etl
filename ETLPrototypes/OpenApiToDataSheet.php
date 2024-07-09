@@ -3,6 +3,7 @@ namespace axenox\ETL\ETLPrototypes;
 
 use axenox\ETL\Common\AbstractOpenApiPrototype;
 use exface\Core\CommonLogic\UxonObject;
+use exface\Core\DataTypes\ArrayDataType;
 use exface\Core\Exceptions\InvalidArgumentException;
 use exface\Core\Exceptions\NotImplementedError;
 use exface\Core\Factories\FormulaFactory;
@@ -19,6 +20,7 @@ use Flow\JSONPath\JSONPathException;
 
 /**
  * Objects have to be defined with an x-object-alias and with x-attribute-aliases like:
+ * ´´´
  * {
  *     "Object": {
  *          "type": "object",
@@ -31,6 +33,8 @@ use Flow\JSONPath\JSONPathException;
  *          }
  *     }
  * }
+ *
+ * ´´´
  *
  * Only use direct Attribute aliases in the definition and never relation paths or formulars!
  * e.g "x-attribute-alias": "Objekt_ID"
@@ -195,7 +199,7 @@ class OpenApiToDataSheet extends AbstractOpenApiPrototype
      * @param array $placeholder
      * @return array
      */
-    protected function getImportData(mixed $requestBody, array $toObjectSchema, array $placeholder, ?string $key = null) : array
+    protected function getImportData(array $requestBody, array $toObjectSchema, array $placeholder, ?string $key = null) : array
     {
         $attributeAliasByPropertyName = [];
         foreach ($toObjectSchema['properties'] as $propertyName => $propertyValue) {
@@ -203,16 +207,23 @@ class OpenApiToDataSheet extends AbstractOpenApiPrototype
         }
 
         $importData = [];
-        if (is_array($requestBody[$key])) {
-            foreach ($requestBody[$key] as $entry) {
-                $row = $this->getImportDataFromRequestBody($entry, $attributeAliasByPropertyName);
-                $this->addAdditionalColumnsToRow($placeholder, $row);
-                $importData[] = $row;
+        // Determine if the request body contains a named array/object or an unnamed array/object
+        $sourceData = is_array($requestBody[$key]) ? $requestBody[$key] : $requestBody;
+
+        if (ArrayDataType::isSequential($sourceData)) {
+            // Named array: { "object-key" [ {"id": "123", "name": "abc" }, {"id": "234", "name": "cde"} ] }
+            // Unnamed array: [ {"id": "123", "name": "abc" }, {"id": "234", "name": "cde"} ]
+            foreach ($sourceData as $entry) {
+                $importData[] = $this->getImportDataFromRequestBody($entry, $attributeAliasByPropertyName);
             }
         } else {
-            $row = $this->getImportDataFromRequestBody($requestBody, $attributeAliasByPropertyName);
-            $this->addAdditionalColumnsToRow($placeholder, $row);
-            $importData[] = $row;
+            // Named object: { "object-key" {"id": "123", "name": "abc" } }
+            // Unnamed object: {"id": "123", "name": "abc" }
+            $importData[] = $this->getImportDataFromRequestBody($sourceData, $attributeAliasByPropertyName);
+        }
+
+        foreach ($importData as &$entry) {
+            $this->addAdditionalColumnsToRow($placeholder, $entry);
         }
 
         return $importData;
