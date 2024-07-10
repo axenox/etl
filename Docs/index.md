@@ -4,8 +4,8 @@ This app adds data flows and tools to design and run them. Data flows can be use
 
 ## Contents
 
-- [Designing data flows in general](Designing_data_flows/index.md)
-- Web services for data flows (TODO)
+- [Designing data flows in general](DataFlows/index.md)
+- [Web services for data flows](WebServices/index.md)
 - Excel-uploads for data flows (TODO)
 - Best practice
 	- [SQL flows](Designing_data_flows/SQL_flows_best_practices.md)

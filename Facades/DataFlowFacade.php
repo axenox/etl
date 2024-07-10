@@ -1,6 +1,7 @@
 <?php
 namespace axenox\ETL\Facades;
 
+use axenox\ETL\Common\AbstractOpenApiPrototype;
 use axenox\ETL\Facades\Middleware\RequestLoggingMiddleware;
 use exface\Core\CommonLogic\UxonObject;
 use exface\Core\Exceptions\InvalidArgumentException;
@@ -10,7 +11,6 @@ use Intervention\Image\Exception\NotFoundException;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use axenox\ETL\Actions\RunETLFlow;
-use axenox\ETL\DataTypes\WebRequestStatusDataType;
 use exface\Core\CommonLogic\Selectors\ActionSelector;
 use exface\Core\CommonLogic\Tasks\HttpTask;
 use exface\Core\DataTypes\JsonDataType;
@@ -44,11 +44,10 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
     // TODO: move all OpenApiFacadeInterface methods into a separate OpenApiWebserviceType class
 
 	const REQUEST_ATTRIBUTE_NAME_ROUTE = 'route';
-    const REQUEST_ATTRIBUTE_FORMATTED_RESPONSE = 'FORMATTED_RESPONSE';
-
 	private $openApiCache = [];
     private RequestLoggingMiddleware $loggingMiddleware;
     private $verbose = null;
+    private $routePath = null;
 
     /**
 	 * {@inheritDoc}
@@ -60,13 +59,13 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
         $response = null;
 
 		try {
-            $path = $this->getRoutePath($request);
-            $routePath = rtrim(strstr($path, '/'), '/');
-			$routeModel = $this->getRouteData($request);
+			$routeModel = $request->getAttribute(self::REQUEST_ATTRIBUTE_NAME_ROUTE);;
 
             if ((bool)$routeModel['enabled'] === false) {
                 return new Response(200, $headers, 'Dataflow inactive.', reason: 'verified');
             }
+
+            $routePath = RouteConfigLoader::getRoutePath($request);
 
 			// process flow
 			$routeUID = $routeModel['UID'];
@@ -193,16 +192,6 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 		return json_encode($body);
 	}
 
-    /**
-     * @param ServerRequestInterface $request
-     * @return string[]|null
-     */
-	protected function getRouteData(
-		ServerRequestInterface $request) : ?array
-	{
-		return $request->getAttribute(self::REQUEST_ATTRIBUTE_NAME_ROUTE, null);
-	}
-
     protected function getFlowAlias(string $routeUid, string $routePath) : string
     {
         $ds = DataSheetFactory::createFromObjectIdOrAlias($this->getWorkbench(), 'axenox.ETL.webservice_flow');
@@ -245,7 +234,7 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 	    
 		$ds = DataSheetFactory::createFromObjectIdOrAlias($this->getWorkbench(), 'axenox.ETL.webservice');
 		$ds->getColumns()->addMultiple(
-			['UID', 'local_url', 'type__schema_json', 'type__default_response_path', 'swagger_json', 'config_uxon', 'enabled']);
+			['UID', 'local_url', 'full_url', 'version', 'type__schema_json', 'type__default_response_path', 'swagger_json', 'config_uxon', 'enabled']);
 		$ds->dataRead();
 
         $excludePattern = ['/.*swaggerui$/', '/.*openapi\\.json$/'];
@@ -253,7 +242,7 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
         $this->loggingMiddleware = $loggingMiddleware;
 
 		$middleware = parent::getMiddleware();
-		$middleware[] = new RouteConfigLoader($this, $ds, 'local_url', 'config_uxon', self::REQUEST_ATTRIBUTE_NAME_ROUTE);
+		$middleware[] = new RouteConfigLoader($this, $ds, 'local_url', 'config_uxon','version', $this->getUrlRouteDefault(), self::REQUEST_ATTRIBUTE_NAME_ROUTE );
 		$middleware[] = new RouteAuthenticationMiddleware($this, [], true);
 		$middleware[] = $loggingMiddleware;
         $middleware[] = new OpenApiValidationMiddleware($this, $excludePattern);
@@ -349,10 +338,11 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 		}
 		
 		JsonDataType::validateJsonSchema($json, $routeData['type__schema_json']);		
-		$jsonArray = json_decode($json, true);
-		$jsonArray = $this->prependLocalServerPaths($path, $jsonArray);
-		$this->openApiCache[$path] = $jsonArray;
-		return $jsonArray;
+		$openApiJson = json_decode($json, true);
+        $openApiJson = $this->removeComputedAttributes($openApiJson);
+		$openApiJson = $this->prependLocalServerPaths($path, $openApiJson);
+		$this->openApiCache[$path] = $openApiJson;
+		return $openApiJson;
 	}
 
     /**
@@ -386,7 +376,7 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
      */
     public function getJsonSchemaFromOpenApiByRef(ServerRequestInterface $request, string $jsonPath, string $contentType): object
     {
-        $openApiSchema = $this->getOpenApiJson($request);
+        $openApiSchema = $this->openApiCache[$request->getUri()->getPath()];
         $jsonPath = $this->findSchemaPathInOpenApiJson($request, $jsonPath, $contentType);
         $schema = $this->findJsonDataByRef($openApiSchema, $jsonPath);
         if ($schema === null) {
@@ -464,10 +454,12 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
     }
 	
 	/**
+     *
 	 * @param string $path
 	 * @param array $swaggerArray
 	 * @return array
 	 */
+    // TODO: move with OpenApiFacadeInterface functions
 	private function prependLocalServerPaths(string $path, array $swaggerArray): array
 	{
 		$basePath = $this->getUrlRouteDefault();
@@ -481,6 +473,29 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 			
 		return $swaggerArray;
 	}
+
+    /**
+     *
+     * @param array $swaggerArray
+     * @return array
+     */
+    // TODO: move with OpenApiFacadeInterface functions
+    private function removeComputedAttributes(array $swaggerArray) : array
+    {
+        $newSwaggerDefinition = [];
+        foreach($swaggerArray as $name => $value){
+            if (is_array($value)) {
+                $newSwaggerDefinition[$name] = $this->removeComputedAttributes($value);
+                continue;
+            }
+            if ($name === 'x-computed-attribute') {
+                continue;
+            }
+            $newSwaggerDefinition[$name] = $value;
+        }
+
+        return $newSwaggerDefinition;
+    }
 
     /**
      * Selects data from a swaggerJson with the given json path.
@@ -509,10 +524,16 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
      * @param ServerRequestInterface $request
      * @return string
      */
-    public function getRoutePath(ServerRequestInterface $request): string
+    public function getRoutePath(ServerRequestInterface $request, array $routeModel = null): string
     {
+        if ($this->routePath !== null) {
+            return $this->routePath;
+        }
+
         $path = $request->getUri()->getPath();
-        return StringDataType::substringAfter($path, $this->getUrlRouteDefault() . '/', '');
+        $routeComponents = AbstractOpenApiPrototype::extractUrlComponents($path);
+        $this->routePath = $routeComponents['route'];
+        return $this->routePath;
     }
 
     /**

@@ -104,6 +104,11 @@ final class RequestLoggingMiddleware implements MiddlewareInterface
         string $routeUID,
         string $flowRunUID): void
     {
+        // create request log if missing
+        if ($this->logData === null) {
+            $this->logRequestReceived($request);
+        }
+
         $taskData = $this->logData->extractSystemColumns();
         $taskData->setCellValue('route', 0, $routeUID);
         $taskData->setCellValue('status', 0, WebRequestStatusDataType::PROCESSING);
@@ -123,6 +128,11 @@ final class RequestLoggingMiddleware implements MiddlewareInterface
         \Throwable $e = null,
         ResponseInterface $response = null): void
     {
+        // do not log errors in request log prior to a valid request
+        if ($this->logData === null) {
+            return;
+        }
+
         $logData = $this->logData->extractSystemColumns();
         $logData->setCellValue('status', 0, WebRequestStatusDataType::ERROR);
         if ($e !== null) {

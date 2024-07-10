@@ -3,6 +3,7 @@ namespace axenox\ETL\ETLPrototypes;
 
 use axenox\ETL\Common\AbstractOpenApiPrototype;
 use exface\Core\CommonLogic\UxonObject;
+use exface\Core\DataTypes\ArrayDataType;
 use exface\Core\Exceptions\InvalidArgumentException;
 use exface\Core\Exceptions\NotImplementedError;
 use exface\Core\Factories\FormulaFactory;
@@ -19,6 +20,7 @@ use Flow\JSONPath\JSONPathException;
 
 /**
  * Objects have to be defined with an x-object-alias and with x-attribute-aliases like:
+ * ´´´
  * {
  *     "Object": {
  *          "type": "object",
@@ -31,6 +33,8 @@ use Flow\JSONPath\JSONPathException;
  *          }
  *     }
  * }
+ *
+ * ´´´
  *
  * Only use direct Attribute aliases in the definition and never relation paths or formulars!
  * e.g "x-attribute-alias": "Objekt_ID"
@@ -118,9 +122,17 @@ class OpenApiToDataSheet extends AbstractOpenApiPrototype
         $schemas = json_decode(json_encode($schemas), true);
 
         $toObjectSchema = $this->findObjectSchema($toSheet, $schemas);
-        $requestSchema = $this->getSchema($stepTask->getHttpRequest(), $openApiJson, '$.paths.[#routePath#].[#methodType#].requestBody.content.[#ContentType#].schema');
+        $jsonPath = '$.paths.[#routePath#].[#methodType#].requestBody.content.[#ContentType#].schema';
+        $requestSchema = $this->getSchema($stepTask->getHttpRequest(), $openApiJson, $jsonPath);
+
+        if ($requestSchema === null) {
+            throw new InvalidArgumentException('Cannot find necessary request schema in OpenApi. Please check the OpenApi definition!´.'
+                . $jsonPath
+                . '´ Please check the OpenApi definition!');
+        }
+
         $key = $this->getArrayKeyToImportDataFromSchema($requestSchema, $toObjectSchema[self::OPEN_API_ATTRIBUTE_TO_OBJECT_ALIAS]);
-        $importData = $this->getImportData($requestBody, $key, $toObjectSchema, $placeholders);
+        $importData = $this->getImportData($requestBody, $toObjectSchema, $placeholders, $key);
         $dsToImport = DataSheetFactory::createFromObjectIdOrAlias($this->getWorkbench(), $toObjectSchema[self::OPEN_API_ATTRIBUTE_TO_OBJECT_ALIAS]);
         $dsToImport->getColumns()->addFromSystemAttributes();
 
@@ -145,6 +157,14 @@ class OpenApiToDataSheet extends AbstractOpenApiPrototype
         yield from [];
     }
 
+    /**
+     * Searches through the request schema looking for the object reference and returning its name.
+     * This key can than be used to find the object within the request body.
+     *
+     * @param array $requestSchema
+     * @param string $objectAlias
+     * @return string|null
+     */
     protected function getArrayKeyToImportDataFromSchema(array $requestSchema, string $objectAlias) : ?string
     {
         $key = null;
@@ -169,40 +189,57 @@ class OpenApiToDataSheet extends AbstractOpenApiPrototype
         return $key;
     }
 
-    protected function getImportData(mixed $requestBody, string $key, array $toObjectSchema, array $placeholder) : array
+    /**
+     * Reads import data from the request body. If no key is specified, it will search the response body for the right object.
+     * Otherwise, it will try to read the whole request body content as the import data for the object of this step.
+     *
+     * @param mixed $requestBody
+     * @param string|null $key
+     * @param array $toObjectSchema
+     * @param array $placeholder
+     * @return array
+     */
+    protected function getImportData(array $requestBody, array $toObjectSchema, array $placeholder, ?string $key = null) : array
     {
-        $importData = [];
-
-        if (array_key_exists($key, $requestBody) === false) {
-            throw new InvalidArgumentException('Cannot find import data in request body!');
-        }
-
         $attributeAliasByPropertyName = [];
         foreach ($toObjectSchema['properties'] as $propertyName => $propertyValue) {
             $attributeAliasByPropertyName[$propertyName] = $propertyValue[self::OPEN_API_ATTRIBUTE_TO_ATTRIBUTE_ALIAS];
         }
 
         $importData = [];
-        if (is_array($requestBody[$key])) {
-            foreach ($requestBody[$key] as $entry) {
-                $row = $this->getImportDataFromRequestBody($entry, $attributeAliasByPropertyName);
-                $this->addAdditionalColumnsToRow($placeholder, $row);
-                $importData[] = $row;
+        // Determine if the request body contains a named array/object or an unnamed array/object
+        $sourceData = is_array($requestBody[$key]) ? $requestBody[$key] : $requestBody;
+
+        if (ArrayDataType::isSequential($sourceData)) {
+            // Named array: { "object-key" [ {"id": "123", "name": "abc" }, {"id": "234", "name": "cde"} ] }
+            // Unnamed array: [ {"id": "123", "name": "abc" }, {"id": "234", "name": "cde"} ]
+            foreach ($sourceData as $entry) {
+                $importData[] = $this->getImportDataFromRequestBody($entry, $attributeAliasByPropertyName);
             }
         } else {
-            $row = $this->getImportDataFromRequestBody($requestBody, $attributeAliasByPropertyName);
-            $this->addAdditionalColumnsToRow($placeholder, $row);
-            $importData[] = $row;
+            // Named object: { "object-key" {"id": "123", "name": "abc" } }
+            // Unnamed object: {"id": "123", "name": "abc" }
+            $importData[] = $this->getImportDataFromRequestBody($sourceData, $attributeAliasByPropertyName);
+        }
+
+        foreach ($importData as &$entry) {
+            $this->addAdditionalColumnsToRow($placeholder, $entry);
         }
 
         return $importData;
     }
 
-    /** @noinspection PhpDuplicateSwitchCaseBodyInspection */
-    protected function getImportDataFromRequestBody($requestBody, $attributeAliasByPropertyName)
+    /**
+     * @param $requestBody
+     * @param $attributeAliasByPropertyName
+     * @return array
+     */
+    protected function getImportDataFromRequestBody($requestBody, $attributeAliasByPropertyName) : array
     {
+        $importData = [];
         foreach ($requestBody as $propertyName => $value) {
             switch(true) {
+                case array_key_exists($propertyName, $attributeAliasByPropertyName) === false && is_array($value):
                 case is_numeric($propertyName):
                     $importData = $this->getImportDataFromRequestBody($value, $attributeAliasByPropertyName);
                     break;
@@ -218,10 +255,6 @@ class OpenApiToDataSheet extends AbstractOpenApiPrototype
 
                     $importData[$attributeAliasByPropertyName[$propertyName]] = $value;
                     break;
-                // must be last to check because array can be the type of the value if found!
-                case is_array($value):
-                    $importData = $this->getImportDataFromRequestBody($value, $attributeAliasByPropertyName);
-                    break;
             }
         }
 
@@ -229,9 +262,11 @@ class OpenApiToDataSheet extends AbstractOpenApiPrototype
     }
 
     /**
+     * Adds additional data provided by the ´additional_rows´ config within the step to every row.
+     *
      * @param array $placeholder
-     * @param $row
-     * @return mixed
+     * @param array $row
+     * @return void
      */
     public function addAdditionalColumnsToRow(array $placeholder, array &$row) : void
     {

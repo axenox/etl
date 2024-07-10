@@ -5,6 +5,7 @@ use cebe\openapi\exceptions\TypeErrorException;
 use cebe\openapi\exceptions\UnresolvableReferenceException;
 use exface\Core\DataTypes\JsonDataType;
 use GuzzleHttp\Psr7\Response;
+use League\OpenAPIValidation\PSR7\Exception\Validation\AddressValidationFailed;
 use League\OpenAPIValidation\PSR7\Exception\Validation\InvalidParameter;
 use League\OpenAPIValidation\PSR7\Exception\ValidationFailed;
 use Psr\Http\Message\ResponseInterface;
@@ -124,7 +125,7 @@ final class OpenApiValidationMiddleware implements MiddlewareInterface
             try {
                 $responseValidator->validate($matchedOASOperation, $response);
             } catch (ValidationFailed $exception) {
-                $message = $exception->getVerboseMessage();
+                $message = $exception instanceof AddressValidationFailed ? $exception->getVerboseMessage() : $exception->getMessage();
                 if ($this->isVerbose($request) && $this->hasJsonBody($response)) {
                     try {
                         $schema = $this->facade->getResponseBodySchemaForCurrentRoute($request, $response->getStatusCode());
@@ -136,12 +137,13 @@ final class OpenApiValidationMiddleware implements MiddlewareInterface
                             'details' => $e->getErrors()
                         ];
 
-                        throw new JsonSchemaValidationError($errors, 'Invalid response body', null, null, $json);
+                        $jsonError = new JsonSchemaValidationError($errors, 'Invalid response body', null, null, $json);
                     } catch (\Throwable $e) {
                         $this->getWorkbench()->getLogger()->logException($e);
                     }
                 }
-
+                $jsonError = $jsonError ?? new JsonSchemaValidationError(['error' => $message, 'details' => $message], 'Invalid response body', null, null, $response->getBody()->__toString());
+                $this->getWorkbench()->getLogger()->logException($jsonError);
                 throw new HttpBadRequestError($request, $message, null, $exception);
             }
         }

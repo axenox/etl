@@ -167,8 +167,6 @@ class DataSheetToOpenApi extends AbstractOpenApiPrototype
         }
         
         $fromSheet->dataRead();
-
-        // enforce from sheet defined data types
         foreach ($fromSheet->getColumns() as $column) {
             // remove data that was not requested but loaded anyway
             if (array_key_exists($column->getName(), $requestedColumns) === false) {
@@ -179,6 +177,7 @@ class DataSheetToOpenApi extends AbstractOpenApiPrototype
         $index = 0;
         $content = [];
         $rows = $fromSheet->getRows();
+        // enforce from sheet defined data types
         foreach ($fromSheet->getColumns() as $column) {
             $values = $column->getValuesNormalized();
             foreach ($rows as &$row) {
@@ -210,7 +209,12 @@ class DataSheetToOpenApi extends AbstractOpenApiPrototype
         }
 
         foreach ($fromObjectSchema['properties'] as $propName => $property) {
-            if (array_key_exists(self::OPEN_API_ATTRIBUTE_TO_ATTRIBUTE_ALIAS, $property)) {
+            // computations like =SUM(attribute_alias) or (SELECT CASE [#~alias#].Flag = 1 THEN 'JA' ELSE 'Nein' END)
+            if (array_key_exists(self::OPEN_API_ATTRIBUTE_TO_COMPUTED_ATTRIBUTE, $property)) {
+                $attributes[$propName] = $property[self::OPEN_API_ATTRIBUTE_TO_COMPUTED_ATTRIBUTE];
+            }
+            // attribute alias like attribute_alias or related_attribute__LABEL:LIST
+            else if (array_key_exists(self::OPEN_API_ATTRIBUTE_TO_ATTRIBUTE_ALIAS, $property)) {
                 $attributes[$propName] = $property[self::OPEN_API_ATTRIBUTE_TO_ATTRIBUTE_ALIAS];
             }
         }
@@ -293,6 +297,13 @@ class DataSheetToOpenApi extends AbstractOpenApiPrototype
         $currentBody = json_decode($requestLogData->getCellValue('response_body', 0), true);
         $jsonPath = '$.paths.[#routePath#].[#methodType#].responses.200.content.[#ContentType#].schema';
         $responseSchema = $this->getSchema($request, $openApiJson, $jsonPath);
+
+        if ($responseSchema === null) {
+            throw new InvalidArgumentException('Cannot find necessary response schema in OpenApi with json path: ´.'
+                . $jsonPath
+                . '´ Please check the OpenApi definition!');
+        }
+
         $newBody = $this->createBodyFromSchema($responseSchema, $rows, $objectAlias, $placeholders);
         $newBody = $currentBody === null ? $newBody : $this->deepMerge($currentBody, $newBody);
         $requestLogData->setCellValue('response_header', 0, 'application/json');
@@ -413,8 +424,8 @@ class DataSheetToOpenApi extends AbstractOpenApiPrototype
         }
 
         $json = $filters->toJson();
-        $json = StringDataType::replacePlaceholders($json, $placeholders);
-        $conditionGroup = new ConditionGroup($this->getWorkbench());
+        $json = StringDataType::replacePlaceholders($json, $placeholders, false);
+        $conditionGroup = new ConditionGroup($this->getWorkbench(), ignoreEmptyValues: true);
         $conditionGroup->importUxonObject(UxonObject::fromJson($json));
         return $conditionGroup;
     }
