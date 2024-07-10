@@ -424,8 +424,8 @@ class DataSheetToOpenApi extends AbstractOpenApiPrototype
         }
 
         $json = $filters->toJson();
-        $json = StringDataType::replacePlaceholders($json, $placeholders);
-        $conditionGroup = new ConditionGroup($this->getWorkbench());
+        $json = StringDataType::replacePlaceholders($json, $placeholders, false);
+        $conditionGroup = new ConditionGroup($this->getWorkbench(), ignoreEmptyValues: true);
         $conditionGroup->importUxonObject(UxonObject::fromJson($json));
         return $conditionGroup;
     }
