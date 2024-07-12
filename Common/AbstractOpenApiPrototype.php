@@ -21,7 +21,8 @@ abstract class AbstractOpenApiPrototype extends AbstractETLPrototype
     const JSON_PATH_TO_OPEN_API_SCHEMAS = '$.components.schemas';
     const OPEN_API_ATTRIBUTE_TO_OBJECT_ALIAS = 'x-object-alias';
     const OPEN_API_ATTRIBUTE_TO_ATTRIBUTE_ALIAS = 'x-attribute-alias';
-    const OPEN_API_ATTRIBUTE_TO_COMPUTED_ATTRIBUTE = 'x-computed-attribute';
+    const OPEN_API_ATTRIBUTE_TO_ATTRIBUTE_CALCULATION = 'x-attribute-calculation';
+    const OPEN_API_ATTRIBUTE_TO_ATTRIBUTE_DATAADDRESS = 'x-attribute-dataaddress';
 
     protected $baseSheet = null;
 
