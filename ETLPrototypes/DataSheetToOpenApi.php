@@ -2,12 +2,17 @@
 namespace axenox\ETL\ETLPrototypes;
 
 use axenox\ETL\Common\AbstractOpenApiPrototype;
+use exface\Core\CommonLogic\DataSheets\DataColumn;
 use exface\Core\CommonLogic\DataSheets\DataSheet;
+use exface\Core\CommonLogic\Model\Attribute;
 use exface\Core\CommonLogic\Model\Condition;
 use exface\Core\CommonLogic\Model\ConditionGroup;
+use exface\Core\CommonLogic\Model\Expression;
+use exface\Core\CommonLogic\Selectors\DataTypeSelector;
 use exface\Core\CommonLogic\UxonObject;
 use exface\Core\Exceptions\InvalidArgumentException;
 use exface\Core\Exceptions\NotImplementedError;
+use exface\Core\Factories\DataTypeFactory;
 use exface\Core\Interfaces\DataSheets\DataSheetInterface;
 use exface\Core\Factories\DataSheetFactory;
 use axenox\ETL\Common\AbstractETLPrototype;
@@ -24,6 +29,7 @@ use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * Objects have to be defined with an x-object-alias and with x-attribute-aliases like:
+ * ´´´
  * {
  *     "Object": {
  *          "type": "object",
@@ -37,7 +43,10 @@ use Psr\Http\Message\ServerRequestInterface;
  *     }
  * }
  *
+ * ´´´
+ *
  * Attributes can be defined within the OpenApi like this:
+ * ´´´
  *  {
  *     "Id": {
  *         "type": "int",
@@ -53,6 +62,8 @@ use Psr\Http\Message\ServerRequestInterface;
  *         "x-attribute-alias": "=CONCAT(ATTR1, ' ', ATTR2)"
  *     }
  *  }
+ *
+ * ´´´
  *
  * The to-object HAS to be defined within the response schema of the route to the step!
  * e.g. with multiple structural concepts
@@ -153,10 +164,7 @@ class DataSheetToOpenApi extends AbstractOpenApiPrototype
         $schemas = json_decode(json_encode($schemas), true);
 
         $fromObjectSchema = $this->findObjectSchema($fromSheet, $schemas);
-        $requestedColumns = $this->findAttributesInSchema($fromObjectSchema);
-        foreach ($requestedColumns as $propName => $attrAlias) {
-            $fromSheet->getColumns()->addFromExpression($attrAlias, $propName);
-        }
+        $requestedColumns = $this->addColumnsFromSchema($fromObjectSchema, $fromSheet);
 
         if (($filters =$this->getFilters($placeholders)) != null) {
             $fromSheet->setFilters($filters);
@@ -191,35 +199,58 @@ class DataSheetToOpenApi extends AbstractOpenApiPrototype
         $request = $stepTask->getHttpRequest();
         $this->updateRequestData($requestLogData, $request, $openApiJson, $content, $fromObjectSchema[self::OPEN_API_ATTRIBUTE_TO_OBJECT_ALIAS], $placeholders);
 
-
         return $result->setProcessedRowsCounter(count($content));
     }
 
 
     /**
      * @param array $fromObjectSchema
-     * @return array
+     * @return DataColumn[]
      */
-    protected function findAttributesInSchema(array $fromObjectSchema) : array
+    protected function addColumnsFromSchema(array $fromObjectSchema, DataSheetInterface $fromSheet) : array
     {
-        $attributes = [];
+        $requestedColumns = [];
 
         if (array_key_exists('properties', $fromObjectSchema) === false) {
             throw new NotImplementedError('Only type ´object´ schemas are implemented for the ETLPrototype ' . DataSheetToOpenApi::class);
         }
 
+        $attributeAliasKey = self::OPEN_API_ATTRIBUTE_TO_ATTRIBUTE_ALIAS;
+        $calculationKey = self::OPEN_API_ATTRIBUTE_TO_ATTRIBUTE_CALCULATION;
+        $dataAddressKey = self::OPEN_API_ATTRIBUTE_TO_ATTRIBUTE_DATAADDRESS;
         foreach ($fromObjectSchema['properties'] as $propName => $property) {
-            // computations like =SUM(attribute_alias) or (SELECT CASE [#~alias#].Flag = 1 THEN 'JA' ELSE 'Nein' END)
-            if (array_key_exists(self::OPEN_API_ATTRIBUTE_TO_COMPUTED_ATTRIBUTE, $property)) {
-                $attributes[$propName] = $property[self::OPEN_API_ATTRIBUTE_TO_COMPUTED_ATTRIBUTE];
+            if (array_key_exists($attributeAliasKey, $property) === false) {
+                continue;
             }
-            // attribute alias like attribute_alias or related_attribute__LABEL:LIST
-            else if (array_key_exists(self::OPEN_API_ATTRIBUTE_TO_ATTRIBUTE_ALIAS, $property)) {
-                $attributes[$propName] = $property[self::OPEN_API_ATTRIBUTE_TO_ATTRIBUTE_ALIAS];
+
+            $alias = $property[$attributeAliasKey];
+            $calculation = $property[$calculationKey];
+            $dataAddress = $property[$dataAddressKey];
+            if ($dataAddress !== null) {
+                // data address like: ´CASE WHEN [#Status#] > 10 THEN 'Ja' ELSE 'Nein'´
+                $att = new Attribute($fromSheet->getMetaObject());
+                $att->setAlias($alias);
+                // objects are represented as json strings in OneLink attributes
+                $definedType =  $property['type'] === 'object' ? 'string' : $property['type'];
+                // API Definitions only contain core data types.
+                $dataType = DataTypeFactory::createFromString($this->getWorkbench(), 'exface.Core.' . $definedType);
+                $att->setDataType($dataType);
+                $att->setDataAddress($dataAddress);
+                $fromSheet->getMetaObject()->getAttributes()->add($att);
+                $fromSheet->getColumns()->addFromExpression($alias, $propName);
+                $requestedColumns[$propName] = $alias;
+            } else if ($calculation !== null  && Expression::detectFormula($calculation)) {
+                // calculations like ´=Sum(attribute_alias) o. =Format(attribute_alias)´
+                $fromSheet->getColumns()->addFromExpression($calculation, $propName);
+                $requestedColumns[$propName] = $alias;
+            } else {
+                // attribute alias like ´attribute_alias´ or ´related_attribute__LABEL:LIST´
+                $fromSheet->getColumns()->addFromExpression($alias, $propName);
+                $requestedColumns[$propName] = $alias;
             }
         }
 
-        return $attributes;
+        return $requestedColumns;
     }
 
     /**
