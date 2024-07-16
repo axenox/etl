@@ -81,9 +81,9 @@
     "rows": [
         {
             "CREATED_ON": "2023-10-18 16:06:50",
-            "MODIFIED_ON": "2024-02-06 12:53:00",
+            "MODIFIED_ON": "2024-07-16 11:47:20",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
-            "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
+            "MODIFIED_BY_USER": "0x11e8fe1c902c8ebea23ee4b318306b9a",
             "UID": "0x11eeae4695964d78ae46025041000001",
             "READABLE_FLAG": 1,
             "WRITABLE_FLAG": 1,
@@ -110,6 +110,12 @@
                                         "widget_type": "WidgetGroup",
                                         "caption": "Request",
                                         "widgets": [
+                                            {
+                                                "attribute_alias": "CREATED_ON"
+                                            },
+                                            {
+                                                "attribute_alias": "CREATED_BY_USER__LABEL"
+                                            },
                                             {
                                                 "attribute_alias": "url_path"
                                             },
