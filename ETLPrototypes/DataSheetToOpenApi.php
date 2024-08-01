@@ -124,6 +124,7 @@ class DataSheetToOpenApi extends AbstractOpenApiPrototype
 
     private $rowOffset = 0;
     private $filters = null;
+    private $schemaName = null;
 
 
     /**
@@ -163,7 +164,12 @@ class DataSheetToOpenApi extends AbstractOpenApiPrototype
         $schemas = (new JSONPath(json_decode($openApiJson, false)))->find(self::JSON_PATH_TO_OPEN_API_SCHEMAS)->getData()[0];
         $schemas = json_decode(json_encode($schemas), true);
 
-        $fromObjectSchema = $this->findObjectSchema($fromSheet, $schemas);
+        if (($schemaName = $this->getSchemaName()) !== null && array_key_exists($schemaName, $schemas)) {
+            $fromObjectSchema = $schemas[$schemaName];
+        } else {
+            $fromObjectSchema = $this->findObjectSchema($fromSheet, $schemas);
+        }
+
         $requestedColumns = $this->addColumnsFromSchema($fromObjectSchema, $fromSheet);
 
         if (($filters =$this->getFilters($placeholders)) != null) {
@@ -459,6 +465,27 @@ class DataSheetToOpenApi extends AbstractOpenApiPrototype
         $conditionGroup = new ConditionGroup($this->getWorkbench(), ignoreEmptyValues: true);
         $conditionGroup->importUxonObject(UxonObject::fromJson($json));
         return $conditionGroup;
+    }
+
+    /**
+     * Define the name of the schema for this specific step.
+     * If null, it will try to find the attribute alias within the OpenApi definition.
+     *
+     * @uxon-property schema_name
+     * @uxon-type string
+     *
+     * @param string $schemaName
+     * @return OpenApiToDataSheet
+     */
+    protected function setSchemaName(string $schemaName) : DataSheetToOpenApi
+    {
+        $this->schemaName = $schemaName;
+        return $this;
+    }
+
+    protected function getSchemaName() : ?string
+    {
+        return $this->schemaName;
     }
 
     /**

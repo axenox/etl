@@ -85,6 +85,7 @@ use Flow\JSONPath\JSONPathException;
 class OpenApiToDataSheet extends AbstractOpenApiPrototype
 {
     private $additionalColumns = null;
+    private $schemaName = null;
 
     /**
      *
@@ -121,7 +122,12 @@ class OpenApiToDataSheet extends AbstractOpenApiPrototype
             ->find(self::JSON_PATH_TO_OPEN_API_SCHEMAS)->getData()[0];
         $schemas = json_decode(json_encode($schemas), true);
 
-        $toObjectSchema = $this->findObjectSchema($toSheet, $schemas);
+        if (($schemaName = $this->getSchemaName()) !== null && array_key_exists($schemaName, $schemas)) {
+            $toObjectSchema = $schemas[$schemaName];
+        } else {
+            $toObjectSchema = $this->findObjectSchema($toSheet, $schemas);
+        }
+
         $jsonPath = '$.paths.[#routePath#].[#methodType#].requestBody.content.[#ContentType#].schema';
         $requestSchema = $this->getSchema($stepTask->getHttpRequest(), $openApiJson, $jsonPath);
 
@@ -326,6 +332,27 @@ class OpenApiToDataSheet extends AbstractOpenApiPrototype
     protected function getAdditionalColumn() : array
     {
         return $this->additionalColumns;
+    }
+
+    /**
+     * Define the name of the schema for this specific step.
+     * If null, it will try to find the attribute alias within the OpenApi definition.
+     *
+     * @uxon-property schema_name
+     * @uxon-type string
+     *
+     * @param string $schemaName
+     * @return OpenApiToDataSheet
+     */
+    protected function setSchemaName(string $schemaName) : OpenApiToDataSheet
+    {
+        $this->schemaName = $schemaName;
+        return $this;
+    }
+
+    protected function getSchemaName() : ?string
+    {
+        return $this->schemaName;
     }
 
     /**
