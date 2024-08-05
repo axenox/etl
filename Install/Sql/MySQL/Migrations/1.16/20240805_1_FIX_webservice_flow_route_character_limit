@@ -1,0 +1,5 @@
+-- UP
+CALL execute_sql_on_existing_column('etl_webservice_flow', 'route', 'ALTER TABLE [dbo].[etl_webservice_flow] ALTER COLUMN [route] nvarchar(255) NULL');
+
+-- DOWN
+-- nothing to do here
