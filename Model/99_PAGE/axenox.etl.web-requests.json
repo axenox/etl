@@ -49,6 +49,9 @@
                                 "attribute_alias": "CREATED_ON"
                             },
                             {
+                                "attribute_alias": "CREATED_BY_USER__LABEL"
+                            },
+                            {
                                 "attribute_alias": "http_method",
                                 "caption": "Method"
                             },

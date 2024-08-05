@@ -339,7 +339,7 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 		
 		JsonDataType::validateJsonSchema($json, $routeData['type__schema_json']);		
 		$openApiJson = json_decode($json, true);
-        $openApiJson = $this->removeComputedAttributes($openApiJson);
+        $openApiJson = $this->removeInternalAttributes($openApiJson);
 		$openApiJson = $this->prependLocalServerPaths($path, $openApiJson);
 		$this->openApiCache[$path] = $openApiJson;
 		return $openApiJson;
@@ -480,15 +480,16 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
      * @return array
      */
     // TODO: move with OpenApiFacadeInterface functions
-    private function removeComputedAttributes(array $swaggerArray) : array
+    private function removeInternalAttributes(array $swaggerArray) : array
     {
         $newSwaggerDefinition = [];
         foreach($swaggerArray as $name => $value){
             if (is_array($value)) {
-                $newSwaggerDefinition[$name] = $this->removeComputedAttributes($value);
+                $newSwaggerDefinition[$name] = $this->removeInternalAttributes($value);
                 continue;
             }
-            if ($name === 'x-computed-attribute') {
+            if ($name === AbstractOpenApiPrototype::OPEN_API_ATTRIBUTE_TO_ATTRIBUTE_CALCULATION
+                || $name === AbstractOpenApiPrototype::OPEN_API_ATTRIBUTE_TO_ATTRIBUTE_DATAADDRESS) {
                 continue;
             }
             $newSwaggerDefinition[$name] = $value;
