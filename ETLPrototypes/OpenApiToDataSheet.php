@@ -283,7 +283,7 @@ class OpenApiToDataSheet extends AbstractOpenApiPrototype
                         $row[$column['attribute_alias']] = $expression->evaluate();
                     }
                     break;
-                case empty($phs = StringDataType::findPlaceholders($value)) === false:
+                case empty(StringDataType::findPlaceholders($value)) === false:
                     $row[$column['attribute_alias']] = StringDataType::replacePlaceholders($value, $placeholder);
                     break;
                 default:
