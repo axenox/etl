@@ -186,11 +186,6 @@ class DataSheetTransfer extends AbstractETLPrototype
         
         return $result->setProcessedRowsCounter($cntFrom);
     }
-
-    public function validate(): \Generator
-    {
-        yield from [];
-    }
     
     /**
      * 

@@ -15,6 +15,10 @@ use exface\Core\Widgets\DebugMessage;
 use Flow\JSONPath\JSONPath;
 use Flow\JSONPath\JSONPathException;
 use Psr\Http\Message\ServerRequestInterface;
+use exface\Core\Interfaces\Tasks\TaskInterface;
+use exface\Core\Interfaces\Tasks\HttpTaskInterface;
+use exface\Core\Exceptions\RuntimeException;
+use axenox\ETL\Interfaces\OpenApiFacadeInterface;
 
 abstract class AbstractOpenApiPrototype extends AbstractETLPrototype
 {
@@ -60,6 +64,30 @@ abstract class AbstractOpenApiPrototype extends AbstractETLPrototype
         }
 
         return $fromObjectSchema;
+    }
+    
+    /**
+     * 
+     * @param TaskInterface $task
+     * @throws InvalidArgumentException
+     * @return string
+     */
+    protected function getOpenApiJson(TaskInterface $task) : string
+    {
+        if (! ($task instanceof HttpTaskInterface)) {
+            throw new InvalidArgumentException('Cannot use OpenAPI flow steps with non-HTTP tasks!');
+        }
+        
+        $facade = $task->getFacade();
+        if ($facade === null || ! ($facade instanceof OpenApiFacadeInterface)) {
+            throw new InvalidArgumentException('Cannot use OpenAPI flow steps with non-OpenAPI facades!');
+        }
+        
+        $json = $facade->getOpenApiDef($task->getHttpRequest());
+        if ($json === null) {
+            throw new InvalidArgumentException('Cannot load OpenAPI definition from HTTP task!');
+        }
+        return $json;
     }
 
     /**

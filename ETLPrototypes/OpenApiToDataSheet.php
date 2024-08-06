@@ -10,13 +10,13 @@ use exface\Core\Factories\FormulaFactory;
 use exface\Core\Factories\DataSheetFactory;
 use axenox\ETL\Interfaces\ETLStepResultInterface;
 use exface\Core\DataTypes\StringDataType;
-use axenox\ETL\Common\IncrementalEtlStepResult;
 use exface\Core\Interfaces\Tasks\HttpTaskInterface;
 use exface\Core\Widgets\DebugMessage;
 use axenox\ETL\Events\Flow\OnBeforeETLStepRun;
 use axenox\ETL\Interfaces\ETLStepDataInterface;
 use Flow\JSONPath\JSONPath;
 use Flow\JSONPath\JSONPathException;
+use axenox\ETL\Common\UxonEtlStepResult;
 
 /**
  * Objects have to be defined with an x-object-alias and with x-attribute-aliases like:
@@ -98,11 +98,11 @@ class OpenApiToDataSheet extends AbstractOpenApiPrototype
     	$stepRunUid = $stepData->getStepRunUid();
     	$placeholders = $this->getPlaceholders($stepData);
     	$baseSheet = DataSheetFactory::createFromObject($this->getToObject());
-    	$result = new IncrementalEtlStepResult($stepRunUid);
+    	$result = new UxonEtlStepResult($stepRunUid);
         $stepTask = $stepData->getTask();
 
         if ($stepTask instanceof HttpTaskInterface === false){
-            throw new InvalidArgumentException('Http request needed to process OpenApi definitions! Request type: ' . get_class($stepTask));
+            throw new InvalidArgumentException('Http request needed to process OpenApi definitions! `' . get_class($stepTask) . '` received instead.');
         }
         
         $this->baseSheet = $baseSheet;
@@ -117,7 +117,7 @@ class OpenApiToDataSheet extends AbstractOpenApiPrototype
         $requestBody = json_decode($requestLogData['http_body'], true);
         $toSheet = $baseSheet->copy();
 
-        $openApiJson = $stepData->getOpenApiJson();
+        $openApiJson = $this->getOpenApiJson($stepData->getTask());
         $schemas = (new JSONPath(json_decode($openApiJson, false)))
             ->find(self::JSON_PATH_TO_OPEN_API_SCHEMAS)->getData()[0];
         $schemas = json_decode(json_encode($schemas), true);
@@ -156,11 +156,6 @@ class OpenApiToDataSheet extends AbstractOpenApiPrototype
 
         $transaction->commit();
         return $result->setProcessedRowsCounter($toSheet->countRows());
-    }
-
-    public function validate(): \Generator
-    {
-        yield from [];
     }
 
     /**
@@ -362,7 +357,7 @@ class OpenApiToDataSheet extends AbstractOpenApiPrototype
      */
     public static function parseResult(string $stepRunUid, string $resultData = null): ETLStepResultInterface
     {
-        return new IncrementalEtlStepResult($stepRunUid, $resultData);
+        return new UxonEtlStepResult($stepRunUid, $resultData);
     }
     
     /**
