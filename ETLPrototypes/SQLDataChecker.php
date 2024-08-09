@@ -241,16 +241,6 @@ class SQLDataChecker extends AbstractETLPrototype
         
         return $result;
     }
-
-    /**
-     * 
-     * {@inheritDoc}
-     * @see \axenox\ETL\Interfaces\ETLStepInterface::validate()
-     */
-    public function validate(): \Generator
-    {
-        yield from [];
-    }
     
     /**
      * 

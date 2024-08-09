@@ -197,11 +197,6 @@ class DataSheetToSQL extends AbstractETLPrototype
         
         return $result->setProcessedRowsCounter($totalCnt);
     }
-
-    public function validate(): \Generator
-    {
-        yield from [];
-    }
     
     /**
      * 

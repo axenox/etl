@@ -1,0 +1,6 @@
+-- UP
+IF COL_LENGTH('dbo.etl_webservice_flow','route') IS NOT NULL
+    ALTER TABLE [dbo].[etl_webservice_flow] ALTER COLUMN [route] nvarchar(255) NULL;
+
+-- DOWN
+-- nothing to do here

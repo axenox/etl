@@ -7,35 +7,19 @@ use exface\Core\Interfaces\DataSources\DataTransactionInterface;
 use exface\Core\Interfaces\Tasks\ResultMessageStreamInterface;
 use exface\Core\Interfaces\Actions\iCanBeCalledFromCLI;
 use exface\Core\CommonLogic\Actions\ServiceParameter;
-use exface\Core\Factories\DataSheetFactory;
-use exface\Core\DataTypes\ComparatorDataType;
-use exface\Core\DataTypes\SortingDirectionsDataType;
 use exface\Core\Exceptions\Actions\ActionRuntimeError;
-use exface\Core\CommonLogic\UxonObject;
-use axenox\ETL\Interfaces\ETLStepInterface;
 use exface\Core\DataTypes\UUIDDataType;
-use exface\Core\Factories\MetaObjectFactory;
-use exface\Core\DataTypes\BooleanDataType;
-use exface\Core\Exceptions\RuntimeException;
-use axenox\ETL\Factories\ETLStepFactory;
-use exface\Core\DataTypes\DateTimeDataType;
 use exface\Core\Interfaces\DataSheets\DataSheetInterface;
-use exface\Core\Interfaces\Exceptions\ExceptionInterface;
-use exface\Core\Factories\UiPageFactory;
 use exface\Core\Interfaces\Exceptions\ActionExceptionInterface;
 use exface\Core\Exceptions\Actions\ActionInputMissingError;
-use axenox\ETL\Interfaces\ETLStepResultInterface;
 use exface\Core\Exceptions\Actions\ActionConfigurationError;
-use axenox\ETL\Events\Flow\OnBeforeETLStepRun;
-use exface\Core\Factories\WidgetFactory;
-use axenox\ETL\Common\IncrementalEtlStepResult;
 use exface\Core\Interfaces\Actions\iModifyData;
-use exface\Core\DataTypes\ArrayDataType;
-use exface\Core\Interfaces\Model\MetaAttributeInterface;
 use exface\Core\Interfaces\Model\ExpressionInterface;
 use exface\Core\Factories\ExpressionFactory;
 use exface\Core\Exceptions\Actions\ActionInputError;
 use axenox\ETL\Common\ETLStepData;
+use axenox\ETL\Common\DataFlow;
+use axenox\ETL\Factories\DataFlowFactory;
 
 /**
  * Runs one or multiple ETL flows
@@ -124,7 +108,7 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI, 
      */
     protected function performImmediately(TaskInterface $task, DataTransactionInterface $transaction, ResultMessageStreamInterface $result) : array
     {
-    	return [$task, $this->getFlowAliases($task)];
+    	return [$task, $this->getFlows($task)];
     }
     
     /**
@@ -134,8 +118,8 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI, 
      */
     protected function performDeferred(TaskInterface $task = null, array $flows = []) : \Generator
     {
-        foreach ($flows as $uid => $alias) {
-            yield from $this->runFlow($alias, $uid, $task);
+        foreach ($flows as $uid => $flow) {
+            yield from $this->runFlow($flow, $uid, $task);
         }
     }
     
@@ -145,328 +129,56 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI, 
      * @throws null
      * @return \Generator|string[]
      */
-    protected function runFlow(string $alias, string $flowRunUid, TaskInterface $task) : \Generator
+    protected function runFlow(DataFlow $flow, string $flowRunUid, TaskInterface $task) : \Generator
     {
         $indent = '  ';
         
-        yield 'Running ETL flow "' . $alias . '" (run-UID ' . $flowRunUid . ').' . PHP_EOL;
+        yield 'Running ETL flow "' . $flow->getName() . '" (run-UID ' . $flowRunUid . ').' . PHP_EOL;
         yield PHP_EOL . $indent . 'Execution plan:' . PHP_EOL;
-        
-        $prevStepResult = null;
 
-        $steps = $this->getSteps($alias, $indent.$indent);
-        $timeout = 0;
-        foreach ($steps as $step) {
-            $timeout += $step->getTimeout();
-        }
-
+        $timeout = $flow->getTimeout();
         if ($timeout > (ini_get('max_execution_time') ?? 30)) {
             yield PHP_EOL . 'Increasing PHP max execution time to ' . $timeout . ' seconds.';
             set_time_limit($timeout);
         }
         
         yield PHP_EOL . 'Starting now...' . PHP_EOL . PHP_EOL;
-        foreach ($steps as $pos => $step) {
-            $nr = $pos+1;
-            $prevRunResult = $this->getPreviousResultData($step);
-            $logRow = $this->logRunStart($step, $flowRunUid, $nr, $prevRunResult)->getRow(0);
-            
-            $stepRunUid = $logRow['UID'];
-            yield $indent . $nr . '. ' . $step->getName() . ': ';
-            if ($step->isDisabled()) {
-                yield 'disabled' . PHP_EOL;
-            } else {
-                $log = '';
-                $stepData = new ETLStepData($task, $flowRunUid, $stepRunUid, $prevStepResult, $prevRunResult, $this->openApiJson);
-                $this->getWorkbench()->eventManager()->addListener(OnBeforeETLStepRun::getEventName(), function(OnBeforeETLStepRun $event) use (&$logRow, $step) {
-                    if ($event->getStep() !== $step) {
-                        return;
-                    }
-                    $ds = $this->logRunDebug($event, $logRow);
-                    $logRow = $ds->getRow(0);
-                });
-                try {
-                	$generator = $step->run($stepData);
-                    foreach ($generator as $msg) {
-                        $msg = $indent . $indent . $msg;
-                        $log .= $msg;
-                        yield $msg;
-                    }
-                    $stepResult = $generator->getReturn();
-                    $this->logRunSuccess($logRow, $log, $stepResult);
-                } catch (\Throwable $e) {
-                    if (! $e instanceof ActionExceptionInterface) {
-                        $e = new ActionRuntimeError($this, $e->getMessage(), null, $e);
-                    }
-                    try {
-                        $this->logRunError($logRow, $e, $log);
-                    } catch (\Throwable $el) {
-                        $this->getWorkbench()->getLogger()->logException($el);
-                        yield PHP_EOL . $indent 
-                        .  '✗ Could not save ETL run log: ' . $el->getMessage() 
-                        . ' in ' . $el->getFile() 
-                        . ' on line ' . $el->getLine();
-                    }
-                    if ($this->getStopFlowOnError($step)) {
-                        throw $e;
-                    } else {
-                        yield PHP_EOL . '✗ ERROR: ' . $e->getMessage();
-                        yield PHP_EOL . '  See log-ID ' . $e->getId() . ' for details!';
-                        $this->getWorkbench()->getLogger()->logException($e);
-                    }
-                }
+        
+        try {
+            $stepData = new ETLStepData($task, $flowRunUid, null, null, null, $this->openApiJson);
+            yield from $flow->run($stepData);
+        } catch (\Throwable $e) {
+            if (! $e instanceof ActionExceptionInterface) {
+                $e = new ActionRuntimeError($this, $e->getMessage(), null, $e);
             }
-            
-            $prevStepResult = $stepResult;
+            throw $e;
         }
         
         yield PHP_EOL . '✓ Finished successfully' . PHP_EOL;
     }
     
     /**
-     * 
-     * @param OnBeforeETLStepRun $event
-     * @param array $row
-     * @return \exface\Core\Interfaces\DataSheets\DataSheetInterface
-     */
-    protected function logRunDebug(OnBeforeETLStepRun $event, array $row)
-    {
-        $ds = DataSheetFactory::createFromObjectIdOrAlias($this->getWorkbench(), 'axenox.ETL.step_run');
-        try {
-            $debugContainer = WidgetFactory::createDebugMessage($this->getWorkbench(), $ds->getMetaObject());
-            $widgetJson = $event->getStep()->createDebugWidget($debugContainer)->exportUxonObject()->toJson();
-            $row['debug_widget'] = $widgetJson;
-            $ds->addRow($row);
-            $ds->dataUpdate();
-        } catch (\Throwable $e) {
-            // Forget the widget if rendering does not work
-            $this->getWorkbench()->getLogger()->logException($e);
-            $ds->addRow($row);
-        }
-        return $ds;
-    }
-    
-    /**
-     * 
-     * @param array $row
-     * @param string $output
-     * @param ETLStepResultInterface $result
-     * @return DataSheetInterface
-     */
-    protected function logRunSuccess(array $row, string $output, ETLStepResultInterface $result = null) : DataSheetInterface
-    {
-        $time = DateTimeDataType::now();
-        $ds = DataSheetFactory::createFromObjectIdOrAlias($this->getWorkbench(), 'axenox.ETL.step_run');
-        $row['end_time'] = $time;
-        $row['result_count'] = $result->countProcessedRows() ?? 0;
-        $row['result_uxon'] = $result->__toString();
-        $row['success_flag'] = true;
-        $row['output'] = $output;
-        
-        if (($result instanceof IncrementalEtlStepResult) && $result->getIncrementValue() !== null) {
-            $row['incremental_flag'] = true;
-        } else {
-            $row['incremental_flag'] = false;
-            $row['incremental_after_run'] = null;
-        }
-        
-        $ds->addRow($row);
-        $ds->dataUpdate();
-        return $ds;
-    }
-    
-    /**
-     * 
-     * @param array $row
-     * @param ExceptionInterface $exception
-     * @param string $output
-     * @return DataSheetInterface
-     */
-    protected function logRunError(array $row, ExceptionInterface $exception, string $output = '') : DataSheetInterface
-    {
-        $time = DateTimeDataType::now();
-        $ds = DataSheetFactory::createFromObjectIdOrAlias($this->getWorkbench(), 'axenox.ETL.step_run');
-        $row['end_time'] = $time;
-        $row['output'] = $output;
-        $row['error_flag'] = true;
-        $row['error_message'] = $exception->getMessage();
-        $row['error_log_id'] = $exception->getId();
-        try {
-            $widgetJson = $exception->createWidget(UiPageFactory::createEmpty($this->getWorkbench()))->exportUxonObject()->toJson();
-            $row['error_widget'] = $widgetJson;
-        } catch (\Throwable $e) {
-            // Forget the widget if rendering does not work
-            $this->getWorkbench()->getLogger()->logException($e);
-        }
-        $ds->addRow($row);
-        $ds->dataUpdate();
-        return $ds;
-    }
-    
-    /**
-     * 
-     * @param ETLStepInterface $step
-     * @param string $flowRunUid
-     * @param int $position
-     * @param ETLStepResultInterface $lastResult
-     * @return DataSheetInterface
-     */
-    protected function logRunStart(ETLStepInterface $step, string $flowRunUid, int $position, ETLStepResultInterface $lastResult = null) : DataSheetInterface
-    {
-        $time = DateTimeDataType::now();
-        $ds = DataSheetFactory::createFromObjectIdOrAlias($this->getWorkbench(), 'axenox.ETL.step_run');
-        $row = [
-            'step' => $this->getStepUid($step),
-            'flow' => $this->getFlowUid($step),
-            'flow_run' => $flowRunUid,
-            'flow_run_pos' => $position,
-            'start_time' => $time,
-            'timeout_seconds' => $step->getTimeout(),
-            'incremental_flag' => $step->isIncremental(),
-            'incremental_after_run' => $lastResult === null ? null : $lastResult->getStepRunUid()
-        ];
-        try {
-            $debugContainer = WidgetFactory::createDebugMessage($this->getWorkbench(), $ds->getMetaObject());
-            $widgetJson = $step->createDebugWidget($debugContainer)->exportUxonObject()->toJson();
-            $row['error_widget'] = $widgetJson;
-        } catch (\Throwable $e) {
-            // Forget the widget if rendering does not work
-            $this->getWorkbench()->getLogger()->logException($e);
-        }
-        if ($step->isDisabled()) {
-            $row['step_disabled_flag'] = true;
-            $row['end_time'] = $time;
-        }
-        $ds->getColumns()->addFromSystemAttributes();
-        $ds->addRow($row);
-        $ds->dataCreate();
-        return $ds;
-    }
-    
-    /**
-     * 
-     * @param ETLStepInterface $step
-     * @throws ActionRuntimeError
-     * @return string
-     */
-    protected function getStepUid(ETLStepInterface $step) : string
-    {
-        $uid = array_search($step, $this->stepsLoaded, true);
-        if (! $uid) {
-            throw new ActionRuntimeError($this, 'No UID found for ETL step "' . $step->__toString() . '": step not loaded/planned properly?');
-        }
-        return $uid;
-    }
-    
-    /**
-     * 
-     * @param ETLStepInterface $step
-     * @throws ActionRuntimeError
-     * @return string
-     */
-    protected function getFlowUid(ETLStepInterface $step) : string
-    {
-        foreach ($this->stepsPerFlowUid as $uid => $steps) {
-            if (! in_array($step, $steps, true)) {
-                $uid = null;
-            }
-        }
-        if (! $uid) {
-            throw new ActionRuntimeError($this, 'No flow found for ETL step "' . $step->__toString() . '": step not loaded/planned properly?');
-        }
-        return $uid;
-    }
-    
-    /**
-     * 
-     * @param string $flowAlias
-     * @throws ActionRuntimeError
-     * @return ETLStepInterface[]
-     */
-    protected function getSteps(string $flowAlias, string $logIndent) : array
-    {
-        $ds = DataSheetFactory::createFromObjectIdOrAlias($this->getWorkbench(), 'axenox.ETL.step');
-        $ds->getFilters()->addConditionFromString('flow__alias', $flowAlias, ComparatorDataType::EQUALS);
-        $ds->getSorters()->addFromString('step_flow_sequence', SortingDirectionsDataType::ASC);
-        $ds->getColumns()->addMultiple([
-            'UID',
-            'name',
-            'etl_prototype',
-            'etl_config_uxon',
-            'from_object',
-            'to_object',
-            'disabled',
-            'flow',
-            'stop_flow_on_error',
-            'step_flow_sequence'
-        ]);
-        $ds->dataRead();
-        
-        if ($ds->isEmpty()) {
-            return [];
-        }
-        
-        $disabledCompletely = true;
-        $steps = [];
-        $loadedSteps = [];
-        foreach ($ds->getRows() as $row) {
-            $toObj = MetaObjectFactory::createFromString($this->getWorkbench(), $row['to_object']);
-            if ($row['from_object']) {
-                $fromObj = MetaObjectFactory::createFromString($this->getWorkbench(), $row['from_object']);
-            } else {
-                $fromObj = $toObj;
-            }
-            
-            $step = ETLStepFactory::createFromFile(
-                $row['etl_prototype'], 
-                $row['name'], 
-                $toObj,
-                $fromObj,
-                UxonObject::fromAnything($row['etl_config_uxon'] ?? [])
-            );
-
-            $step->setDisabled(BooleanDataType::cast($row['disabled']));
-            if ($step->isDisabled() === false) {
-                $disabledCompletely = false;
-            }
-
-            $steps[] = $step;
-            $flowUId = $row['flow'];
-            $loadedSteps[$row['UID']] = $step;
-
-            if ($row['stop_flow_on_error']) {
-                $this->flowStoppers[] = $step;
-            }
-        }
-        
-        if ($disabledCompletely === true) {
-            return [];
-        }
-
-        $this->stepsLoaded = $loadedSteps;
-        $this->stepsPerFlowUid[$flowUId] = $loadedSteps;
-        return $steps;
-    }
-    
-    /**
-     * Returns an array of flows to run with flow run UIDs for keys and aliases for values.
+     * Returns an array of flows to run with flow run UIDs for keys and DataFlow instances as values.
      * 
      * @param TaskInterface $task
      * @throws ActionInputMissingError
-     * @return array
+     * @return DataFlow[]
      */
-    protected function getFlowAliases(TaskInterface $task) : array
+    protected function getFlows(TaskInterface $task) : array
     {
+        $flows= [];
+        $wb = $this->getWorkbench();
         switch (true) {
-            case $this->getFlowAlias():
-                $aliases = [$this->getFlowAlias()];
+            case null !== $alias = $this->getFlowAlias():
+                $flows = [DataFlowFactory::createFromString($wb, $alias)];
                 break;
             case $task->hasParameter('flow'):
-                $aliases = explode(',', $task->getParameter('flow'));
+                foreach (explode(',', $task->getParameter('flow')) as $alias) {
+                    $flows[] = DataFlowFactory::createFromString($wb, $alias);
+                }
                 break;
             case $task->hasInputData():
                 $inputData = $this->getInputDataSheet($task);
-                $aliases = [];
                 $aliasExpr = $this->getInputFlowAliasExpression($inputData);
                 if (! $col = $inputData->getColumns()->getByExpression($aliasExpr)) {
                     if (! $inputData->hasUidColumn(true)) {
@@ -478,11 +190,13 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI, 
                     $flowSheet->getFilters()->addConditionFromColumnValues($flowSheet->getUidColumn());
                     $flowSheet->dataRead();
                 }
-                $aliases = $col->getValues();
+                foreach ($col->getValues() as $alias) {
+                    $flows[] = DataFlowFactory::createFromString($wb, $alias);
+                }
                 break;
         }
         
-        if (empty($aliases)) {
+        if (empty($flows)) {
             throw new ActionInputMissingError($this, 'No ETL flow to run: please provide `flow` parameter or input data based on the flow object (axenox.ETL.flow)!');
         }
         
@@ -490,70 +204,36 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI, 
         switch (true) {
             case $task->hasInputData() && $uidExpr !== null:
                 $inputData = $inputData ?? $this->getInputDataSheet($task);
-                $aliasesWithUids = [];
+                $flowsPerRunUid = [];
                 if ($uidCol = $inputData->getColumns()->getByExpression($uidExpr)) {
-                    foreach ($aliases as $rowNo => $alias) {
-                        $aliasesWithUids[$uidCol->getValue($rowNo)] = $alias;
+                    foreach ($flows as $rowNo => $flow) {
+                        $flowsPerRunUid[$uidCol->getValue($rowNo)] = $flow;
                     }
                 } else {
-                    foreach ($aliases as $alias) {
-                        $aliasesWithUids[self::generateFlowRunUid()] = $alias;
+                    foreach ($flows as $flow) {
+                        $flowsPerRunUid[self::generateFlowRunUid()] = $flow;
                     }
                 }
                 break;
             case $task->hasParameter('run_uid'):
                 $uids = explode(',', $task->getParameter('run_uid'));
-                if (count($uids) !== count($aliases)) {
-                    throw new ActionInputError($this, 'The number of provided flow aliases (' . count($aliases) . ') does not match the number number of run UIDs (' . count($uids) . ')!');
+                if (count($uids) !== count($flows)) {
+                    throw new ActionInputError($this, 'The number of provided flow aliases (' . count($flows) . ') does not match the number number of run UIDs (' . count($uids) . ')!');
                 }
-                $aliasesWithUids = array_combine($uids, $aliases);
+                $flowsPerRunUid = array_combine($uids, $flows);
                 break;
-            case $uidExpr !== null && count($aliases) === 1:
-                $aliasesWithUids = [$uidExpr->evaluate() => $aliases[0]];
+            case $uidExpr !== null && count($flows) === 1:
+                $flowsPerRunUid = [$uidExpr->evaluate() => $flows[0]];
                 break;
             default:
-                $aliasesWithUids = [];
-                foreach ($aliases as $alias) {
-                    $aliasesWithUids[self::generateFlowRunUid()] = $alias;
+                $flowsPerRunUid = [];
+                foreach ($flows as $selector) {
+                    $flowsPerRunUid[self::generateFlowRunUid()] = $selector;
                 }
                 break;
         }
         
-        return $aliasesWithUids;
-    }
-    
-    /**
-     * 
-     * @param ETLStepInterface $step
-     * @return string|NULL
-     */
-    protected function getPreviousResultData(ETLStepInterface $step) : ?ETLStepResultInterface
-    {
-        $sheet = DataSheetFactory::createFromObjectIdOrAlias($this->getWorkbench(), 'axenox.ETL.step_run');
-        $sheet->getFilters()->addConditionFromString('step', $this->getStepUid($step), ComparatorDataType::EQUALS);
-        $sheet->getFilters()->addConditionFromString('success_flag', 1, ComparatorDataType::EQUALS);
-        $sheet->getFilters()->addConditionFromString('invalidated_flag', 0, ComparatorDataType::EQUALS);
-        $sheet->getSorters()->addFromString('start_time', SortingDirectionsDataType::DESC);
-        $sheet->getColumns()->addMultiple([
-            'UID',
-            'result_uxon'
-        ]);
-        $sheet->dataRead(1);
-        if (! $sheet->isEmpty()) {
-            return $step::parseResult($sheet->getCellValue('UID', 0), $sheet->getCellValue('result_uxon', 0));
-        } else {
-            return null;
-        }
-    }
-    
-    /**
-     * 
-     * @param ETLStepInterface $step
-     * @return bool
-     */
-    protected function getStopFlowOnError(ETLStepInterface $step) : bool
-    {
-        return in_array($step, $this->flowStoppers, true);
+        return $flowsPerRunUid;
     }
     
     /**

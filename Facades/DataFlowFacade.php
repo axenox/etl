@@ -45,6 +45,7 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 
 	const REQUEST_ATTRIBUTE_NAME_ROUTE = 'route';
 	private $openApiCache = [];
+	private $openApiStrings = [];
     private RequestLoggingMiddleware $loggingMiddleware;
     private $verbose = null;
     private $routePath = null;
@@ -328,21 +329,41 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 		if (array_key_exists($path, $this->openApiCache)) {
 			return $this->openApiCache[$path];
 		}
-		$routeData = $request->getAttribute(self::REQUEST_ATTRIBUTE_NAME_ROUTE);
-		if (empty($routeData)) {
-			throw new FacadeRoutingError('No route data found in request!');
-		}
-		$json = $routeData['swagger_json'];
-		if ($json === null || $json === '') {
+		
+		$json = $this->getOpenApiDef($request);
+		if ($json === null) {
 			return null;
 		}
 		
-		JsonDataType::validateJsonSchema($json, $routeData['type__schema_json']);		
 		$openApiJson = json_decode($json, true);
         $openApiJson = $this->removeInternalAttributes($openApiJson);
 		$openApiJson = $this->prependLocalServerPaths($path, $openApiJson);
 		$this->openApiCache[$path] = $openApiJson;
 		return $openApiJson;
+	}
+	
+	/**
+	 * 
+	 * {@inheritDoc}
+	 * @see \axenox\ETL\Interfaces\OpenApiFacadeInterface::getOpenApiDef()
+	 */
+	public function getOpenApiDef(ServerRequestInterface $request): ?string
+	{
+	    $path = $request->getUri()->getPath();
+	    if (array_key_exists($path, $this->openApiStrings)) {
+	        return $this->openApiStrings[$path];
+	    }
+	    
+	    $routeData = $request->getAttribute(self::REQUEST_ATTRIBUTE_NAME_ROUTE);
+	    if (empty($routeData)) {
+	        throw new FacadeRoutingError('No route data found in request!');
+	    }
+	    $json = $routeData['swagger_json'];
+	    if ($json === null || $json === '') {
+	        return null;
+	    }
+	    JsonDataType::validateJsonSchema($json, $routeData['type__schema_json']);
+	    return $json;
 	}
 
     /**

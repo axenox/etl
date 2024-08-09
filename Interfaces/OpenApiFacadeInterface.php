@@ -14,6 +14,8 @@ interface OpenApiFacadeInterface extends FacadeInterface
      * @return array|NULL
      */
     public function getOpenApiJson(ServerRequestInterface $request) : ?array;
+    
+    public function getOpenApiDef(ServerRequestInterface $request) : ?string;
 
     /**
      * @param ServerRequestInterface $request

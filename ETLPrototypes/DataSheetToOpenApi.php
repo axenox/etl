@@ -3,19 +3,15 @@ namespace axenox\ETL\ETLPrototypes;
 
 use axenox\ETL\Common\AbstractOpenApiPrototype;
 use exface\Core\CommonLogic\DataSheets\DataColumn;
-use exface\Core\CommonLogic\DataSheets\DataSheet;
 use exface\Core\CommonLogic\Model\Attribute;
-use exface\Core\CommonLogic\Model\Condition;
 use exface\Core\CommonLogic\Model\ConditionGroup;
 use exface\Core\CommonLogic\Model\Expression;
-use exface\Core\CommonLogic\Selectors\DataTypeSelector;
 use exface\Core\CommonLogic\UxonObject;
 use exface\Core\Exceptions\InvalidArgumentException;
 use exface\Core\Exceptions\NotImplementedError;
 use exface\Core\Factories\DataTypeFactory;
 use exface\Core\Interfaces\DataSheets\DataSheetInterface;
 use exface\Core\Factories\DataSheetFactory;
-use axenox\ETL\Common\AbstractETLPrototype;
 use axenox\ETL\Interfaces\ETLStepResultInterface;
 use exface\Core\DataTypes\StringDataType;
 use axenox\ETL\Common\IncrementalEtlStepResult;
@@ -124,6 +120,7 @@ class DataSheetToOpenApi extends AbstractOpenApiPrototype
 
     private $rowOffset = 0;
     private $filters = null;
+    private $schemaName = null;
 
 
     /**
@@ -141,7 +138,7 @@ class DataSheetToOpenApi extends AbstractOpenApiPrototype
         $stepTask = $stepData->getTask();
 
         if ($stepTask instanceof HttpTaskInterface === false){
-            throw new InvalidArgumentException('Http request needed to process OpenApi definitions! Request type: ' . get_class($stepTask));
+            throw new InvalidArgumentException('Http request needed to process OpenApi definitions! `' . get_class($stepTask) . '` received instead.');
         }
 
         if ($limit = $this->getRowLimit($placeholders)) {
@@ -159,11 +156,16 @@ class DataSheetToOpenApi extends AbstractOpenApiPrototype
             . ($limit ? 'rows ' . ($offset+1) . ' - ' . ($offset+$limit) : 'all rows')
             . ' requested in OpenApi definition';
 
-        $openApiJson = $stepData->getOpenApiJson();
+        $openApiJson = $this->getOpenApiJson($stepData->getTask());
         $schemas = (new JSONPath(json_decode($openApiJson, false)))->find(self::JSON_PATH_TO_OPEN_API_SCHEMAS)->getData()[0];
         $schemas = json_decode(json_encode($schemas), true);
 
-        $fromObjectSchema = $this->findObjectSchema($fromSheet, $schemas);
+        if (($schemaName = $this->getSchemaName()) !== null && array_key_exists($schemaName, $schemas)) {
+            $fromObjectSchema = $schemas[$schemaName];
+        } else {
+            $fromObjectSchema = $this->findObjectSchema($fromSheet, $schemas);
+        }
+
         $requestedColumns = $this->addColumnsFromSchema($fromObjectSchema, $fromSheet);
 
         if (($filters =$this->getFilters($placeholders)) != null) {
@@ -201,7 +203,6 @@ class DataSheetToOpenApi extends AbstractOpenApiPrototype
 
         return $result->setProcessedRowsCounter(count($content));
     }
-
 
     /**
      * @param array $fromObjectSchema
@@ -462,6 +463,27 @@ class DataSheetToOpenApi extends AbstractOpenApiPrototype
     }
 
     /**
+     * Define the name of the schema for this specific step.
+     * If null, it will try to find the attribute alias within the OpenApi definition.
+     *
+     * @uxon-property schema_name
+     * @uxon-type string
+     *
+     * @param string $schemaName
+     * @return OpenApiToDataSheet
+     */
+    protected function setSchemaName(string $schemaName) : DataSheetToOpenApi
+    {
+        $this->schemaName = $schemaName;
+        return $this;
+    }
+
+    protected function getSchemaName() : ?string
+    {
+        return $this->schemaName;
+    }
+
+    /**
      *
      * {@inheritDoc}
      * @see \axenox\ETL\Interfaces\ETLStepInterface::parseResult()
@@ -492,10 +514,5 @@ class DataSheetToOpenApi extends AbstractOpenApiPrototype
     public function isIncremental(): bool
     {
         return false;
-    }
-
-    public function validate(): \Generator
-    {
-        yield from [];
     }
 }

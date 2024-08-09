@@ -11,6 +11,7 @@ use exface\Core\Factories\DataSheetFactory;
 use exface\Core\DataTypes\ComparatorDataType;
 use axenox\ETL\Facades\Helper\MetaModelSchemaBuilder;
 use exface\Core\Factories\MetaObjectFactory;
+use exface\Core\Interfaces\Log\LoggerInterface;
 
 /**
  * UXON-schema class for Composer auth.json.
@@ -155,36 +156,53 @@ class OpenAPISchema implements UxonSchemaInterface
         $ds->getColumns()->addMultiple(['UID','NAME', 'PROTOTYPE__LABEL', 'DESCRIPTION', 'PROTOTYPE', 'UXON' , 'WRAP_PATH', 'WRAP_FLAG']);
         $ds->getFilters()->addConditionFromString('UXON_SCHEMA', '\\' . __CLASS__, ComparatorDataType::EQUALS);
         $ds->getSorters()
-        ->addFromString('PROTOTYPE', SortingDirectionsDataType::ASC)
-        ->addFromString('NAME', SortingDirectionsDataType::ASC);
+            ->addFromString('PROTOTYPE', SortingDirectionsDataType::ASC)
+            ->addFromString('NAME', SortingDirectionsDataType::ASC);
         $ds->dataRead();
         
              
-        $objectAlias = end($path);
-        if (($path ?? '') !== ''){
+        $objectAlias = empty($path) ? '' : end($path);
+        if (($objectAlias ?? '') !== ''){
             $objectSheet = DataSheetFactory::createFromObjectIdOrAlias($this->getWorkbench(), 'exface.Core.OBJECT');
             $objectSheet->getFilters()->addConditionFromString('ALIAS_WITH_NS', $objectAlias, ComparatorDataType::IS);
             $objectSheet->getColumns()->addMultiple([
                 'NAME',
+                'ALIAS',
+                'APP__ALIAS',
                 'ALIAS_WITH_NS'
             ]);
             $objectSheet->dataRead();
             $schemaBuilder = new MetaModelSchemaBuilder(onlyReturnProperties: true, forceSchema: true, loadExamples: true);
             foreach ($objectSheet->getRows() as $objRow) {
-                $obj = MetaObjectFactory::createFromString($this->getWorkbench(), $objRow['ALIAS_WITH_NS']);
-                $json = $schemaBuilder->transformIntoJsonSchema($obj);
+                try {
+                    $obj = MetaObjectFactory::createFromString($this->getWorkbench(), $objRow['ALIAS_WITH_NS']);
+                    $json = $schemaBuilder->transformIntoJsonSchema($obj);
             
-                $ds->addRow([
-                    'UID' => $obj->getId(),
-                    'NAME' => $obj->getName(), 
-                    'PROTOTYPE__LABEL' => 'Meta objects', 
-                    'DESCRIPTION' => '', 
-                    'PROTOTYPE' => 'object', 
-                    'UXON' => json_encode($json), 
-                    'WRAP_PATH' => null, 
-                    'WRAP_FLAG' => 0
-                ]);
+                    $ds->addRow([
+                        'UID' => $obj->getId(),
+                        'NAME' => $obj->getName() . '<br>Alias: ' . $objRow['ALIAS'] . '<br>App: ' . $objRow['APP__ALIAS'], 
+                        'PROTOTYPE__LABEL' => 'Meta objects', 
+                        'DESCRIPTION' => '', 
+                        'PROTOTYPE' => 'object', 
+                        'UXON' => json_encode($json), 
+                        'WRAP_PATH' => null, 
+                        'WRAP_FLAG' => 0
+                    ]);
+                } catch (\Throwable $e) {
+                    $this->getWorkbench()->getLogger()->logException($e, LoggerInterface::WARNING);
+                }
             }
+        } else {
+            $ds->addRow([
+                'UID' => null,
+                'NAME' => 'Object presets can only be generated if this dialog is opened for a UXON property holding an object alias',
+                'PROTOTYPE__LABEL' => 'Meta objects',
+                'DESCRIPTION' => '',
+                'PROTOTYPE' => 'object',
+                'UXON' => 'T',
+                'WRAP_PATH' => null,
+                'WRAP_FLAG' => 0
+            ]);
         }
         
         return $ds->getRows();
