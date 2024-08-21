@@ -21,7 +21,7 @@ use cebe\openapi\ReferenceContext;
 use exface\Core\Exceptions\Facades\HttpBadRequestError;
 use League\OpenAPIValidation\Schema\Exception\SchemaMismatch;
 use GuzzleHttp\Exception\BadResponseException;
-use Psr\Http\Message\MessageInterface;
+use exface\Core\Interfaces\Log\LoggerInterface;
 
 /**
  * This middleware adds request and response validation to facades implementing OpenApiFacadeInterface
@@ -95,7 +95,9 @@ final class OpenApiValidationMiddleware implements MiddlewareInterface
                                     'error' => $exception->getMessage(),
                                     'details' => $e->getErrors()
                                 ];
-                                throw new JsonSchemaValidationError($errors, 'Invalid request body', null, null, $json);
+                                throw (
+                                    new JsonSchemaValidationError($errors, 'Invalid request body', null, null, $json)
+                                )->setLogLevel(LoggerInterface::ERROR);
                             } catch (\Throwable $e) {
                                 $this->getWorkbench()->getLogger()->logException($e);
                             }
