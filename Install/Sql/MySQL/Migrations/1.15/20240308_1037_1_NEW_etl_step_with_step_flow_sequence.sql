@@ -13,6 +13,7 @@ UPDATE
 		WHERE  fr.valid_flag = 1 
 			AND fr.created_on = (
 				SELECT MAX(etl_flow_run_tmp.created_on) 
+					/* Use a subselect here instead of the view exf_flow_run because on fresh installs the view is not there yet */
 					FROM (SELECT 
 							r.flow_oid,
 							MIN(r.created_on) AS created_on
