@@ -10,7 +10,17 @@ UPDATE
 			sr.step_oid 
 		FROM etl_step_run sr
 			LEFT JOIN etl_flow_run fr ON fr.oid = sr.flow_run_oid
-		WHERE  fr.valid_flag = 1 AND fr.created_on = (Select MAX(created_on) FROM etl_flow_run WHERE flow_oid = fr.flow_oid)
+		WHERE  fr.valid_flag = 1 
+			AND fr.created_on = (
+				SELECT MAX(etl_flow_run_tmp.created_on) 
+					FROM (SELECT 
+							r.flow_oid,
+							MIN(r.created_on) AS created_on
+						FROM etl_step_run r
+						GROUP BY r.flow_run_oid, r.flow_oid
+					) etl_flow_run_tmp
+				WHERE etl_flow_run_tmp.flow_oid = fr.flow_oid
+			)
   	) srs ON etl_step.oid = srs.step_oid 
   		AND etl_step.flow_oid = srs.flow_oid
 SET step_flow_sequence = srs.flow_run_pos
