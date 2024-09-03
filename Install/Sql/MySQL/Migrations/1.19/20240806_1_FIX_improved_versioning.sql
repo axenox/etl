@@ -1,8 +1,8 @@
 -- UP
 
 -- Make version columns longer
-CALL execute_sql_on_existing_column('etl_webservice', 'version', 'CHANGE COLUMN `version` `version` VARCHAR(50) NULL DEFAULT NULL');
-CALL execute_sql_on_existing_column('etl_flow', 'version', 'CHANGE COLUMN `version` `version` VARCHAR(50) NULL DEFAULT NULL');
+CALL execute_sql_on_existing_column('etl_webservice', 'version', 'ALTER TABLE etl_webservice CHANGE COLUMN `version` `version` VARCHAR(50) NULL DEFAULT NULL');
+CALL execute_sql_on_existing_column('etl_flow', 'version', 'ALTER TABLE etl_flow CHANGE COLUMN `version` `version` VARCHAR(50) NULL DEFAULT NULL');
 
 -- Remove request_direction from web services
 CALL execute_sql_on_existing_column('etl_webservice', 'request_direction', 'ALTER TABLE etl_webservice DROP COLUMN request_direction');

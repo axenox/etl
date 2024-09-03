@@ -81,9 +81,9 @@
     "rows": [
         {
             "CREATED_ON": "2021-02-26 16:46:29",
-            "MODIFIED_ON": "2024-03-11 07:48:36",
+            "MODIFIED_ON": "2024-08-29 13:44:04",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
-            "MODIFIED_BY_USER": "0x11e8fe1c902c8ebea23ee4b318306b9a",
+            "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
             "UID": "0x11ebae9fcb215da2ae9f025041000001",
             "READABLE_FLAG": 1,
             "WRITABLE_FLAG": 1,
@@ -94,7 +94,7 @@
             "DATA_SOURCE": "0x32000000000000000000000000000000",
             "APP": "0x11ebbc50679eacdabc50025041000001",
             "SHORT_DESCRIPTION": "",
-            "PARENT_OBJECT": "",
+            "PARENT_OBJECT": null,
             "DATA_ADDRESS_PROPS": null,
             "DEFAULT_EDITOR_UXON": {
                 "widget_type": "Dialog",
@@ -144,7 +144,7 @@
                         "widget_type": "WidgetGroup",
                         "caption": "Configuration",
                         "width": "max",
-                        "height": 15,
+                        "height": "max",
                         "widgets": [
                             {
                                 "attribute_alias": "etl_config_uxon",
