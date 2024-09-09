@@ -1,0 +1,114 @@
+{
+    "object_alias": "exface.Core.DATASRC",
+    "columns": [
+        {
+            "name": "CREATED_ON",
+            "attribute_alias": "CREATED_ON"
+        },
+        {
+            "name": "MODIFIED_ON",
+            "attribute_alias": "MODIFIED_ON"
+        },
+        {
+            "name": "CREATED_BY_USER",
+            "attribute_alias": "CREATED_BY_USER"
+        },
+        {
+            "name": "MODIFIED_BY_USER",
+            "attribute_alias": "MODIFIED_BY_USER"
+        },
+        {
+            "name": "UID",
+            "attribute_alias": "UID"
+        },
+        {
+            "name": "APP",
+            "attribute_alias": "APP"
+        },
+        {
+            "name": "DEFAULT_CONNECTION",
+            "attribute_alias": "DEFAULT_CONNECTION"
+        },
+        {
+            "name": "DEFAULT_QUERY_BUILDER",
+            "attribute_alias": "DEFAULT_QUERY_BUILDER"
+        },
+        {
+            "name": "READABLE_FLAG",
+            "attribute_alias": "READABLE_FLAG"
+        },
+        {
+            "name": "WRITABLE_FLAG",
+            "attribute_alias": "WRITABLE_FLAG"
+        },
+        {
+            "name": "BASE_OBJECT",
+            "attribute_alias": "BASE_OBJECT"
+        },
+        {
+            "name": "LABEL",
+            "attribute_alias": "LABEL"
+        },
+        {
+            "name": "ALIAS",
+            "attribute_alias": "ALIAS"
+        }
+    ],
+    "rows": [
+        {
+            "CREATED_ON": "2024-09-09 09:30:18",
+            "MODIFIED_ON": "2024-09-09 10:04:16",
+            "CREATED_BY_USER": "0x31000000000000000000000000000000",
+            "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
+            "UID": "0x11efa5805d8a3628a580025041000001",
+            "APP": "0x11ebbc50679eacdabc50025041000001",
+            "DEFAULT_CONNECTION": "0x11efb312f7cc071cb312025041000001",
+            "DEFAULT_QUERY_BUILDER": "exface\/Core\/QueryBuilders\/FileBuilder.php",
+            "READABLE_FLAG": 1,
+            "WRITABLE_FLAG": 1,
+            "BASE_OBJECT": "0x11e6afd8efb4743f8943e4b318306b9a",
+            "LABEL": "DataFlow uploaded files",
+            "ALIAS": "dataflow_uploaded_files"
+        },
+        {
+            "CREATED_ON": "2024-09-09 12:39:09",
+            "MODIFIED_ON": "2024-09-09 15:30:59",
+            "CREATED_BY_USER": "0x31000000000000000000000000000000",
+            "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
+            "UID": "0x11ef8c0dbf3cd7b28c0d025041000001",
+            "APP": "0x11ebbc50679eacdabc50025041000001",
+            "DEFAULT_CONNECTION": "0x11ed992617f9ad829926747827435ce5",
+            "DEFAULT_QUERY_BUILDER": "exface\/Core\/QueryBuilders\/ExcelBuilder.php",
+            "READABLE_FLAG": 1,
+            "WRITABLE_FLAG": 1,
+            "BASE_OBJECT": null,
+            "LABEL": "DataFlow uploaded Spreadsheets",
+            "ALIAS": "dataflow_uploaded_spreadsheets"
+        }
+    ],
+    "totals_rows": [],
+    "filters": {
+        "operator": "AND",
+        "base_object_alias": "exface.Core.DATASRC",
+        "conditions": [
+            {
+                "expression": "APP",
+                "comparator": "=",
+                "value": "0x11ebbc50679eacdabc50025041000001",
+                "object_alias": "exface.Core.DATASRC"
+            }
+        ]
+    },
+    "rows_limit": null,
+    "rows_offset": 0,
+    "sorters": [
+        {
+            "attribute_alias": "CREATED_ON",
+            "direction": "ASC"
+        },
+        {
+            "attribute_alias": "UID",
+            "direction": "ASC"
+        }
+    ]
+}

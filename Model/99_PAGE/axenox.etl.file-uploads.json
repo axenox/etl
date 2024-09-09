@@ -1,0 +1,149 @@
+{
+    "uid": "0x11efa80c342a979ca80c025041000001",
+    "alias_with_namespace": "axenox.etl.file-uploads",
+    "menu_parent_page_selector": "0x11ebbc9afc222912bc9a025041000001",
+    "menu_index": 0,
+    "menu_visible": true,
+    "name": "File uploads",
+    "description": "",
+    "intro": "",
+    "replaces_page_selector": null,
+    "created_by_user_selector": "0x31000000000000000000000000000000",
+    "created_on": "2024-09-09 09:21:59",
+    "modified_by_user_selector": "0x31000000000000000000000000000000",
+    "modified_on": "2024-09-09 16:56:53",
+    "contents": {
+        "object_alias": "axenox.ETL.file_flow",
+        "widget_type": "SplitHorizontal",
+        "panels": [
+            {
+                "width": "50%",
+                "widgets": [
+                    {
+                        "caption": "Upload flows",
+                        "widget_type": "DataTable",
+                        "object_alias": "axenox.ETL.file_flow",
+                        "columns": [
+                            {
+                                "attribute_alias": "name"
+                            },
+                            {
+                                "attribute_alias": "flow__version"
+                            },
+                            {
+                                "attribute_alias": "app__ALIAS"
+                            },
+                            {
+                                "attribute_alias": "file_upload__UID:COUNT",
+                                "caption": "Uploads"
+                            },
+                            {
+                                "attribute_alias": "description"
+                            },
+                            {
+                                "attribute_alias": "flow__alias_with_version"
+                            }
+                        ],
+                        "sorters": [
+                            {
+                                "attribute_alias": "name",
+                                "direction": "asc"
+                            }
+                        ],
+                        "buttons": [
+                            {
+                                "action_alias": "exface.Core.ShowObjectCreateDialog"
+                            },
+                            {
+                                "action_alias": "exface.Core.ShowObjectEditDialog",
+                                "bind_to_double_click": true
+                            },
+                            {
+                                "action_alias": "exface.Core.ShowObjectCopyDialog"
+                            },
+                            {
+                                "action_alias": "exface.Core.DeleteObject",
+                                "visibility": "optional"
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "widgets": [
+                    {
+                        "caption": "Uploaded files",
+                        "widget_type": "DataTable",
+                        "object_alias": "axenox.ETL.file_upload",
+                        "filters": [
+                            {
+                                "attribute_alias": "CREATED_ON",
+                                "widget_type": "RangeSpinnerFilter"
+                            }
+                        ],
+                        "columns": [
+                            {
+                                "attribute_alias": "CREATED_ON"
+                            },
+                            {
+                                "attribute_alias": "file_name"
+                            },
+                            {
+                                "attribute_alias": "file_size_bytes"
+                            },
+                            {
+                                "attribute_alias": "CREATED_BY_USER__LABEL"
+                            },
+                            {
+                                "attribute_alias": "flow_run__status"
+                            },
+                            {
+                                "attribute_alias": "flow_run__progress"
+                            },
+                            {
+                                "attribute_alias": "file_path"
+                            }
+                        ],
+                        "sorters": [
+                            {
+                                "attribute_alias": "CREATED_ON",
+                                "direction": "asc"
+                            }
+                        ],
+                        "buttons": [
+                            {
+                                "action_alias": "axenox.ETL.FileUploadDialog"
+                            },
+                            {
+                                "action_alias": "axenox.ETL.FileUploadProcess"
+                            },
+                            {
+                                "action_alias": "exface.Core.DownloadFile"
+                            },
+                            {
+                                "bind_to_double_click": true,
+                                "action": {
+                                    "alias": "exface.Core.ShowObjectInfoDialog",
+                                    "object_alias": "axenox.ETL.flow_run",
+                                    "input_mapper": {
+                                        "from_object_alias": "axenox.ETL.file_upload",
+                                        "to_object_alias": "axenox.ETL.flow_run",
+                                        "column_to_column_mappings": [
+                                            {
+                                                "from": "flow",
+                                                "to": "UID"
+                                            }
+                                        ]
+                                    }
+                                }
+                            },
+                            {
+                                "action_alias": "exface.Core.DeleteObject"
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    }
+}
