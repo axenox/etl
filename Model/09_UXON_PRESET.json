@@ -493,9 +493,9 @@
         },
         {
             "CREATED_ON": "2024-05-22 15:21:54",
-            "MODIFIED_ON": "2024-05-22 15:21:54",
+            "MODIFIED_ON": "2024-09-09 16:59:13",
             "CREATED_BY_USER": "0x11e8fe1c902c8ebea23ee4b318306b9a",
-            "MODIFIED_BY_USER": "0x11e8fe1c902c8ebea23ee4b318306b9a",
+            "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
             "UID": "0x11ef85f541f8fa8885f5025041000001",
             "APP": "0x11ebbc50679eacdabc50025041000001",
             "NAME": "OpenAPI 3.0.3 Export",
@@ -504,15 +504,15 @@
             "UXON": {
                 "openapi": "3.0.3",
                 "info": {
-                    "title": "Import",
+                    "title": "",
                     "description": "",
                     "version": "1.0.0"
                 },
                 "servers": [],
                 "tags": [
                     {
-                        "name": "Daten",
-                        "description": "Daten export"
+                        "name": "Data",
+                        "description": "Export data"
                     }
                 ],
                 "paths": {
@@ -526,7 +526,7 @@
                                 {
                                     "name": "limit",
                                     "in": "query",
-                                    "description": "Definiere die maximale Anzahl der Eintr\u00e4ge.",
+                                    "description": "Limit the maximum number of rows to be included in one response",
                                     "required": false,
                                     "schema": {
                                         "type": "integer",
@@ -536,7 +536,7 @@
                                 {
                                     "name": "offset",
                                     "in": "query",
-                                    "description": "Definiere die Startposition ab dem die Eintr\u00e4ge geladen werden.",
+                                    "description": "Skip ",
                                     "required": false,
                                     "schema": {
                                         "type": "integer",
@@ -546,7 +546,7 @@
                             ],
                             "responses": {
                                 "200": {
-                                    "description": "Erfolgreiche Abfrage",
+                                    "description": "Successfull response",
                                     "content": {
                                         "application\/json": {
                                             "schema": {
@@ -559,7 +559,7 @@
                                                             "items": {
                                                                 "$ref": "#\/components\/schemas\/Object"
                                                             },
-                                                            "x-object-alias": "full.namespace.object"
+                                                            "x-object-alias": "my.APP.OBJECT_ALIAS"
                                                         },
                                                         "page_limit": {
                                                             "type": "integer",
@@ -598,15 +598,15 @@
                     "schemas": {
                         "Object": {
                             "type": "object",
-                            "x-object-alias": "full.namespace.object",
+                            "x-object-alias": "my.APP.OBJECT_ALIAS",
                             "properties": {
                                 "prop1": {
                                     "type": "integer",
-                                    "x-attribute-alias": "prop1alias"
+                                    "x-attribute-alias": ""
                                 },
                                 "prop2": {
                                     "type": "string",
-                                    "x-attribute-alias": "prop2alias"
+                                    "x-attribute-alias": ""
                                 }
                             }
                         }
