@@ -53,17 +53,17 @@
     "rows": [
         {
             "CREATED_ON": "2024-09-09 10:03:14",
-            "MODIFIED_ON": "2024-09-09 11:09:51",
+            "MODIFIED_ON": "2024-09-10 14:08:51",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
             "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
             "UID": "0x11efb312f7cc071cb312025041000001",
             "APP": "0x11ebbc50679eacdabc50025041000001",
             "TIME_ZONE": null,
-            "LABEL": "DataFlow uploads (local)",
+            "LABEL": "DataFlow upload storage (local)",
             "CONNECTOR": "exface\/Core\/DataConnectors\/LocalFileConnector.php",
-            "CONFIG": "$$~~zwX9U3GSfF39wjIgMLaHz18s+LwTMihErSH+9W14wYGwfFZ8OxAP4PlG9J7KiKuUvtvDkT3ajZQTiYqfZwcz6zVDFiDp\/t4nEnq7hQ5Hy0CRPA==",
+            "CONFIG": "$$~~eqXBepAJablRYtUlHnmIWWb0rvmaiLfrsegdFEmXJr1cgmwQ4Upe9p31Ngqwnmv5X3SB12wOoPGdxnnfyrUxOztPJv4Fmddpw\/tT1\/6BCGDWvg==",
             "READONLY": 0,
-            "ALIAS": "dataflow_uploads_local"
+            "ALIAS": "dataflow_upload_storage_local"
         }
     ],
     "totals_rows": [],

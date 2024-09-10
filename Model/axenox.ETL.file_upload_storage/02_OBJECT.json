@@ -81,7 +81,7 @@
     "rows": [
         {
             "CREATED_ON": "2024-09-09 10:07:42",
-            "MODIFIED_ON": "2024-09-09 10:07:42",
+            "MODIFIED_ON": "2024-09-10 13:15:35",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
             "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
             "UID": "0x11ef857e96b40b86857e025041000001",
@@ -89,7 +89,7 @@
             "WRITABLE_FLAG": 1,
             "COMMENTS": "",
             "DOCS": "",
-            "NAME": "Uploaded file",
+            "NAME": "Uploaded file storage",
             "INHERIT_DATA_SOURCE_BASE_OBJECT": 1,
             "DATA_SOURCE": "0x11efa5805d8a3628a580025041000001",
             "APP": "0x11ebbc50679eacdabc50025041000001",
@@ -97,7 +97,7 @@
             "PARENT_OBJECT": null,
             "DATA_ADDRESS_PROPS": null,
             "DEFAULT_EDITOR_UXON": null,
-            "ALIAS": "file_upload_file",
+            "ALIAS": "file_upload_storage",
             "DATA_ADDRESS": ""
         }
     ],

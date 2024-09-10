@@ -537,7 +537,7 @@
         },
         {
             "CREATED_ON": "2024-09-09 11:56:30",
-            "MODIFIED_ON": "2024-09-09 12:51:52",
+            "MODIFIED_ON": "2024-09-10 09:56:20",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
             "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
             "UID": "0x11ef8f41cab424c08f41025041000001",
@@ -560,7 +560,7 @@
             "COPYABLEFLAG": 0,
             "ALIAS": "LABEL",
             "DATATYPE": "0x30000000000000000000000000000000",
-            "DATA_ADDRESS": "CONCAT([#file_name#], ' ', [#CREATED_ON#])",
+            "DATA_ADDRESS": "CONCAT([#file_name#], ' (', [#CREATED_ON#], ')')",
             "OBJECT": "0x11ef97055df83b389705025041000001",
             "FORMATTER": "",
             "DISPLAYORDER": null,

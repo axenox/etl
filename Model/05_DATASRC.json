@@ -57,7 +57,7 @@
     "rows": [
         {
             "CREATED_ON": "2024-09-09 09:30:18",
-            "MODIFIED_ON": "2024-09-09 10:04:16",
+            "MODIFIED_ON": "2024-09-10 14:09:00",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
             "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
             "UID": "0x11efa5805d8a3628a580025041000001",
@@ -67,8 +67,8 @@
             "READABLE_FLAG": 1,
             "WRITABLE_FLAG": 1,
             "BASE_OBJECT": "0x11e6afd8efb4743f8943e4b318306b9a",
-            "LABEL": "DataFlow uploaded files",
-            "ALIAS": "dataflow_uploaded_files"
+            "LABEL": "DataFlow upload storage",
+            "ALIAS": "dataflow_upload_storage"
         },
         {
             "CREATED_ON": "2024-09-09 12:39:09",
