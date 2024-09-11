@@ -81,7 +81,7 @@
     "rows": [
         {
             "CREATED_ON": "2024-09-09 09:23:10",
-            "MODIFIED_ON": "2024-09-09 09:25:02",
+            "MODIFIED_ON": "2024-09-11 14:22:06",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
             "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
             "UID": "0x11efab005df7d35aab00025041000001",
@@ -96,7 +96,36 @@
             "SHORT_DESCRIPTION": "",
             "PARENT_OBJECT": null,
             "DATA_ADDRESS_PROPS": null,
-            "DEFAULT_EDITOR_UXON": null,
+            "DEFAULT_EDITOR_UXON": {
+                "widget_type": "Dialog",
+                "width": 1,
+                "columns_in_grid": 1,
+                "height": "auto",
+                "maximized": false,
+                "widgets": [
+                    {
+                        "attribute_alias": "name"
+                    },
+                    {
+                        "attribute_alias": "alias"
+                    },
+                    {
+                        "attribute_alias": "app"
+                    },
+                    {
+                        "attribute_alias": "flow"
+                    },
+                    {
+                        "attribute_alias": "subfolder"
+                    },
+                    {
+                        "attribute_alias": "enabled_flag"
+                    },
+                    {
+                        "attribute_alias": "description"
+                    }
+                ]
+            },
             "ALIAS": "file_flow",
             "DATA_ADDRESS": "etl_file_flow"
         }

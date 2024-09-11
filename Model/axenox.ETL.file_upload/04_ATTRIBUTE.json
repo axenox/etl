@@ -493,7 +493,7 @@
         },
         {
             "CREATED_ON": "2024-09-09 10:11:29",
-            "MODIFIED_ON": "2024-09-09 10:54:21",
+            "MODIFIED_ON": "2024-09-11 09:55:47",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
             "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
             "UID": "0x11ef9c561df44dfe9c56025041000001",
@@ -516,7 +516,7 @@
             "COPYABLEFLAG": 0,
             "ALIAS": "file_path",
             "DATATYPE": "0x11ea01502d3497c5b7580205857feb80",
-            "DATA_ADDRESS": "CONCAT([#UID#], '\/', [#file_name#])",
+            "DATA_ADDRESS": "CONCAT(\n  (CASE \n    WHEN [#file_flow__subfolder#] IS NOT NULL \n      AND [#file_flow__subfolder#] != '' \n      THEN CONCAT([#file_flow__subfolder#], '\/') \n    ELSE '' \n  END),\n  [#UID#], \n  '\/', \n  [#file_name#]\n)",
             "OBJECT": "0x11ef97055df83b389705025041000001",
             "FORMATTER": "",
             "DISPLAYORDER": null,
