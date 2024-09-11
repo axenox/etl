@@ -81,7 +81,7 @@
     "rows": [
         {
             "CREATED_ON": "2021-02-26 16:44:37",
-            "MODIFIED_ON": "2024-05-30 13:34:48",
+            "MODIFIED_ON": "2024-09-11 08:52:44",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
             "MODIFIED_BY_USER": "0x11e8fe1c902c8ebea23ee4b318306b9a",
             "UID": "0x11eb90858867906c9085025041000001",
@@ -94,7 +94,7 @@
             "DATA_SOURCE": "0x32000000000000000000000000000000",
             "APP": "0x11ebbc50679eacdabc50025041000001",
             "SHORT_DESCRIPTION": "",
-            "PARENT_OBJECT": "",
+            "PARENT_OBJECT": null,
             "DATA_ADDRESS_PROPS": null,
             "DEFAULT_EDITOR_UXON": {
                 "widget_type": "Dialog",
@@ -115,6 +115,10 @@
                                                         "attribute_alias": "UID",
                                                         "widget_type": "InputHidden",
                                                         "id": "uid_field"
+                                                    },
+                                                    {
+                                                        "attribute_alias": "alias_with_version",
+                                                        "widget_type": "InputHidden"
                                                     },
                                                     {
                                                         "attribute_alias": "name"
