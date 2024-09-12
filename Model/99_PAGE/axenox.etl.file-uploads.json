@@ -2,7 +2,7 @@
     "uid": "0x11efa80c342a979ca80c025041000001",
     "alias_with_namespace": "axenox.etl.file-uploads",
     "menu_parent_page_selector": "0x11ebbc9afc222912bc9a025041000001",
-    "menu_index": 0,
+    "menu_index": 1,
     "menu_visible": true,
     "name": "File uploads",
     "description": "",
@@ -11,7 +11,7 @@
     "created_by_user_selector": "0x31000000000000000000000000000000",
     "created_on": "2024-09-09 09:21:59",
     "modified_by_user_selector": "0x31000000000000000000000000000000",
-    "modified_on": "2024-09-09 16:56:53",
+    "modified_on": "2024-09-12 15:43:25",
     "contents": {
         "object_alias": "axenox.ETL.file_flow",
         "widget_type": "SplitHorizontal",
@@ -31,11 +31,11 @@
                                 "attribute_alias": "flow__version"
                             },
                             {
-                                "attribute_alias": "app__ALIAS"
-                            },
-                            {
                                 "attribute_alias": "file_upload__UID:COUNT",
                                 "caption": "Uploads"
+                            },
+                            {
+                                "attribute_alias": "alias_with_ns"
                             },
                             {
                                 "attribute_alias": "description"
