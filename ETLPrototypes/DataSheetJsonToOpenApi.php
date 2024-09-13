@@ -113,7 +113,7 @@ use Psr\Http\Message\ServerRequestInterface;
  *
  * @author miriam.seitz
  */
-class DataSheetToOpenApi extends AbstractOpenApiPrototype
+class DataSheetJsonToOpenApi extends AbstractOpenApiPrototype
 {
 
     private $rowLimit = null;
@@ -213,7 +213,7 @@ class DataSheetToOpenApi extends AbstractOpenApiPrototype
         $requestedColumns = [];
 
         if (array_key_exists('properties', $fromObjectSchema) === false) {
-            throw new NotImplementedError('Only type ´object´ schemas are implemented for the ETLPrototype ' . DataSheetToOpenApi::class);
+            throw new NotImplementedError('Only type ´object´ schemas are implemented for the ETLPrototype ' . DataSheetJsonToOpenApi::class);
         }
 
         $attributeAliasKey = self::OPEN_API_ATTRIBUTE_TO_ATTRIBUTE_ALIAS;
@@ -391,9 +391,9 @@ class DataSheetToOpenApi extends AbstractOpenApiPrototype
      * @uxon-type int|null
      *
      * @param $numberOfRows
-     * @return DataSheetToOpenApi
+     * @return DataSheetJsonToOpenApi
      */
-    protected function setRowLimit($numberOfRows) : DataSheetToOpenApi
+    protected function setRowLimit($numberOfRows) : DataSheetJsonToOpenApi
     {
         $this->rowLimit = $numberOfRows;
         return $this;
@@ -421,9 +421,9 @@ class DataSheetToOpenApi extends AbstractOpenApiPrototype
      * @uxon-type int|null
      *
      * @param $startPosition
-     * @return DataSheetToOpenApi
+     * @return DataSheetJsonToOpenApi
      */
-    protected function setRowOffset($startPosition) : DataSheetToOpenApi
+    protected function setRowOffset($startPosition) : DataSheetJsonToOpenApi
     {
         $this->rowOffset = $startPosition;
         return $this;
@@ -436,9 +436,9 @@ class DataSheetToOpenApi extends AbstractOpenApiPrototype
      * @uxon-property filters
      * @uxon-type \exface\Core\CommonLogic\UxonObject
      * @uxon-template {"filters":{"operator": "AND","conditions":[{"expression": "","comparator": "=","value": ""}]}}
-     * @return DataSheetToOpenApi
+     * @return DataSheetJsonToOpenApi
      */
-    public function setFilters(UxonObject $filters) : DataSheetToOpenApi
+    public function setFilters(UxonObject $filters) : DataSheetJsonToOpenApi
     {
         $this->filters = $filters;
         return $this;
@@ -470,9 +470,9 @@ class DataSheetToOpenApi extends AbstractOpenApiPrototype
      * @uxon-type string
      *
      * @param string $schemaName
-     * @return OpenApiToDataSheet
+     * @return OpenApiJsonToDataSheet
      */
-    protected function setSchemaName(string $schemaName) : DataSheetToOpenApi
+    protected function setSchemaName(string $schemaName) : DataSheetJsonToOpenApi
     {
         $this->schemaName = $schemaName;
         return $this;
