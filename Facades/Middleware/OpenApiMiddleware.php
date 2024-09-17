@@ -58,13 +58,14 @@ final class OpenApiMiddleware implements MiddlewareInterface
         $headers = array_merge($this->headers, ['Content-Type' => 'application/json']);
         return new Response(200, $headers, $openApiJson);
     }
-    
+
     /**
      * Add requested metamodel schemas into openapi components
-     * 
+     *
      * @param array $swaggerArray
+     * @return array the modified $swaggerArray
      */
-    private function autogenerateMetamodelSchemas(array $swaggerArray)
+    private function autogenerateMetamodelSchemas(array $swaggerArray) : array
     {
     	$swaggerSchema = $swaggerArray['components']['schemas'];
     	if (array_key_exists('Metamodel Informationen', $swaggerSchema)){
@@ -77,10 +78,10 @@ final class OpenApiMiddleware implements MiddlewareInterface
                     $swaggerSchema['Metamodel Informationen']['properties'][$metaobjectAlias] = $metaObjectSchema[$metaobjectAlias];
     			}
     		}
-    		
+
     		$swaggerArray['components']['schemas'] = $swaggerSchema;
     	}
-    	
+
     	return $swaggerArray;
     }
     

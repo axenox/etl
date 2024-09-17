@@ -4,7 +4,6 @@ namespace axenox\ETL\Facades\Middleware;
 use cebe\openapi\exceptions\TypeErrorException;
 use cebe\openapi\exceptions\UnresolvableReferenceException;
 use exface\Core\DataTypes\JsonDataType;
-use GuzzleHttp\Psr7\Response;
 use League\OpenAPIValidation\PSR7\Exception\Validation\AddressValidationFailed;
 use League\OpenAPIValidation\PSR7\Exception\Validation\InvalidParameter;
 use League\OpenAPIValidation\PSR7\Exception\ValidationFailed;
@@ -127,7 +126,7 @@ final class OpenApiValidationMiddleware implements MiddlewareInterface
                 $message = $exception instanceof AddressValidationFailed ? $exception->getVerboseMessage() : $exception->getMessage();
                 if ($this->isVerbose($request) && $this->hasJsonBody($response)) {
                     try {
-                        $schema = $this->facade->getResponseBodySchemaForCurrentRoute($request, $response->getStatusCode());
+                        $schema = $this->facade->getResponseBodySchemaForCurrentRoute($request, $statusCode);
                         $json = $response->getBody()->__toString();
                         JsonDataType::validateJsonSchema($json, $schema);
                     } catch (JsonSchemaValidationError $e) {

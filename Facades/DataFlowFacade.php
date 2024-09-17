@@ -16,7 +16,6 @@ use exface\Core\CommonLogic\Selectors\ActionSelector;
 use exface\Core\CommonLogic\Tasks\HttpTask;
 use exface\Core\DataTypes\JsonDataType;
 use exface\Core\DataTypes\StringDataType;
-use exface\Core\Exceptions\InternalError;
 use exface\Core\Exceptions\Facades\FacadeRoutingError;
 use exface\Core\Exceptions\DataTypes\JsonSchemaValidationError;
 use exface\Core\Facades\AbstractHttpFacade\AbstractHttpFacade;
@@ -24,7 +23,6 @@ use exface\Core\Facades\AbstractHttpFacade\Middleware\RouteConfigLoader;
 use exface\Core\Factories\ActionFactory;
 use exface\Core\Factories\DataSheetFactory;
 use exface\Core\Interfaces\DataSheets\DataSheetInterface;
-use exface\Core\Interfaces\Exceptions\ExceptionInterface;
 use exface\Core\Interfaces\Tasks\ResultInterface;
 use axenox\ETL\Interfaces\OpenApiFacadeInterface;
 use axenox\ETL\Facades\Middleware\OpenApiValidationMiddleware;
@@ -321,10 +319,11 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 		if ($json === null) {
 			return null;
 		}
-		
+		// TODO jsc 240917 move to OpenAPI specific Implementation
 		$openApiJson = json_decode($json, true);
         $openApiJson = $this->removeInternalAttributes($openApiJson);
-		$openApiJson = $this->prependLocalServerPaths($path, $openApiJson);
+        $openApiJson = $this->prependLocalServerPaths($path, $openApiJson);
+        $openApiJson = $this->setApiVersion($request, $openApiJson);
 		$this->openApiCache[$path] = $openApiJson;
 		return $openApiJson;
 	}
@@ -460,34 +459,50 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 
         return null;
     }
-	
-	/**
-     *
-	 * @param string $path
-	 * @param array $swaggerArray
-	 * @return array
-	 */
-    // TODO: move with OpenApiFacadeInterface functions
-	private function prependLocalServerPaths(string $path, array $swaggerArray): array
-	{
-		$basePath = $this->getUrlRouteDefault();
-		$routePath = StringDataType::substringAfter($path, $basePath, $path);
-		$webserviceBase = StringDataType::substringBefore($routePath, '/', '', true, true) . '/';
-		$basePath .= '/' . ltrim($webserviceBase, "/");
-		foreach ($this->getWorkbench()->getConfig()->getOption('SERVER.BASE_URLS') as $baseUrl) {
-            // prepend entry to array
-            array_unshift($swaggerArray['servers'], ['url' => $baseUrl . $basePath]);
-		}
-			
-		return $swaggerArray;
-	}
 
     /**
-     *
-     * @param array $swaggerArray
-     * @return array
+     * Appends all local server paths of the API.
+     * TODO jsc 240917 move to OpenAPI specific Implementation
+     * @param string $path the actual called path
+     * @param array $swaggerArray an array holding information of swagger configuration
+     * @return array the modified $swaggerArray
      */
-    // TODO: move with OpenApiFacadeInterface functions
+    private function prependLocalServerPaths(string $path, array $swaggerArray): array
+    {
+        $basePath = $this->getUrlRouteDefault();
+        $routePath = StringDataType::substringAfter($path, $basePath, $path);
+        $webserviceBase = StringDataType::substringBefore($routePath, '/', '', true, true) . '/';
+        $basePath .= '/' . ltrim($webserviceBase, "/");
+        foreach ($this->getWorkbench()->getConfig()->getOption('SERVER.BASE_URLS') as $baseUrl) {
+            // prepend entry to array
+            array_unshift($swaggerArray['servers'], ['url' => $baseUrl . $basePath]);
+        }
+
+        return $swaggerArray;
+    }
+
+    /**
+     * Sets the API version number of the API.
+     * TODO jsc 240917 move to OpenAPI specific Implementation
+     * @param ServerRequestInterface $request the actual request
+     * @param array $swaggerArray an array holding information of swagger configuration
+     * @return array the modified $swaggerArray
+     */
+    private function setApiVersion(ServerRequestInterface $request, array $swaggerArray): array
+    {
+        $version = $request->getAttribute(self::REQUEST_ATTRIBUTE_NAME_ROUTE)['version'];
+        if ($version !== null) {
+            $swaggerArray['info']['version'] = $version;
+        }
+        return $swaggerArray;
+    }
+
+    /**
+     * Removes internal attributes from Swagger API definition.
+     * TODO jsc 240917 move to OpenAPI specific Implementation
+     * @param array $swaggerArray an array holding information of swagger configuration
+     * @return array the modified $swaggerArray
+     */
     private function removeInternalAttributes(array $swaggerArray) : array
     {
         $newSwaggerDefinition = [];
