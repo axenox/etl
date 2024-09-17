@@ -5,6 +5,7 @@ use axenox\ETL\Common\AbstractOpenApiPrototype;
 use axenox\ETL\Facades\Middleware\RequestLoggingMiddleware;
 use exface\Core\CommonLogic\UxonObject;
 use exface\Core\Exceptions\InvalidArgumentException;
+use exface\Core\Exceptions\UnavailableError;
 use Flow\JSONPath\JSONPathException;
 use GuzzleHttp\Psr7\Response;
 use Intervention\Image\Exception\NotFoundException;
@@ -59,43 +60,31 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 	    $headers = $this->buildHeadersCommon();
         $response = null;
 
-		try {
-			$routeModel = $request->getAttribute(self::REQUEST_ATTRIBUTE_NAME_ROUTE);;
+        $routeModel = $request->getAttribute(self::REQUEST_ATTRIBUTE_NAME_ROUTE);;
 
-            if ((bool)$routeModel['enabled'] === false) {
-                return new Response(200, $headers, 'Dataflow inactive.', reason: 'verified');
-            }
+        if ((bool)$routeModel['enabled'] === false) {
+            // return Service Unavailable if related data flow is not running
+            throw new UnavailableError('Dataflow inactive.');
+        }
 
-            $routePath = RouteConfigLoader::getRoutePath($request);
+        $routePath = RouteConfigLoader::getRoutePath($request);
 
-			// process flow
-			$routeUID = $routeModel['UID'];
-			$flowAlias = $this->getFlowAlias($routeUID, $routePath);
-			$flowRunUID = RunETLFlow::generateFlowRunUid();
-            $this->loggingMiddleware->logRequestProcessing($request, $routeUID, $flowRunUID);
-			$flowResult = $this->runFlow($flowAlias, $request); // flow data update
-			$flowOutput = $flowResult->getMessage();
-            $requestWithBody = $this->loadRequestDataWithBody($request);
+    	// process flow
+		$routeUID = $routeModel['UID'];
+		$flowAlias = $this->getFlowAlias($routeUID, $routePath);
+		$flowRunUID = RunETLFlow::generateFlowRunUid();
+        $this->loggingMiddleware->logRequestProcessing($request, $routeUID, $flowRunUID);
+	    $flowResult = $this->runFlow($flowAlias, $request); // flow data update
+		$flowOutput = $flowResult->getMessage();
+        $requestWithBody = $this->loadRequestDataWithBody($request);
 				
-			if ($requestWithBody->countRows() == 1) {
-				$body = $this->createRequestResponseBody($requestWithBody, $request, $headers, $routeModel, $routePath);
-				$response = new Response(200, $headers, $body);
-			}
-			
-		} catch (\Throwable $e) {
-		    // Make sure, the exception is logged as an error - e.g. in the Logs, Monitor, etc.
-		    $this->getWorkbench()->getLogger()->logException($e);
-		    
-            $this->loadRequestDataWithBody($request);
-			if (!$e instanceof ExceptionInterface) {
-				$e = new InternalError($e->getMessage(), null, $e);
-			}
-
-            return $this->createResponseFromError($e, $request);
+		if ($requestWithBody->countRows() == 1) {
+			$body = $this->createRequestResponseBody($requestWithBody, $request, $headers, $routeModel, $routePath);
+			$response = new Response(200, $headers, $body);
 		}
 
 		if ($response === null) {
-			$response = new Response(200, $headers, 'Dataflow successfull.', reason: 'verified');
+			$response = new Response(204, $headers, '', reason: 'No Content');
 		}
 
         $this->loggingMiddleware->logRequestDone($request, $flowOutput, $response);
@@ -275,15 +264,13 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 
         $headers['Content-Type'] = 'application/json';
         if ($exception instanceof JsonSchemaValidationError) {
-            $response = new Response(400, $headers, json_encode($exception->getFormattedErrors()));
-            $this->loggingMiddleware->logRequestFailed($request, $exception, $response);
-            return $response;
-		}
-
-        $errorData = json_encode(['Error' => [
-			'Message' => $exception->getMessage(), 
-			'Log-Id' => $exception->getId()]
-		]);
+            $errorData = json_encode($exception->getFormattedErrors());
+		} else {
+            $errorData = json_encode(['Error' => [
+                'Message' => $exception->getMessage(),
+                'Log-Id' => $exception->getId()]
+            ]);
+        }
 
 		$response = new Response($code, $headers, $errorData);
 

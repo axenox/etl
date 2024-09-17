@@ -56,8 +56,7 @@ final class OpenApiMiddleware implements MiddlewareInterface
         $openApiJson = json_encode($openApiJson, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         
         $headers = array_merge($this->headers, ['Content-Type' => 'application/json']);
-        $response = new Response(200, $headers, $openApiJson);
-        return $response;
+        return new Response(200, $headers, $openApiJson);
     }
     
     /**
