@@ -94,9 +94,8 @@ final class OpenApiValidationMiddleware implements MiddlewareInterface
                                     'error' => $exception->getMessage(),
                                     'details' => $e->getErrors()
                                 ];
-                                throw (
-                                    new JsonSchemaValidationError($errors, 'Invalid request body', null, null, $json)
-                                )->setLogLevel(LoggerInterface::ERROR);
+                                $eDetails = new JsonSchemaValidationError($errors, 'Invalid request body', null, null, $json);
+                                throw new HttpBadRequestError($request, $e2->getMessage(), null, $eDetails);
                             }
                         }
 
@@ -134,10 +133,10 @@ final class OpenApiValidationMiddleware implements MiddlewareInterface
                             'error' => $message,
                             'details' => $e->getErrors()
                         ];
-                        throw new JsonSchemaValidationError($errors, 'Invalid response body', null, null, $json, 500);
+                        throw (new JsonSchemaValidationError($errors, 'Invalid response body', null, null, $json))->setStatusCode(500);
                     }
                 }
-                throw new JsonSchemaValidationError(['error' => $message, 'details' => $message], 'Invalid response body', null, null, $response->getBody()->__toString(), 500);
+                throw (new JsonSchemaValidationError(['error' => $message, 'details' => $message], 'Invalid response body', null, null, $response->getBody()->__toString()))->setStatusCode(500);
             }
         }
         
