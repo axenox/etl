@@ -5,6 +5,7 @@ use axenox\ETL\Common\AbstractOpenApiPrototype;
 use axenox\ETL\Facades\Middleware\RequestLoggingMiddleware;
 use exface\Core\CommonLogic\UxonObject;
 use exface\Core\Exceptions\InvalidArgumentException;
+use exface\Core\Exceptions\UnavailableError;
 use Flow\JSONPath\JSONPathException;
 use GuzzleHttp\Psr7\Response;
 use Intervention\Image\Exception\NotFoundException;
@@ -15,7 +16,6 @@ use exface\Core\CommonLogic\Selectors\ActionSelector;
 use exface\Core\CommonLogic\Tasks\HttpTask;
 use exface\Core\DataTypes\JsonDataType;
 use exface\Core\DataTypes\StringDataType;
-use exface\Core\Exceptions\InternalError;
 use exface\Core\Exceptions\Facades\FacadeRoutingError;
 use exface\Core\Exceptions\DataTypes\JsonSchemaValidationError;
 use exface\Core\Facades\AbstractHttpFacade\AbstractHttpFacade;
@@ -23,7 +23,6 @@ use exface\Core\Facades\AbstractHttpFacade\Middleware\RouteConfigLoader;
 use exface\Core\Factories\ActionFactory;
 use exface\Core\Factories\DataSheetFactory;
 use exface\Core\Interfaces\DataSheets\DataSheetInterface;
-use exface\Core\Interfaces\Exceptions\ExceptionInterface;
 use exface\Core\Interfaces\Tasks\ResultInterface;
 use axenox\ETL\Interfaces\OpenApiFacadeInterface;
 use axenox\ETL\Facades\Middleware\OpenApiValidationMiddleware;
@@ -59,43 +58,31 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 	    $headers = $this->buildHeadersCommon();
         $response = null;
 
-		try {
-			$routeModel = $request->getAttribute(self::REQUEST_ATTRIBUTE_NAME_ROUTE);;
+        $routeModel = $request->getAttribute(self::REQUEST_ATTRIBUTE_NAME_ROUTE);;
 
-            if ((bool)$routeModel['enabled'] === false) {
-                return new Response(200, $headers, 'Dataflow inactive.', reason: 'verified');
-            }
+        if ((bool)$routeModel['enabled'] === false) {
+            // return Service Unavailable if related data flow is not running
+            throw new UnavailableError('Dataflow inactive.');
+        }
 
-            $routePath = RouteConfigLoader::getRoutePath($request);
+        $routePath = RouteConfigLoader::getRoutePath($request);
 
-			// process flow
-			$routeUID = $routeModel['UID'];
-			$flowAlias = $this->getFlowAlias($routeUID, $routePath);
-			$flowRunUID = RunETLFlow::generateFlowRunUid();
-            $this->loggingMiddleware->logRequestProcessing($request, $routeUID, $flowRunUID);
-			$flowResult = $this->runFlow($flowAlias, $request); // flow data update
-			$flowOutput = $flowResult->getMessage();
-            $requestWithBody = $this->loadRequestDataWithBody($request);
+    	// process flow
+		$routeUID = $routeModel['UID'];
+		$flowAlias = $this->getFlowAlias($routeUID, $routePath);
+		$flowRunUID = RunETLFlow::generateFlowRunUid();
+        $this->loggingMiddleware->logRequestProcessing($request, $routeUID, $flowRunUID);
+	    $flowResult = $this->runFlow($flowAlias, $request); // flow data update
+		$flowOutput = $flowResult->getMessage();
+        $requestWithBody = $this->loadRequestDataWithBody($request);
 				
-			if ($requestWithBody->countRows() == 1) {
-				$body = $this->createRequestResponseBody($requestWithBody, $request, $headers, $routeModel, $routePath);
-				$response = new Response(200, $headers, $body);
-			}
-			
-		} catch (\Throwable $e) {
-		    // Make sure, the exception is logged as an error - e.g. in the Logs, Monitor, etc.
-		    $this->getWorkbench()->getLogger()->logException($e);
-		    
-            $this->loadRequestDataWithBody($request);
-			if (!$e instanceof ExceptionInterface) {
-				$e = new InternalError($e->getMessage(), null, $e);
-			}
-
-            return $this->createResponseFromError($e, $request);
+		if ($requestWithBody->countRows() == 1) {
+			$body = $this->createRequestResponseBody($requestWithBody, $request, $headers, $routeModel, $routePath);
+			$response = new Response(200, $headers, $body);
 		}
 
 		if ($response === null) {
-			$response = new Response(200, $headers, 'Dataflow successfull.', reason: 'verified');
+			$response = new Response(204, $headers, '', reason: 'No Content');
 		}
 
         $this->loggingMiddleware->logRequestDone($request, $flowOutput, $response);
@@ -275,15 +262,13 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 
         $headers['Content-Type'] = 'application/json';
         if ($exception instanceof JsonSchemaValidationError) {
-            $response = new Response(400, $headers, json_encode($exception->getFormattedErrors()));
-            $this->loggingMiddleware->logRequestFailed($request, $exception, $response);
-            return $response;
-		}
-
-        $errorData = json_encode(['Error' => [
-			'Message' => $exception->getMessage(), 
-			'Log-Id' => $exception->getId()]
-		]);
+            $errorData = json_encode($exception->getFormattedErrors());
+		} else {
+            $errorData = json_encode(['Error' => [
+                'Message' => $exception->getMessage(),
+                'Log-Id' => $exception->getId()]
+            ]);
+        }
 
 		$response = new Response($code, $headers, $errorData);
 
@@ -334,10 +319,11 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 		if ($json === null) {
 			return null;
 		}
-		
+		// TODO jsc 240917 move to OpenAPI specific Implementation
 		$openApiJson = json_decode($json, true);
         $openApiJson = $this->removeInternalAttributes($openApiJson);
-		$openApiJson = $this->prependLocalServerPaths($path, $openApiJson);
+        $openApiJson = $this->prependLocalServerPaths($path, $openApiJson);
+        $openApiJson = $this->setApiVersion($request, $openApiJson);
 		$this->openApiCache[$path] = $openApiJson;
 		return $openApiJson;
 	}
@@ -473,34 +459,50 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 
         return null;
     }
-	
-	/**
-     *
-	 * @param string $path
-	 * @param array $swaggerArray
-	 * @return array
-	 */
-    // TODO: move with OpenApiFacadeInterface functions
-	private function prependLocalServerPaths(string $path, array $swaggerArray): array
-	{
-		$basePath = $this->getUrlRouteDefault();
-		$routePath = StringDataType::substringAfter($path, $basePath, $path);
-		$webserviceBase = StringDataType::substringBefore($routePath, '/', '', true, true) . '/';
-		$basePath .= '/' . ltrim($webserviceBase, "/");
-		foreach ($this->getWorkbench()->getConfig()->getOption('SERVER.BASE_URLS') as $baseUrl) {
-            // prepend entry to array
-            array_unshift($swaggerArray['servers'], ['url' => $baseUrl . $basePath]);
-		}
-			
-		return $swaggerArray;
-	}
 
     /**
-     *
-     * @param array $swaggerArray
-     * @return array
+     * Appends all local server paths of the API.
+     * TODO jsc 240917 move to OpenAPI specific Implementation
+     * @param string $path the actual called path
+     * @param array $swaggerArray an array holding information of swagger configuration
+     * @return array the modified $swaggerArray
      */
-    // TODO: move with OpenApiFacadeInterface functions
+    private function prependLocalServerPaths(string $path, array $swaggerArray): array
+    {
+        $basePath = $this->getUrlRouteDefault();
+        $routePath = StringDataType::substringAfter($path, $basePath, $path);
+        $webserviceBase = StringDataType::substringBefore($routePath, '/', '', true, true) . '/';
+        $basePath .= '/' . ltrim($webserviceBase, "/");
+        foreach ($this->getWorkbench()->getConfig()->getOption('SERVER.BASE_URLS') as $baseUrl) {
+            // prepend entry to array
+            array_unshift($swaggerArray['servers'], ['url' => $baseUrl . $basePath]);
+        }
+
+        return $swaggerArray;
+    }
+
+    /**
+     * Sets the API version number of the API.
+     * TODO jsc 240917 move to OpenAPI specific Implementation
+     * @param ServerRequestInterface $request the actual request
+     * @param array $swaggerArray an array holding information of swagger configuration
+     * @return array the modified $swaggerArray
+     */
+    private function setApiVersion(ServerRequestInterface $request, array $swaggerArray): array
+    {
+        $version = $request->getAttribute(self::REQUEST_ATTRIBUTE_NAME_ROUTE)['version'];
+        if ($version !== null) {
+            $swaggerArray['info']['version'] = $version;
+        }
+        return $swaggerArray;
+    }
+
+    /**
+     * Removes internal attributes from Swagger API definition.
+     * TODO jsc 240917 move to OpenAPI specific Implementation
+     * @param array $swaggerArray an array holding information of swagger configuration
+     * @return array the modified $swaggerArray
+     */
     private function removeInternalAttributes(array $swaggerArray) : array
     {
         $newSwaggerDefinition = [];
