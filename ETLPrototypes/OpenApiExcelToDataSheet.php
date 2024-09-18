@@ -180,6 +180,7 @@ class OpenApiExcelToDataSheet extends AbstractOpenApiPrototype
         $dsToImport = DataSheetFactory::createFromObjectIdOrAlias($this->getWorkbench(), $toObjectSchema[self::OPEN_API_ATTRIBUTE_TO_OBJECT_ALIAS]);
         $dsToImport->getColumns()->addFromSystemAttributes();
 
+        // transforms and validates excel data
         $importData = $this->getRowsToImport($fakeSheet, $placeholders);
         yield 'Importing rows ' . count($importData) . ' for ' . $dsToImport->getMetaObject()->getAlias(). ' with the data from a file import.';
 
@@ -207,6 +208,12 @@ class OpenApiExcelToDataSheet extends AbstractOpenApiPrototype
     {
         $rowsToImport = [];
         foreach ($excelResult->getRows() as $row) {
+            // validate row values with OpenApi definition present in meta object
+            foreach ($excelResult->getMetaObject()->getAttributes() as $attribute) {
+                $dataType = $attribute->getDataType();
+                $dataType->parse($row[$attribute->getAlias()]);
+            }
+
             $rowsToImport[] = $this->addAdditionalColumnsToRow($placeholder, $row);
         }
 
@@ -279,6 +286,8 @@ class OpenApiExcelToDataSheet extends AbstractOpenApiPrototype
                 }
                 if ($enumValues !== null) {
                     $enumType = DataTypeFactory::createFromString($this->getWorkbench(), StringEnumDataType::class);
+                    // In PowerUi we map keys to the values. In this case, the value also needs to be the key, since the OpenApi definition only has one value for the enum.
+                    $enumValues = array_combine($enumValues, $enumValues);
                     if ($enumType instanceof EnumDataTypeInterface) {
                         $enumType->setValues($enumValues);
                     }
