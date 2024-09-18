@@ -149,6 +149,7 @@ class OpenApiExcelToDataSheet extends AbstractOpenApiPrototype
 
         $excelColumnMapping = [];
 
+        $sheetname = $toObjectSchema[self::OPEN_API_ATTRIBUTE_TO_EXCEL_SHEET];
         foreach ($toObjectSchema['properties'] as $propertyValue) {
             $excelColumnMapping[$propertyValue[self::OPEN_API_ATTRIBUTE_TO_EXCEL_COLUMN]] = [
                 "attribute-alias" => $propertyValue[self::OPEN_API_ATTRIBUTE_TO_ATTRIBUTE_ALIAS],
@@ -160,11 +161,10 @@ class OpenApiExcelToDataSheet extends AbstractOpenApiPrototype
 
         // Create fake meta object with the expected attributes and use the regular
         // ExcelBuilder to read it.
-        // TODO: Add Excel Sheet logik
         $fakeObj = MetaObjectFactory::createTemporary(
             $this->getWorkbench(),
             'Temp. Excel',
-            $fileInfo->getPathAbsolute(),
+            $fileInfo->getPathAbsolute() . '/*[' . $sheetname . ']',
             ExcelBuilder::class,
             'exface.Core.objects_with_filebehavior'
         );
