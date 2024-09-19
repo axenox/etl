@@ -82,7 +82,7 @@ use axenox\ETL\Common\UxonEtlStepResult;
  *
  * @author miriam.seitz
  */
-class OpenApiToDataSheet extends AbstractOpenApiPrototype
+class OpenApiJsonToDataSheet extends AbstractOpenApiPrototype
 {
     private $additionalColumns = null;
     private $schemaName = null;
@@ -109,12 +109,13 @@ class OpenApiToDataSheet extends AbstractOpenApiPrototype
         $this->getWorkbench()->eventManager()->dispatch(new OnBeforeETLStepRun($this));
 
         $requestLogData = $this->loadRequestData($stepData, ['http_body', 'http_content_type'])->getRow();
+        $requestBody = json_decode($requestLogData['http_body'], true);
 
-        if ($requestLogData['http_content_type'] !== 'application/json') {
-            throw new NotImplementedError('Content type \'' . $requestLogData['http_content_type'] . '\' has not been implemented for ' . get_class($this));
+        if ($requestLogData['http_content_type'] !== 'application/json' || $requestBody === null) {
+            yield 'No HTTP content found to process' . PHP_EOL;
+            return $result->setProcessedRowsCounter(0);
         }
 
-        $requestBody = json_decode($requestLogData['http_body'], true);
         $toSheet = $baseSheet->copy();
 
         $openApiJson = $this->getOpenApiJson($stepData->getTask());
@@ -316,9 +317,9 @@ class OpenApiToDataSheet extends AbstractOpenApiPrototype
      * @uxon-template [{"attribute_alias":"", "value": ""}]
      *
      * @param UxonObject $additionalColumns
-     * @return OpenApiToDataSheet
+     * @return OpenApiJsonToDataSheet
      */
-    protected function setAdditionalColumns(UxonObject $additionalColumns) : OpenApiToDataSheet
+    protected function setAdditionalColumns(UxonObject $additionalColumns) : OpenApiJsonToDataSheet
     {
         $this->additionalColumns = $additionalColumns->toArray();
         return $this;
@@ -337,9 +338,9 @@ class OpenApiToDataSheet extends AbstractOpenApiPrototype
      * @uxon-type string
      *
      * @param string $schemaName
-     * @return OpenApiToDataSheet
+     * @return OpenApiJsonToDataSheet
      */
-    protected function setSchemaName(string $schemaName) : OpenApiToDataSheet
+    protected function setSchemaName(string $schemaName) : OpenApiJsonToDataSheet
     {
         $this->schemaName = $schemaName;
         return $this;
