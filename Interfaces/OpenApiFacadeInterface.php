@@ -18,6 +18,12 @@ interface OpenApiFacadeInterface extends FacadeInterface
     public function getOpenApiDef(ServerRequestInterface $request) : ?string;
 
     /**
+     * Creates an array of common HTTP headers
+     * @return array an array of common HTTP headers
+     */
+    public function buildHeadersCommon() : array;
+
+    /**
      * @param ServerRequestInterface $request
      * @param string $jsonPath
      * @param string $contentType

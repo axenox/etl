@@ -45,6 +45,7 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 	const REQUEST_ATTRIBUTE_NAME_ROUTE = 'route';
 	private $openApiCache = [];
 	private $openApiStrings = [];
+    private string $allowedHttpMethods = '';
     private RequestLoggingMiddleware $loggingMiddleware;
     private $verbose = null;
     private $routePath = null;
@@ -55,10 +56,10 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 	 */
 	protected function createResponse(ServerRequestInterface $request): ResponseInterface
 	{
-	    $headers = $this->buildHeadersCommon();
+        $headers = $this->buildHeadersCommon();
         $response = null;
 
-        $routeModel = $request->getAttribute(self::REQUEST_ATTRIBUTE_NAME_ROUTE);;
+        $routeModel = $request->getAttribute(self::REQUEST_ATTRIBUTE_NAME_ROUTE);
 
         if ((bool)$routeModel['enabled'] === false) {
             // return Service Unavailable if related data flow is not running
@@ -234,8 +235,8 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 		$middleware[] = new RouteAuthenticationMiddleware($this, [], true);
 		$middleware[] = $loggingMiddleware;
         $middleware[] = new OpenApiValidationMiddleware($this, $excludePattern);
-		$middleware[] = new OpenApiMiddleware($this, $this->buildHeadersCommon(), '/.*openapi\\.json$/');
-		$middleware[] = new SwaggerUiMiddleware($this, $this->buildHeadersCommon(), '/.*swaggerui$/', 'openapi.json');
+		$middleware[] = new OpenApiMiddleware($this, '/.*openapi\\.json$/');
+		$middleware[] = new SwaggerUiMiddleware($this, '/.*swaggerui$/', 'openapi.json');
 		
 		return $middleware;
 	}
@@ -247,7 +248,7 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 	protected function createResponseFromError(\Throwable $exception, ServerRequestInterface $request = null): ResponseInterface
 	{
 		$code = $exception->getStatusCode();
-		$headers = $this->buildHeadersCommon();
+        $headers = $this->buildHeadersCommon();
 
         /*
 		if ($this->getWorkbench()
@@ -294,14 +295,45 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
 	 * {@inheritDoc}
 	 * @see \exface\Core\Facades\AbstractHttpFacade\AbstractHttpFacade::buildHeadersCommon()
 	 */
-	protected function buildHeadersCommon(): array
+	public function buildHeadersCommon(): array
 	{
 		$facadeHeaders = array_filter($this->getConfig()
 			->getOption('FACADE.HEADERS.COMMON')
 			->toArray());
 		$commonHeaders = parent::buildHeadersCommon();
-		return array_merge($commonHeaders, $facadeHeaders);
+		$retVal = array_merge($commonHeaders, $facadeHeaders);
+        if ($this->allowedHttpMethods !== '')
+        {
+            $retVal = array_merge($retVal, ['Access-Control-Allow-Methods' => $this->allowedHttpMethods]);
+        }
+        return $retVal;
 	}
+
+    /**
+     * Extracts HTTP header entry for allowed HTTP methods from OpenAPI definition
+     * TODO jsc 240917 move to OpenAPI specific Implementation
+     * @param array $swaggerArray OpenAPI definition
+     * @return string the HTTP methods extracted by OpenAPI definition
+     */
+    private function extractHttpMethods(array $swaggerArray) : string
+    {
+        $methodArray = [];
+        $swaggerPaths = $swaggerArray['paths'];
+        // iterate all paths
+        foreach ($swaggerPaths as $path)
+        {
+            // iterate all HTTP methods
+            foreach ($path as $method => $values)
+            {
+                // check if method is already in return value
+                if(!array_search($method, $methodArray))
+                {
+                    $methodArray[] = strtoupper($method);
+                }
+            }
+        }
+        return implode(", ", $methodArray);
+    }
 	
 	/**
 	 * 
@@ -324,6 +356,7 @@ class DataFlowFacade extends AbstractHttpFacade implements OpenApiFacadeInterfac
         $openApiJson = $this->removeInternalAttributes($openApiJson);
         $openApiJson = $this->prependLocalServerPaths($path, $openApiJson);
         $openApiJson = $this->setApiVersion($request, $openApiJson);
+        $this->allowedHttpMethods = $this->extractHttpMethods($openApiJson);
 		$this->openApiCache[$path] = $openApiJson;
 		return $openApiJson;
 	}
