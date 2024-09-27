@@ -145,7 +145,7 @@ class RunETLFlow extends AbstractActionDeferred implements iCanBeCalledFromCLI, 
         yield PHP_EOL . 'Starting now...' . PHP_EOL . PHP_EOL;
         
         try {
-            $stepData = new ETLStepData($task, $flowRunUid, null, null, null, $this->openApiJson);
+            $stepData = new ETLStepData($task, $flowRunUid, null, null, null);
             yield from $flow->run($stepData);
         } catch (\Throwable $e) {
             if (! $e instanceof ActionExceptionInterface) {
