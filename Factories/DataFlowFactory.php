@@ -42,6 +42,9 @@ abstract class DataFlowFactory extends AbstractSelectableComponentFactory
             } else {
                 $versionCol = $ds->getColumns()->get('version');
                 $versions = $versionCol->getValues();
+                // Remove empty versions. If there is a flow without a version and the same flow with
+                // a version, the one with version is always concidered newer!
+                $versions = array_filter($versions);
                 $bestMatch = SemanticVersionDataType::findVersionBest($selector->getVersion(), $versions);
                 if ($bestMatch === null) {
                     throw new UnexpectedValueException('Version "' . $selector->getVersion() . '" not found for data flow "' . $selector->stripVersion() . '"!');

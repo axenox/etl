@@ -28,6 +28,10 @@ abstract class AbstractOpenApiPrototype extends AbstractETLPrototype
     const OPEN_API_ATTRIBUTE_TO_ATTRIBUTE_CALCULATION = 'x-attribute-calculation';
     const OPEN_API_ATTRIBUTE_TO_ATTRIBUTE_DATAADDRESS = 'x-attribute-dataaddress';
 
+    const OPEN_API_ATTRIBUTE_TO_DATATYPE = 'type';
+    const OPEN_API_ATTRIBUTE_TO_FORMAT = 'format';
+    const OPEN_API_ATTRIBUTE_TO_ENUM_VALUES = 'enum';
+
     protected $baseSheet = null;
 
     /**

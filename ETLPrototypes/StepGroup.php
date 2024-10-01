@@ -1,6 +1,7 @@
 <?php
 namespace axenox\ETL\ETLPrototypes;
 
+use exface\Core\Exceptions\InternalError;
 use exface\Core\Widgets\DebugMessage;
 use axenox\ETL\Interfaces\ETLStepResultInterface;
 use axenox\ETL\Interfaces\ETLStepDataInterface;
@@ -121,6 +122,9 @@ class StepGroup implements DataFlowStepInterface
                     $stepResult = $generator->getReturn();
                     $this->logRunSuccess($logRow, $log, $stepResult);
                 } catch (\Throwable $e) {
+                    if (! $e instanceof ExceptionInterface) {
+                        $e = new InternalError($e->getMessage(), null, $e);
+                    }
                     try {
                         $this->logRunError($logRow, $e, $log);
                     } catch (\Throwable $el) {

@@ -4,7 +4,6 @@ namespace axenox\ETL\Facades\Middleware;
 use cebe\openapi\exceptions\TypeErrorException;
 use cebe\openapi\exceptions\UnresolvableReferenceException;
 use exface\Core\DataTypes\JsonDataType;
-use GuzzleHttp\Psr7\Response;
 use League\OpenAPIValidation\PSR7\Exception\Validation\AddressValidationFailed;
 use League\OpenAPIValidation\PSR7\Exception\Validation\InvalidParameter;
 use League\OpenAPIValidation\PSR7\Exception\ValidationFailed;
@@ -95,11 +94,8 @@ final class OpenApiValidationMiddleware implements MiddlewareInterface
                                     'error' => $exception->getMessage(),
                                     'details' => $e->getErrors()
                                 ];
-                                throw (
-                                    new JsonSchemaValidationError($errors, 'Invalid request body', null, null, $json)
-                                )->setLogLevel(LoggerInterface::ERROR);
-                            } catch (\Throwable $e) {
-                                $this->getWorkbench()->getLogger()->logException($e);
+                                $eDetails = new JsonSchemaValidationError($errors, 'Invalid request body', null, null, $json);
+                                throw new HttpBadRequestError($request, $e2->getMessage(), null, $eDetails);
                             }
                         }
 
@@ -108,7 +104,7 @@ final class OpenApiValidationMiddleware implements MiddlewareInterface
                         $schemaError = $prev->getPrevious();
                         $context = 'Invalid request parameter';
                         $msg = $prev->getMessage() . '. ' . $schemaError->getMessage();
-                        return new Response(400, ['content-type' => 'plain/text'], $context . $msg);
+                        throw new HttpBadRequestError($request, $context . $msg, null, $exception);
                 }
             }
 
@@ -121,16 +117,15 @@ final class OpenApiValidationMiddleware implements MiddlewareInterface
         // 3. Validate response
         $responseValidator = $builder->getResponseValidator();
         $statusCode = $response->getStatusCode();
-        if ($statusCode >= 200 && $statusCode < 300 &&
-            // skip validation if response is already verified
-            $response->getReasonPhrase() !== 'verified') {
+        // just validate successful response if there is any - 204 has none as RFC9110 defines
+        if ($statusCode >= 200 && $statusCode < 300 && $statusCode != 204) {
             try {
                 $responseValidator->validate($matchedOASOperation, $response);
             } catch (ValidationFailed $exception) {
                 $message = $exception instanceof AddressValidationFailed ? $exception->getVerboseMessage() : $exception->getMessage();
                 if ($this->isVerbose($request) && $this->hasJsonBody($response)) {
                     try {
-                        $schema = $this->facade->getResponseBodySchemaForCurrentRoute($request, $response->getStatusCode());
+                        $schema = $this->facade->getResponseBodySchemaForCurrentRoute($request, $statusCode);
                         $json = $response->getBody()->__toString();
                         JsonDataType::validateJsonSchema($json, $schema);
                     } catch (JsonSchemaValidationError $e) {
@@ -138,15 +133,10 @@ final class OpenApiValidationMiddleware implements MiddlewareInterface
                             'error' => $message,
                             'details' => $e->getErrors()
                         ];
-
-                        $jsonError = new JsonSchemaValidationError($errors, 'Invalid response body', null, null, $json);
-                    } catch (\Throwable $e) {
-                        $this->getWorkbench()->getLogger()->logException($e);
+                        throw (new JsonSchemaValidationError($errors, 'Invalid response body', null, null, $json))->setStatusCode(500);
                     }
                 }
-                $jsonError = $jsonError ?? new JsonSchemaValidationError(['error' => $message, 'details' => $message], 'Invalid response body', null, null, $response->getBody()->__toString());
-                $this->getWorkbench()->getLogger()->logException($jsonError);
-                throw new HttpBadRequestError($request, $message, null, $exception);
+                throw (new JsonSchemaValidationError(['error' => $message, 'details' => $message], 'Invalid response body', null, null, $response->getBody()->__toString()))->setStatusCode(500);
             }
         }
         
