@@ -39,5 +39,6 @@ class DataFlowInstaller extends DataInstaller
         $this->addDataToReplace('axenox.ETL.webservice_type', 'CREATED_ON', 'app');
         $this->addDataToReplace('axenox.ETL.webservice', 'CREATED_ON', 'app', [], 'WebServices/[#alias#]/[#version#]/04_webservice.json');
         $this->addDataToReplace('axenox.ETL.webservice_flow', 'CREATED_ON', 'webservice__app', [], 'WebServices/[#webservice__alias#]/[#webservice__version#]/05_webservice_flows.json');
+        $this->addDataToReplace('axenox.ETL.file_flow', 'CREATED_ON', 'app', [], 'Uploads/[#alias#]/01_file_flow.json');
     }
 }
