@@ -41,11 +41,6 @@
                                 "multi_select": true
                             },
                             {
-                                "attribute_alias": "http_response_code",
-                                "widget_type": "InputComboTable",
-                                "multi_select": true
-                            },
-                            {
                                 "attribute_alias": "flow_run__flow",
                                 "widget_type": "InputComboTable",
                                 "multi_select": true
@@ -74,10 +69,6 @@
                                 "caption": "Method"
                             },
                             {
-                                "attribute_alias": "http_response_code",
-                                "caption": "Method"
-                            },
-                            {
                                 "attribute_alias": "url_path"
                             },
                             {
@@ -92,9 +83,6 @@
                             },
                             {
                                 "attribute_alias": "flow_run__duration"
-                            },
-                            {
-                                "attribute_alias": "http_response_code"
                             },
                             {
                                 "attribute_alias": "error_message"
