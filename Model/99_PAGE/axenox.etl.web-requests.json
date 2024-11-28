@@ -10,8 +10,8 @@
     "replaces_page_selector": null,
     "created_by_user_selector": "0x31000000000000000000000000000000",
     "created_on": "2023-10-18 17:03:02",
-    "modified_by_user_selector": "0x31000000000000000000000000000000",
-    "modified_on": "2024-06-26 14:39:14",
+    "modified_by_user_selector": "0x11e8fe1c902c8ebea23ee4b318306b9a",
+    "modified_on": "2024-10-23 14:20:13",
     "contents": {
         "widget_type": "SplitHorizontal",
         "object_alias": "axenox.ETL.webservice_request",
@@ -32,10 +32,28 @@
                                 "apply_on_change": true
                             },
                             {
-                                "attribute_alias": "flow_run__flow"
+                                "attribute_alias": "CREATED_BY_USER",
+                                "widget_type": "InputComboTable"
                             },
                             {
-                                "attribute_alias": "route"
+                                "attribute_alias": "status",
+                                "widget_type": "InputComboTable",
+                                "multi_select": true
+                            },
+                            {
+                                "attribute_alias": "http_response_code",
+                                "widget_type": "InputComboTable",
+                                "multi_select": true
+                            },
+                            {
+                                "attribute_alias": "flow_run__flow",
+                                "widget_type": "InputComboTable",
+                                "multi_select": true
+                            },
+                            {
+                                "attribute_alias": "route",
+                                "widget_type": "InputComboTable",
+                                "multi_select": true
                             },
                             {
                                 "attribute_alias": "flow_run",
@@ -53,6 +71,10 @@
                             },
                             {
                                 "attribute_alias": "http_method",
+                                "caption": "Method"
+                            },
+                            {
+                                "attribute_alias": "http_response_code",
                                 "caption": "Method"
                             },
                             {
@@ -200,6 +222,9 @@
                                 "value": "=request_table!flow_run",
                                 "apply_on_change": true,
                                 "required": true
+                            },
+                            {
+                                "attribute_alias": "status"
                             }
                         ],
                         "columns": [
