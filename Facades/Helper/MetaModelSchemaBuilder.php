@@ -106,24 +106,25 @@ class MetaModelSchemaBuilder
 
         $properties = [];
         foreach ($metaObject->getAttributes() as $attribute) {
+            if ($attribute->isRelation()) {
+                $relatedObjectAlias = $attribute->getRelation()
+                    ->getRightObject()
+                    ->getAliasWithNamespace();
+                if (empty($this->relationObjectsToLoad) === false
+                    && in_array($relatedObjectAlias, $this->relationObjectsToLoad)) {
+                    $schema = ['$ref' => '#/components/schemas/Metamodel Informationen/properties/' . $relatedObjectAlias];
+                    $subArray[$attribute->getAlias()] = $schema;
+                    continue;
+                }
+            }
             $properties[] = $attribute->getAlias();
             $dataType = $attribute->getDataType();
             switch (true) {
-                case $attribute->isRelation():
-                    $relatedObjectAlias = $attribute->getRelation()
-                        ->getRightObject()
-                        ->getAliasWithNamespace();
-                    if (empty($this->relationObjectsToLoad) === false
-                        && in_array($relatedObjectAlias, $this->relationObjectsToLoad)) {
-                        $schema = ['$ref' => '#/components/schemas/Metamodel Informationen/properties/' . $relatedObjectAlias];
-                        $subArray[$attribute->getAlias()] = $schema;
-                        continue 2;
-                    }
                 case $dataType instanceof IntegerDataType:
                 case $dataType instanceof TimeDataType:
                     $schema = ['type' => 'integer'];
                     break;
-                case $dataType instanceof NumberDataType:
+                case ($dataType instanceof NumberDataType) && $dataType->getBase() === 10:
                     $schema = ['type' => 'number'];
                     break;
                 case $dataType instanceof BooleanDataType:
@@ -143,7 +144,6 @@ class MetaModelSchemaBuilder
                     break;
                 case $dataType instanceof BinaryDataType:
                     if ($dataType->getEncoding() == 'base64') {
-
                         $schema = ['type' => 'string', 'format' => 'byte'];
                     } else {
                         $schema = ['type' => 'string', 'format' => 'binary'];
