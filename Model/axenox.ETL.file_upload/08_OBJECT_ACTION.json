@@ -61,9 +61,9 @@
     "rows": [
         {
             "CREATED_ON": "2024-09-09 10:43:42",
-            "MODIFIED_ON": "2024-09-09 10:43:42",
+            "MODIFIED_ON": "2024-12-02 17:23:04",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
-            "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
+            "MODIFIED_BY_USER": "0x11e8fe1c902c8ebea23ee4b318306b9a",
             "UID": "0x11efab459dfc9a66ab45025041000001",
             "OBJECT": "0x11ef97055df83b389705025041000001",
             "ACTION_PROTOTYPE": "exface\/Core\/Actions\/ActionChain.php",
@@ -90,8 +90,8 @@
                     },
                     {
                         "alias": "axenox.etl.RunETLFlow",
-                        "flow_alias": "terminplanung-p6-import",
-                        "input_flow_run_uid": "flow_run"
+                        "input_flow_run_uid": "flow_run",
+                        "input_flow_alias": "file_flow__flow"
                     }
                 ]
             },
