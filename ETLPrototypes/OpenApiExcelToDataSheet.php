@@ -181,13 +181,18 @@ class OpenApiExcelToDataSheet extends AbstractOpenApiPrototype
         $dsToImport->getColumns()->addFromSystemAttributes();
 
         // transforms and validates excel data
-        $importData = $this->getRowsToImport($fakeSheet, $placeholders);
-        yield 'Importing rows ' . count($importData) . ' for ' . $dsToImport->getMetaObject()->getAlias(). ' with the data from a file import.';
+        $this->fillDataSheetWithExcelResult($dsToImport, $fakeSheet, $placeholders);
+
+        // Saving relations is very complex and not yet supported for OpenApi Imports
+        $this->removeRelationColumns($dsToImport);
+
+        yield 'Importing rows ' . $dsToImport->countRows() . ' for ' . $dsToImport->getMetaObject()->getAlias(). ' with the data from an Excel file import.';
 
         $transaction = $this->getWorkbench()->data()->startTransaction();
-        $dsToImport->addRows($importData);
         try {
-            $dsToImport->dataUpdate(true, $transaction);
+            // we only create new data in import, either there is an import table or a PreventDuplicatesBehavior
+            // that can be used to update known entire
+            $dsToImport->dataCreate(false, $transaction);
         } catch (\Throwable $e) {
             $transaction->rollback();
             throw $e;
@@ -202,54 +207,26 @@ class OpenApiExcelToDataSheet extends AbstractOpenApiPrototype
      *
      * @param mixed $requestBody
      * @param array $placeholder
-     * @return array
+     * @return void
      */
-    protected function getRowsToImport(DataSheetInterface $excelResult, array $placeholder) : array
+    protected function fillDataSheetWithExcelResult(
+        DataSheetInterface $dataSheet,
+        DataSheetInterface $excelResult,
+        array $placeholder) : void
     {
         $rowsToImport = [];
+        $rowIndex = 0;
         foreach ($excelResult->getRows() as $row) {
             // validate row values with OpenApi definition present in meta object
             foreach ($excelResult->getMetaObject()->getAttributes() as $attribute) {
                 $dataType = $attribute->getDataType();
+                // throws error on failed parse
                 $dataType->parse($row[$attribute->getAlias()]);
             }
 
-            $rowsToImport[] = $this->addAdditionalColumnsToRow($placeholder, $row);
+            $this->addRowToDataSheetWithAdditionalColumns($dataSheet, $placeholder, $row, $rowIndex);
+            $rowIndex++;
         }
-
-        return $rowsToImport;
-    }
-
-    /**
-     * Returns row with additional data provided by the ´additional_rows´ config within the step to every row.
-     *
-     * @param array $placeholder
-     * @param array $row
-     * @return array
-     */
-    public function addAdditionalColumnsToRow(array $placeholder, array $row) : array
-    {
-        $additionalColumn = $this->getAdditionalColumn();
-        foreach ($additionalColumn as $column) {
-            $value = $column['value'];
-            switch (true) {
-                case str_contains($value, '='):
-                    // replace placeholder to ensure static if possible
-                    $value = StringDataType::replacePlaceholders($value, $placeholder, false);
-                    $expression = FormulaFactory::createFromString($this->getWorkbench(), $value);
-                    if ($expression->isStatic()) {
-                        $row[$column['attribute_alias']] = $expression->evaluate();
-                    }
-                    break;
-                case empty(StringDataType::findPlaceholders($value)) === false:
-                    $row[$column['attribute_alias']] = StringDataType::replacePlaceholders($value, $placeholder);
-                    break;
-                default:
-                    $row[$column['attribute_alias']] = $value;
-            }
-        }
-
-        return $row;
     }
 
     public function getInternalDatatype($openApiType, $format, $enumValues)
