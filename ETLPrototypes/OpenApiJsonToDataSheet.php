@@ -10,6 +10,7 @@ use exface\Core\Factories\FormulaFactory;
 use exface\Core\Factories\DataSheetFactory;
 use axenox\ETL\Interfaces\ETLStepResultInterface;
 use exface\Core\DataTypes\StringDataType;
+use exface\Core\Interfaces\DataSheets\DataSheetInterface;
 use exface\Core\Interfaces\Tasks\HttpTaskInterface;
 use exface\Core\Widgets\DebugMessage;
 use axenox\ETL\Events\Flow\OnBeforeETLStepRun;
@@ -139,17 +140,21 @@ class OpenApiJsonToDataSheet extends AbstractOpenApiPrototype
         }
 
         $key = $this->getArrayKeyToImportDataFromSchema($requestSchema, $toObjectSchema[self::OPEN_API_ATTRIBUTE_TO_OBJECT_ALIAS]);
-        $importData = $this->getImportData($requestBody, $toObjectSchema, $placeholders, $key);
         $dsToImport = DataSheetFactory::createFromObjectIdOrAlias($this->getWorkbench(), $toObjectSchema[self::OPEN_API_ATTRIBUTE_TO_OBJECT_ALIAS]);
         $dsToImport->getColumns()->addFromSystemAttributes();
+        $this->fillDataSheetWithImportData($dsToImport, $requestBody, $toObjectSchema, $placeholders, $key);
 
-        yield 'Importing rows ' . count($importData) . ' for ' . $toSheet->getMetaObject()->getAlias(). ' with the data sent via webservice request.';
+        // Saving relations is very complex and not yet supported for OpenApi Imports
+        $this->removeRelationColumns($dsToImport);
+
+        yield 'Importing rows ' . $dsToImport->countRows() . ' for ' . $toSheet->getMetaObject()->getAlias(). ' with the data sent via webservice request.';
 
         $transaction = $this->getWorkbench()->data()->startTransaction();
-        $dsToImport->addRows($importData);
 
         try {
-            $dsToImport->dataUpdate(true, $transaction);
+            // we only create new data in import, either there is an import table or a PreventDuplicatesBehavior
+            // that can be used to update known entire
+            $dsToImport->dataCreate(false, $transaction);
         } catch (\Throwable $e) {
             $transaction->rollback();
             throw $e;
@@ -193,15 +198,21 @@ class OpenApiJsonToDataSheet extends AbstractOpenApiPrototype
 
     /**
      * Reads import data from the request body. If no key is specified, it will search the response body for the right object.
-     * Otherwise, it will try to read the whole request body content as the import data for the object of this step.
+     * Otherwise, it will try to read the whole request body content into the requested datasheet for the object of this step.
      *
      * @param mixed $requestBody
-     * @param string|null $key
      * @param array $toObjectSchema
      * @param array $placeholder
-     * @return array
+     * @param DataSheetInterface $dataSheet
+     * @param string|null $key
+     * @return void
      */
-    protected function getImportData(array $requestBody, array $toObjectSchema, array $placeholder, ?string $key = null) : array
+    protected function fillDataSheetWithImportData(
+        DataSheetInterface $dataSheet,
+        array $requestBody,
+        array $toObjectSchema,
+        array $placeholder,
+        ?string $key = null) : void
     {
         $attributeAliasByPropertyName = [];
         foreach ($toObjectSchema['properties'] as $propertyName => $propertyValue) {
@@ -215,20 +226,18 @@ class OpenApiJsonToDataSheet extends AbstractOpenApiPrototype
         if (ArrayDataType::isSequential($sourceData)) {
             // Named array: { "object-key" [ {"id": "123", "name": "abc" }, {"id": "234", "name": "cde"} ] }
             // Unnamed array: [ {"id": "123", "name": "abc" }, {"id": "234", "name": "cde"} ]
+            $rowIndex = 0;
             foreach ($sourceData as $entry) {
-                $importData[] = $this->getImportDataFromRequestBody($entry, $attributeAliasByPropertyName);
+                $row = $this->getImportDataFromRequestBody($entry, $attributeAliasByPropertyName);
+                $this->addRowToDataSheetWithAdditionalColumns($dataSheet, $placeholder, $row, $rowIndex);
+                $rowIndex++;
             }
         } else {
             // Named object: { "object-key" {"id": "123", "name": "abc" } }
             // Unnamed object: {"id": "123", "name": "abc" }
-            $importData[] = $this->getImportDataFromRequestBody($sourceData, $attributeAliasByPropertyName);
+            $row = $this->getImportDataFromRequestBody($sourceData, $attributeAliasByPropertyName);
+            $this->addRowToDataSheetWithAdditionalColumns($dataSheet, $placeholder, $row, 0);
         }
-
-        foreach ($importData as &$entry) {
-            $this->addAdditionalColumnsToRow($placeholder, $entry);
-        }
-
-        return $importData;
     }
 
     /**
@@ -261,36 +270,6 @@ class OpenApiJsonToDataSheet extends AbstractOpenApiPrototype
         }
 
         return $importData;
-    }
-
-    /**
-     * Adds additional data provided by the ´additional_rows´ config within the step to every row.
-     *
-     * @param array $placeholder
-     * @param array $row
-     * @return void
-     */
-    public function addAdditionalColumnsToRow(array $placeholder, array &$row) : void
-    {
-        $additionalColumn = $this->getAdditionalColumn();
-        foreach ($additionalColumn as $column) {
-            $value = $column['value'];
-            switch (true) {
-                case str_contains($value, '='):
-                    // replace placeholder to ensure static if possible
-                    $value = StringDataType::replacePlaceholders($value, $placeholder, false);
-                    $expression = FormulaFactory::createFromString($this->getWorkbench(), $value);
-                    if ($expression->isStatic()) {
-                        $row[$column['attribute_alias']] = $expression->evaluate();
-                    }
-                    break;
-                case empty(StringDataType::findPlaceholders($value)) === false:
-                    $row[$column['attribute_alias']] = StringDataType::replacePlaceholders($value, $placeholder);
-                    break;
-                default:
-                    $row[$column['attribute_alias']] = $value;
-            }
-        }
     }
 
     /**
