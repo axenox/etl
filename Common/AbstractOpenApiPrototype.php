@@ -10,6 +10,7 @@ use exface\Core\DataTypes\StringDataType;
 use exface\Core\Exceptions\InvalidArgumentException;
 use exface\Core\Facades\AbstractHttpFacade\Middleware\RouteConfigLoader;
 use exface\Core\Factories\DataSheetFactory;
+use exface\Core\Factories\FormulaFactory;
 use exface\Core\Interfaces\DataSheets\DataSheetInterface;
 use exface\Core\Widgets\DebugMessage;
 use Flow\JSONPath\JSONPath;
@@ -147,5 +148,55 @@ abstract class AbstractOpenApiPrototype extends AbstractETLPrototype
         }
 
         return $requestLogData;
+    }
+
+    /**
+     * Adds additional data provided by the ´additional_rows´ config within the step to given row into the given datasheet.
+     *
+     * @param DataSheetInterface $dataSheet
+     * @param array $placeholder
+     * @param array $row
+     * @param int $rowIndex
+     * @return void
+     */
+    protected function addRowToDataSheetWithAdditionalColumns(DataSheetInterface $dataSheet, array $placeholder, array $row, int $rowIndex) : void
+    {
+        $additionalColumn = $this->getAdditionalColumn();
+        // add row data to placeholders so they can be used in formulars
+        $placeholder = array_merge($placeholder, $row);
+        $dataSheet->addRow($row);
+        foreach ($additionalColumn as $column) {
+            $value = $column['value'];
+            switch (true) {
+                case str_contains($value, '='):
+                    // replace placeholder to ensure static if possible
+                    $value = StringDataType::replacePlaceholders($value, $placeholder, false);
+                    $expression = FormulaFactory::createFromString($this->getWorkbench(), $value);
+                    $dataSheet->setCellValue($column['attribute_alias'], $rowIndex,  $expression->evaluate($dataSheet, $rowIndex));
+                    break;
+                case empty(StringDataType::findPlaceholders($value)) === false:
+                    $dataSheet->setCellValue($column['attribute_alias'], $rowIndex,  StringDataType::replacePlaceholders($value, $placeholder));
+                    break;
+                default:
+                    $dataSheet->setCellValue($column['attribute_alias'], $rowIndex, $value);
+            }
+        }
+    }
+
+    /**
+     * Datasheets from OpenApi JSON data cannot have relations.
+     * There are only used for dynamic formulars like =Lookup()
+     * and must be removed when the input data has been processed into the datasheet.
+     *
+     * @param DataSheetInterface $dataSheet
+     * @return void
+     */
+    protected function removeRelationColumns(DataSheetInterface $dataSheet): void
+    {
+        foreach ($dataSheet->getColumns() as $column) {
+            if ($column->getAttribute()->getObject()->isExactly($dataSheet->getMetaObject()) == false) {
+                $dataSheet->getColumns()->remove($column);
+            }
+        }
     }
 }
