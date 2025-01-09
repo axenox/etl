@@ -81,7 +81,7 @@
     "rows": [
         {
             "CREATED_ON": "2021-02-26 16:46:29",
-            "MODIFIED_ON": "2024-08-29 13:44:04",
+            "MODIFIED_ON": "2024-12-17 23:50:31",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
             "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
             "UID": "0x11ebae9fcb215da2ae9f025041000001",
@@ -122,11 +122,41 @@
                             },
                             {
                                 "attribute_alias": "from_object",
-                                "id": "from_object_selector"
+                                "id": "from_object_selector",
+                                "disabled_if": {
+                                    "operator": "AND",
+                                    "conditions": [
+                                        {
+                                            "value_left": "=prototype_field",
+                                            "comparator": "==",
+                                            "value_right": "axenox\/etl\/ETLPrototypes\/StepGroup.php"
+                                        }
+                                    ]
+                                }
                             },
                             {
                                 "attribute_alias": "to_object",
-                                "id": "to_object_selector"
+                                "id": "to_object_selector",
+                                "disabled_if": {
+                                    "operator": "AND",
+                                    "conditions": [
+                                        {
+                                            "value_left": "=prototype_field",
+                                            "comparator": "==",
+                                            "value_right": "axenox\/etl\/ETLPrototypes\/StepGroup.php"
+                                        }
+                                    ]
+                                },
+                                "required_if": {
+                                    "operator": "AND",
+                                    "conditions": [
+                                        {
+                                            "value_left": "=prototype_field",
+                                            "comparator": "!==",
+                                            "value_right": "axenox\/etl\/ETLPrototypes\/StepGroup.php"
+                                        }
+                                    ]
+                                }
                             },
                             {
                                 "attribute_alias": "etl_prototype",

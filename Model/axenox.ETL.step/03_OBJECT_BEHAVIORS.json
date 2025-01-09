@@ -57,19 +57,19 @@
     "rows": [
         {
             "CREATED_ON": "2024-03-11 07:48:30",
-            "MODIFIED_ON": "2024-03-11 09:38:47",
+            "MODIFIED_ON": "2024-12-18 00:21:53",
             "CREATED_BY_USER": "0x11e8fe1c902c8ebea23ee4b318306b9a",
-            "MODIFIED_BY_USER": "0x11e8fe1c902c8ebea23ee4b318306b9a",
+            "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
             "UID": "0x11ee81485f104e2c8148025041000001",
             "BEHAVIOR": "exface\/core\/Behaviors\/OrderingBehavior.php",
             "CONFIG_UXON": {
-                "indexing_boundary_attributes": [
+                "order_within_attributes": [
                     "flow"
                 ],
-                "close_gaps": true,
-                "order_index_attribute": "step_flow_sequence",
-                "new_element_ontop": false,
-                "starting_index": 1
+                "order_number_attribute": "step_flow_sequence",
+                "order_starts_with": 0,
+                "append_to_end": true,
+                "close_gaps": true
             },
             "OBJECT": "0x11ebae9fcb215da2ae9f025041000001",
             "APP": "0x11ebbc50679eacdabc50025041000001",
