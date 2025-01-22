@@ -61,7 +61,7 @@
     "rows": [
         {
             "CREATED_ON": "2021-03-04 11:19:59",
-            "MODIFIED_ON": "2021-03-04 11:19:59",
+            "MODIFIED_ON": "2024-12-17 09:29:38",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
             "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
             "UID": "0x11ebad892c9f773ead89025041000001",
@@ -73,10 +73,11 @@
                 "values": {
                     "E": "Extract",
                     "T": "Transform",
-                    "L": "Load"
+                    "L": "Load",
+                    "G": "Step Group"
                 }
             },
-            "VALIDATION_ERROR": "",
+            "VALIDATION_ERROR": null,
             "DEFAULT_DISPLAY_UXON": null,
             "DEFAULT_EDITOR_UXON": {
                 "widget_type": "InputSelect"
@@ -94,7 +95,7 @@
             "NAME": "Flow web request status",
             "PROTOTYPE": "axenox\/etl\/DataTypes\/WebRequestStatusDataType.php",
             "CONFIG_UXON": null,
-            "VALIDATION_ERROR": "",
+            "VALIDATION_ERROR": null,
             "DEFAULT_DISPLAY_UXON": {
                 "widget_type": "ProgressBar",
                 "color_scale": {

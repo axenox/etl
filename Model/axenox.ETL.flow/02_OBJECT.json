@@ -81,9 +81,9 @@
     "rows": [
         {
             "CREATED_ON": "2021-02-26 16:44:37",
-            "MODIFIED_ON": "2024-09-11 08:52:44",
+            "MODIFIED_ON": "2024-12-18 08:00:03",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
-            "MODIFIED_BY_USER": "0x11e8fe1c902c8ebea23ee4b318306b9a",
+            "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
             "UID": "0x11eb90858867906c9085025041000001",
             "READABLE_FLAG": 1,
             "WRITABLE_FLAG": 1,
@@ -118,7 +118,8 @@
                                                     },
                                                     {
                                                         "attribute_alias": "alias_with_version",
-                                                        "widget_type": "InputHidden"
+                                                        "widget_type": "InputHidden",
+                                                        "required": false
                                                     },
                                                     {
                                                         "attribute_alias": "name"
@@ -146,9 +147,17 @@
                                                 "caption": "Steps",
                                                 "widgets": [
                                                     {
-                                                        "widget_type": "DataTable",
+                                                        "widget_type": "DataTree",
                                                         "object_alias": "axenox.ETL.step",
                                                         "multi_select": true,
+                                                        "tree_parent_relation_alias": "parent_step",
+                                                        "tree_folder_flag_attribute_alias": "group_flag",
+                                                        "tree_expanded": true,
+                                                        "paginate": false,
+                                                        "row_reorder": {
+                                                            "order_index_attribute_alias": "step_flow_sequence",
+                                                            "order_direction": "asc"
+                                                        },
                                                         "filters": [
                                                             {
                                                                 "attribute_alias": "flow",
@@ -173,14 +182,29 @@
                                                         ],
                                                         "columns": [
                                                             {
-                                                                "attribute_alias": "step_flow_sequence"
+                                                                "attribute_alias": "name"
                                                             },
                                                             {
                                                                 "attribute_alias": "disabled",
-                                                                "caption": "Off"
+                                                                "caption": "On",
+                                                                "cell_widget": {
+                                                                    "widget_type": "icon",
+                                                                    "icon_scale": [
+                                                                        "toggle-on",
+                                                                        "toggle-off"
+                                                                    ]
+                                                                }
                                                             },
                                                             {
-                                                                "attribute_alias": "name"
+                                                                "attribute_alias": "stop_flow_on_error",
+                                                                "caption": "If error",
+                                                                "cell_widget": {
+                                                                    "widget_type": "icon",
+                                                                    "icon_scale": [
+                                                                        "fast-forward",
+                                                                        "times-circle"
+                                                                    ]
+                                                                }
                                                             },
                                                             {
                                                                 "attribute_alias": "type"
@@ -195,6 +219,14 @@
                                                             },
                                                             {
                                                                 "attribute_alias": "etl_prototype"
+                                                            },
+                                                            {
+                                                                "attribute_alias": "step_flow_sequence",
+                                                                "hidden": true
+                                                            },
+                                                            {
+                                                                "attribute_alias": "MODIFIED_ON",
+                                                                "hidden": true
                                                             }
                                                         ],
                                                         "sorters": [
@@ -226,10 +258,6 @@
                                                             },
                                                             {
                                                                 "action_alias": "axenox.ETL.EtlStepOnOffToggle"
-                                                            },
-                                                            {
-                                                                "action_alias": "axenox.ETL.FlowQuickEditDialog",
-                                                                "input_widget_id": "uid_field"
                                                             },
                                                             {
                                                                 "action_alias": "exface.Core.DeleteObject"
