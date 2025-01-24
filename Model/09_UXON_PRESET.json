@@ -2,6 +2,11 @@
     "object_alias": "exface.Core.UXON_PRESET",
     "columns": [
         {
+            "name": "_EXPORT_SUMMARY",
+            "hidden": true,
+            "attribute_alias": "NAME"
+        },
+        {
             "name": "CREATED_ON",
             "attribute_alias": "CREATED_ON"
         },
@@ -56,6 +61,7 @@
     ],
     "rows": [
         {
+            "_EXPORT_SUMMARY": "Incremental data sheet transfer",
             "CREATED_ON": "2021-04-26 11:30:26",
             "MODIFIED_ON": "2021-04-26 11:50:33",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
@@ -64,21 +70,21 @@
             "APP": "0x11ebbc50679eacdabc50025041000001",
             "NAME": "Incremental data sheet transfer",
             "DESCRIPTION": "If you want each run to read only those records that have changed since the last (successful) run, define a filter for the `from_data_sheet` over from-object attributes that indicate a change. Use the `[#last_run_increment_value#]` placeholder as value in the filter - it will be replaced by the date-time of the previous successful run of this step.",
-            "PROTOTYPE": "axenox\/etl\/ETLPrototypes\/DataSheetTransfer.php",
+            "PROTOTYPE": "axenox/etl/ETLPrototypes/DataSheetTransfer.php",
             "UXON": {
-                "step_run_uid_attribute": "\/\/ REPLACE WITH ALIAS OF RUN-UID-ATTRIBUTE OF TO-OBJECT",
+                "step_run_uid_attribute": "// REPLACE WITH ALIAS OF RUN-UID-ATTRIBUTE OF TO-OBJECT",
                 "from_data_sheet": {
                     "filters": {
                         "operator": "AND",
                         "conditions": [
                             {
-                                "expression": "\/\/ REPLACE WITH ALIAS OF A MONOTONIC ATTRIBUTE",
+                                "expression": "// REPLACE WITH ALIAS OF A MONOTONIC ATTRIBUTE",
                                 "comparator": ">=",
                                 "value": "[#last_run_increment_value#]",
                                 "object_alias": "sfckoenig.PRM.purch_order"
                             },
                             {
-                                "expression": "\/\/ REPLACE WITH ALIAS OF UPDATE-DATE-ATTRIBUTE",
+                                "expression": "// REPLACE WITH ALIAS OF UPDATE-DATE-ATTRIBUTE",
                                 "comparator": ">=",
                                 "value": "[#last_run_increment_value#]",
                                 "object_alias": "sfckoenig.PRM.purch_order"
@@ -105,6 +111,7 @@
             "THUMBNAIL": ""
         },
         {
+            "_EXPORT_SUMMARY": "Complete data sheet transfer (not incremental)",
             "CREATED_ON": "2021-04-26 11:44:15",
             "MODIFIED_ON": "2021-04-26 11:44:15",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
@@ -112,10 +119,15 @@
             "UID": "0x11ebb1a4f6e2b56eb1a4025041000001",
             "APP": "0x11ebbc50679eacdabc50025041000001",
             "NAME": "Complete data sheet transfer (not incremental)",
-            "DESCRIPTION": "Will read all data of the from-object using the respective query builder, map it to the to-object (similarly to a actions `input_mapper`) and save it. \n\nIf the to-object has a unique identifier, use `update_if_matching_attribute` to update rows with existing IDs.",
-            "PROTOTYPE": "axenox\/etl\/ETLPrototypes\/DataSheetTransfer.php",
+            "DESCRIPTION": [
+                "// Multiline text delimited by `\n`",
+                "Will read all data of the from-object using the respective query builder, map it to the to-object (similarly to a actions `input_mapper`) and save it. ",
+                "",
+                "If the to-object has a unique identifier, use `update_if_matching_attribute` to update rows with existing IDs."
+            ],
+            "PROTOTYPE": "axenox/etl/ETLPrototypes/DataSheetTransfer.php",
             "UXON": {
-                "step_run_uid_attribute": "\/\/ REPLACE WITH ALIAS OF RUN-UID-ATTRIBUTE OF TO-OBJECT (RECOMMENDED!!!)",
+                "step_run_uid_attribute": "// REPLACE WITH ALIAS OF RUN-UID-ATTRIBUTE OF TO-OBJECT (RECOMMENDED!!!)",
                 "mapper": {
                     "column_to_column_mappings": [
                         {
@@ -137,6 +149,7 @@
             "THUMBNAIL": ""
         },
         {
+            "_EXPORT_SUMMARY": "Complete data sheet transfer with paging",
             "CREATED_ON": "2021-04-26 11:50:17",
             "MODIFIED_ON": "2021-04-26 11:50:17",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
@@ -144,15 +157,22 @@
             "UID": "0x11ebbe9dced11312be9d025041000001",
             "APP": "0x11ebbc50679eacdabc50025041000001",
             "NAME": "Complete data sheet transfer with paging",
-            "DESCRIPTION": "Use `page_size` to make multiple read requests each limited in size. How big the `page_size` can be depends on the data source. Only use paging if necessary! \n\n**WARNING:** Paged reads may result in inconsistent data! \n- Make sure to sort monotonically to prevent records from appearing on multiple pages \n- Read a times when changes in the source are unlikely",
-            "PROTOTYPE": "axenox\/etl\/ETLPrototypes\/DataSheetTransfer.php",
+            "DESCRIPTION": [
+                "// Multiline text delimited by `\n`",
+                "Use `page_size` to make multiple read requests each limited in size. How big the `page_size` can be depends on the data source. Only use paging if necessary! ",
+                "",
+                "**WARNING:** Paged reads may result in inconsistent data! ",
+                "- Make sure to sort monotonically to prevent records from appearing on multiple pages ",
+                "- Read a times when changes in the source are unlikely"
+            ],
+            "PROTOTYPE": "axenox/etl/ETLPrototypes/DataSheetTransfer.php",
             "UXON": {
-                "step_run_uid_attribute": "\/\/ REPLACE WITH ALIAS OF RUN-UID-ATTRIBUTE OF TO-OBJECT",
+                "step_run_uid_attribute": "// REPLACE WITH ALIAS OF RUN-UID-ATTRIBUTE OF TO-OBJECT",
                 "page_size": 10000,
                 "from_data_sheet": {
                     "sorters": [
                         {
-                            "attribute_alias": "\/\/ REPLACE WITH ALIAS OF A MONOTONIC ATTRIBUTE OF FROM-OBJECT",
+                            "attribute_alias": "// REPLACE WITH ALIAS OF A MONOTONIC ATTRIBUTE OF FROM-OBJECT",
                             "direction": "ASC"
                         }
                     ]
@@ -176,6 +196,7 @@
             "THUMBNAIL": ""
         },
         {
+            "_EXPORT_SUMMARY": "Lookup surrogate keys via T-SQL (if NULL)",
             "CREATED_ON": "2021-04-26 12:21:47",
             "MODIFIED_ON": "2021-05-10 10:35:50",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
@@ -184,15 +205,27 @@
             "APP": "0x11ebbc50679eacdabc50025041000001",
             "NAME": "Lookup surrogate keys via T-SQL (if NULL)",
             "DESCRIPTION": "Simple SQL to lookup for foreign (surrogate) keys in the to-object by searching for a `name` in the from-object. Replace `key_of_something`, `name_of_something` and `name` (the latter in the from-table!) as needed.",
-            "PROTOTYPE": "axenox\/etl\/ETLPrototypes\/SQLRunner.php",
+            "PROTOTYPE": "axenox/etl/ETLPrototypes/SQLRunner.php",
             "UXON": {
-                "sql": "UPDATE [#to_object_address#] SET \n    EtlRunUidUpdate = [#step_run_uid#],\n    key_of_something = (\n        SELECT \n            f.id \n        FROM [#from_object_address#] f \n        WHERE name_of_something = f.name\n    )\nWHERE key_of_something IS NULL;"
+                "sql": [
+                    "// Multiline text delimited by `\n`",
+                    "UPDATE [#to_object_address#] SET ",
+                    "    EtlRunUidUpdate = [#step_run_uid#],",
+                    "    key_of_something = (",
+                    "        SELECT ",
+                    "            f.id ",
+                    "        FROM [#from_object_address#] f ",
+                    "        WHERE name_of_something = f.name",
+                    "    )",
+                    "WHERE key_of_something IS NULL;"
+                ]
             },
             "WRAP_PATH": "",
             "UXON_SCHEMA": "\\axenox\\ETL\\Uxon\\ETLPrototypeSchema",
             "THUMBNAIL": ""
         },
         {
+            "_EXPORT_SUMMARY": "Incremental SQL Server MERGE",
             "CREATED_ON": "2021-04-26 12:32:18",
             "MODIFIED_ON": "2021-04-26 12:32:18",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
@@ -200,8 +233,13 @@
             "UID": "0x11eba811ad1c1ed2a811025041000001",
             "APP": "0x11ebbc50679eacdabc50025041000001",
             "NAME": "Incremental SQL Server MERGE",
-            "DESCRIPTION": "Using `column_mappings` of the special MsSQLMerge prototype produces better readable step configs, than a hand written MERGE statement in an SQLRunner prototype. You will probably still end up customizing your `sql`, but using prototypes will make it much more readable giving focus the the overall logic of the query.\n\nThis example shows a MERGE statement with a time based increment value. Replace `EtlRunUidUpdate`, `EtlRunUidCreate`, `srcKeyCol` and `targetKeyCol` with corresponding column names in your tables. Placeholder enclosed in `[#``#]` will be replaced automatically. ",
-            "PROTOTYPE": "axenox\/etl\/ETLPrototypes\/MsSQLMerge.php",
+            "DESCRIPTION": [
+                "// Multiline text delimited by `\n`",
+                "Using `column_mappings` of the special MsSQLMerge prototype produces better readable step configs, than a hand written MERGE statement in an SQLRunner prototype. You will probably still end up customizing your `sql`, but using prototypes will make it much more readable giving focus the the overall logic of the query.",
+                "",
+                "This example shows a MERGE statement with a time based increment value. Replace `EtlRunUidUpdate`, `EtlRunUidCreate`, `srcKeyCol` and `targetKeyCol` with corresponding column names in your tables. Placeholder enclosed in `[#``#]` will be replaced automatically. "
+            ],
+            "PROTOTYPE": "axenox/etl/ETLPrototypes/MsSQLMerge.php",
             "UXON": {
                 "sql_to_get_current_increment_value": "SELECT GETDATE();",
                 "column_mappings": [
@@ -214,13 +252,39 @@
                         "to": ""
                     }
                 ],
-                "sql": "MERGE [#to_object_address#] [#target#] \n    USING (\n    \tSELECT \n        \t*\n        \tFROM (\n        \t\tSELECT\n        \t\t  [#source_columns#]\n        \t\t  , EtlCreatedOn\n        \t\t  , row_number() over(partition by srcKeyCol ORDER BY [EtlCreatedOn] DESC) as rn\n        \t\t  FROM [#from_object_address#]\n        \t\t  WHERE \n        \t\t    EtlCreatedOn >= ( CASE WHEN '[#last_run_increment_value#]' != '' THEN '[#last_run_increment_value#]' ELSE '1970-01-01' END )\n        \t) AS tmp\n        WHERE rn = 1\n    ) [#source#]\n    ON ([#source#].srcKeyCol = [#target#].targetKeyCol)\n    WHEN MATCHED\n        THEN UPDATE SET \n            [#update_pairs#],\n            [#target#].EtlRunUidUpdate = [#step_run_uid#]\n    WHEN NOT MATCHED\n        THEN INSERT ([#insert_columns#], EtlRunUidCreate)\n             VALUES ([#insert_values#], [#step_run_uid#]);"
+                "sql": [
+                    "// Multiline text delimited by `\n`",
+                    "MERGE [#to_object_address#] [#target#] ",
+                    "    USING (",
+                    "    \tSELECT ",
+                    "        \t*",
+                    "        \tFROM (",
+                    "        \t\tSELECT",
+                    "        \t\t  [#source_columns#]",
+                    "        \t\t  , EtlCreatedOn",
+                    "        \t\t  , row_number() over(partition by srcKeyCol ORDER BY [EtlCreatedOn] DESC) as rn",
+                    "        \t\t  FROM [#from_object_address#]",
+                    "        \t\t  WHERE ",
+                    "        \t\t    EtlCreatedOn >= ( CASE WHEN '[#last_run_increment_value#]' != '' THEN '[#last_run_increment_value#]' ELSE '1970-01-01' END )",
+                    "        \t) AS tmp",
+                    "        WHERE rn = 1",
+                    "    ) [#source#]",
+                    "    ON ([#source#].srcKeyCol = [#target#].targetKeyCol)",
+                    "    WHEN MATCHED",
+                    "        THEN UPDATE SET ",
+                    "            [#update_pairs#],",
+                    "            [#target#].EtlRunUidUpdate = [#step_run_uid#]",
+                    "    WHEN NOT MATCHED",
+                    "        THEN INSERT ([#insert_columns#], EtlRunUidCreate)",
+                    "             VALUES ([#insert_values#], [#step_run_uid#]);"
+                ]
             },
             "WRAP_PATH": "",
             "UXON_SCHEMA": "\\axenox\\ETL\\Uxon\\ETLPrototypeSchema",
             "THUMBNAIL": ""
         },
         {
+            "_EXPORT_SUMMARY": "Lookup surrogate keys via MySQL (if NULL)",
             "CREATED_ON": "2021-05-10 10:33:01",
             "MODIFIED_ON": "2021-05-10 10:36:07",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
@@ -229,15 +293,28 @@
             "APP": "0x11ebbc50679eacdabc50025041000001",
             "NAME": "Lookup surrogate keys via MySQL (if NULL)",
             "DESCRIPTION": "Simple SQL to lookup for foreign (surrogate) keys in to-object by searching for a `name` in from-object. Replace `something_name`, `something_id` and `name` (the latter in the from-table!) as needed.",
-            "PROTOTYPE": "axenox\/etl\/ETLPrototypes\/SQLRunner.php",
+            "PROTOTYPE": "axenox/etl/ETLPrototypes/SQLRunner.php",
             "UXON": {
-                "sql": "UPDATE [#to_object_address#] t SET \n    updated_by_etl_step_oid = [#step_run_uid#],\n    updated_on = NOW(),\n    something_id = (\n        SELECT \n            f.id \n        FROM [#from_object_address#] f\n        WHERE f.name = t.something_name\n    )\nWHERE t.something_id IS NULL;"
+                "sql": [
+                    "// Multiline text delimited by `\n`",
+                    "UPDATE [#to_object_address#] t SET ",
+                    "    updated_by_etl_step_oid = [#step_run_uid#],",
+                    "    updated_on = NOW(),",
+                    "    something_id = (",
+                    "        SELECT ",
+                    "            f.id ",
+                    "        FROM [#from_object_address#] f",
+                    "        WHERE f.name = t.something_name",
+                    "    )",
+                    "WHERE t.something_id IS NULL;"
+                ]
             },
             "WRAP_PATH": "",
             "UXON_SCHEMA": "\\axenox\\ETL\\Uxon\\ETLPrototypeSchema",
             "THUMBNAIL": ""
         },
         {
+            "_EXPORT_SUMMARY": "Simple SQL Server MERGE",
             "CREATED_ON": "2021-07-06 10:21:01",
             "MODIFIED_ON": "2021-07-06 10:21:01",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
@@ -245,8 +322,13 @@
             "UID": "0x11eb9da719db256e9da7025041000001",
             "APP": "0x11ebbc50679eacdabc50025041000001",
             "NAME": "Simple SQL Server MERGE",
-            "DESCRIPTION": "Using `column_mappings` of the special MsSQLMerge prototype produces better readable step configs, than a hand written MERGE statement in an SQLRunner prototype.\n\nThis example shows a simple MERGE comparing two column in the `[#source#]` and `[#target#]` tables.",
-            "PROTOTYPE": "axenox\/etl\/ETLPrototypes\/MsSQLMerge.php",
+            "DESCRIPTION": [
+                "// Multiline text delimited by `\n`",
+                "Using `column_mappings` of the special MsSQLMerge prototype produces better readable step configs, than a hand written MERGE statement in an SQLRunner prototype.",
+                "",
+                "This example shows a simple MERGE comparing two column in the `[#source#]` and `[#target#]` tables."
+            ],
+            "PROTOTYPE": "axenox/etl/ETLPrototypes/MsSQLMerge.php",
             "UXON": {
                 "column_mappings": [
                     {
@@ -265,6 +347,7 @@
             "THUMBNAIL": ""
         },
         {
+            "_EXPORT_SUMMARY": "OpenAPI 3.0.3 document",
             "CREATED_ON": "2023-12-18 08:54:15",
             "MODIFIED_ON": "2023-12-18 08:58:05",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
@@ -293,21 +376,21 @@
                     }
                 ],
                 "paths": {
-                    "\/\/ REPLACE with your\/route": {
+                    "// REPLACE with your/route": {
                         "get": {
                             "tags": [
                                 ""
                             ],
                             "description": "",
-                            "operationId": "\/\/ e.g. yourroute (without the slashes)",
+                            "operationId": "// e.g. yourroute (without the slashes)",
                             "parameters": [],
                             "responses": {
                                 "200": {
                                     "description": "",
                                     "content": {
-                                        "application\/json": {
+                                        "application/json": {
                                             "schema": {
-                                                "$ref": "\/\/ name of the schema - see $.components.schemas"
+                                                "$ref": "// name of the schema - see $.components.schemas"
                                             },
                                             "examples": {
                                                 "standard": {
@@ -343,6 +426,7 @@
             "THUMBNAIL": ""
         },
         {
+            "_EXPORT_SUMMARY": "Query parameter - date",
             "CREATED_ON": "2023-12-18 08:57:28",
             "MODIFIED_ON": "2023-12-18 08:58:41",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
@@ -368,6 +452,7 @@
             "THUMBNAIL": ""
         },
         {
+            "_EXPORT_SUMMARY": "Query parameter - number",
             "CREATED_ON": "2023-12-18 08:58:34",
             "MODIFIED_ON": "2023-12-18 08:58:52",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
@@ -392,6 +477,7 @@
             "THUMBNAIL": ""
         },
         {
+            "_EXPORT_SUMMARY": "Custom SQL statement",
             "CREATED_ON": "2024-05-06 15:32:17",
             "MODIFIED_ON": "2024-05-06 15:32:17",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
@@ -400,7 +486,7 @@
             "APP": "0x11ebbc50679eacdabc50025041000001",
             "NAME": "Custom SQL statement",
             "DESCRIPTION": "",
-            "PROTOTYPE": "axenox\/etl\/ETLPrototypes\/SQLRunner.php",
+            "PROTOTYPE": "axenox/etl/ETLPrototypes/SQLRunner.php",
             "UXON": {
                 "sql": ""
             },
@@ -409,6 +495,7 @@
             "THUMBNAIL": ""
         },
         {
+            "_EXPORT_SUMMARY": "OpenAPI 3.0.3 Import",
             "CREATED_ON": "2024-05-22 15:16:33",
             "MODIFIED_ON": "2024-05-22 15:16:33",
             "CREATED_BY_USER": "0x11e8fe1c902c8ebea23ee4b318306b9a",
@@ -429,11 +516,11 @@
                 "tags": [
                     {
                         "name": "Objekte",
-                        "description": "\u00dcbermittlung von allen Objekten zu OneLink."
+                        "description": "Übermittlung von allen Objekten zu OneLink."
                     }
                 ],
                 "paths": {
-                    "\/import": {
+                    "/import": {
                         "post": {
                             "tags": [
                                 "Objekte"
@@ -444,14 +531,14 @@
                                 "description": "Die zu importierenden Daten im Json format.",
                                 "required": true,
                                 "content": {
-                                    "application\/json": {
+                                    "application/json": {
                                         "schema": {
                                             "type": "object",
                                             "properties": {
                                                 "Objekte": {
                                                     "type": "array",
                                                     "items": {
-                                                        "$ref": "#\/components\/schemas\/Object"
+                                                        "$ref": "#/components/schemas/Object"
                                                     },
                                                     "x-object-alias": "full.namespace.object"
                                                 }
@@ -492,6 +579,7 @@
             "THUMBNAIL": ""
         },
         {
+            "_EXPORT_SUMMARY": "OpenAPI 3.0.3 Export",
             "CREATED_ON": "2024-05-22 15:21:54",
             "MODIFIED_ON": "2024-09-09 16:59:13",
             "CREATED_BY_USER": "0x11e8fe1c902c8ebea23ee4b318306b9a",
@@ -516,7 +604,7 @@
                     }
                 ],
                 "paths": {
-                    "\/object": {
+                    "/object": {
                         "get": {
                             "tags": [
                                 "Daten"
@@ -548,7 +636,7 @@
                                 "200": {
                                     "description": "Successfull response",
                                     "content": {
-                                        "application\/json": {
+                                        "application/json": {
                                             "schema": {
                                                 "type": "array",
                                                 "items": {
@@ -557,7 +645,7 @@
                                                         "objects": {
                                                             "type": "array",
                                                             "items": {
-                                                                "$ref": "#\/components\/schemas\/Object"
+                                                                "$ref": "#/components/schemas/Object"
                                                             },
                                                             "x-object-alias": "my.APP.OBJECT_ALIAS"
                                                         },

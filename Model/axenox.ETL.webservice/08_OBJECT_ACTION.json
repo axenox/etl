@@ -2,6 +2,11 @@
     "object_alias": "exface.Core.OBJECT_ACTION",
     "columns": [
         {
+            "name": "_EXPORT_SUMMARY",
+            "hidden": true,
+            "attribute_alias": "LABEL"
+        },
+        {
             "name": "CREATED_ON",
             "attribute_alias": "CREATED_ON"
         },
@@ -60,13 +65,14 @@
     ],
     "rows": [
         {
+            "_EXPORT_SUMMARY": "Web service: Edit steps",
             "CREATED_ON": "2024-01-09 12:47:29",
             "MODIFIED_ON": "2024-08-29 13:25:08",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
             "MODIFIED_BY_USER": "0x11eca7f5b092f284a7f5005056bea39f",
             "UID": "0x11eeb5b6dde235f4b5b6025041000001",
             "OBJECT": "0x11eebdc39597022cbdc3025041000001",
-            "ACTION_PROTOTYPE": "exface\/Core\/Actions\/ShowDialog.php",
+            "ACTION_PROTOTYPE": "exface/Core/Actions/ShowDialog.php",
             "ALIAS": "WebserviceSplitEditDialog",
             "NAME": "Edit steps",
             "SHORT_DESCRIPTION": "",
@@ -291,7 +297,7 @@
                                         {
                                             "widget_type": "Browser",
                                             "id": "swaggerui",
-                                            "value": "=Concatenate(full_url, '\/swaggerui')"
+                                            "value": "=Concatenate(full_url, '/swaggerui')"
                                         }
                                     ]
                                 }
@@ -322,18 +328,19 @@
             "DOCS": ""
         },
         {
+            "_EXPORT_SUMMARY": "Web service: Test API",
             "CREATED_ON": "2024-01-09 12:50:01",
             "MODIFIED_ON": "2024-08-29 13:25:59",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
             "MODIFIED_BY_USER": "0x11eca7f5b092f284a7f5005056bea39f",
             "UID": "0x11eea34a3958ba8ea34a025041000001",
             "OBJECT": "0x11eebdc39597022cbdc3025041000001",
-            "ACTION_PROTOTYPE": "exface\/Core\/Actions\/ShowDialog.php",
+            "ACTION_PROTOTYPE": "exface/Core/Actions/ShowDialog.php",
             "ALIAS": "WebserviceSwaggerUIDialog",
             "NAME": "Test API",
             "SHORT_DESCRIPTION": "",
             "CONFIG_UXON": {
-                "icon": "<svg xmlns=\"http:\/\/www.w3.org\/2000\/svg\" viewBox=\"0 0 24 24\"><title>code-block-braces<\/title><path d=\"M5 3C3.9 3 3 3.9 3 5S2.1 7 1 7V9C2.1 9 3 9.9 3 11S3.9 13 5 13H7V11H5V10C5 8.9 4.1 8 3 8C4.1 8 5 7.1 5 6V5H7V3M11 3C12.1 3 13 3.9 13 5S13.9 7 15 7V9C13.9 9 13 9.9 13 11S12.1 13 11 13H9V11H11V10C11 8.9 11.9 8 13 8C11.9 8 11 7.1 11 6V5H9V3H11M22 6V18C22 19.11 21.11 20 20 20H4C2.9 20 2 19.11 2 18V15H4V18H20V6H17.03V4H20C21.11 4 22 4.89 22 6Z\" \/><\/svg>",
+                "icon": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><title>code-block-braces</title><path d=\"M5 3C3.9 3 3 3.9 3 5S2.1 7 1 7V9C2.1 9 3 9.9 3 11S3.9 13 5 13H7V11H5V10C5 8.9 4.1 8 3 8C4.1 8 5 7.1 5 6V5H7V3M11 3C12.1 3 13 3.9 13 5S13.9 7 15 7V9C13.9 9 13 9.9 13 11S12.1 13 11 13H9V11H11V10C11 8.9 11.9 8 13 8C11.9 8 11 7.1 11 6V5H9V3H11M22 6V18C22 19.11 21.11 20 20 20H4C2.9 20 2 19.11 2 18V15H4V18H20V6H17.03V4H20C21.11 4 22 4.89 22 6Z\" /></svg>",
                 "input_object_alias": "axenox.ETL.webservice",
                 "input_rows_min": 1,
                 "input_rows_max": 1,
@@ -342,7 +349,7 @@
                     "widgets": [
                         {
                             "widget_type": "Browser",
-                            "value": "=Concatenate(full_url, '\/swaggerui')"
+                            "value": "=Concatenate(full_url, '/swaggerui')"
                         }
                     ]
                 }
@@ -352,13 +359,14 @@
             "DOCS": ""
         },
         {
+            "_EXPORT_SUMMARY": "Web service: Edit OpenAPI definition",
             "CREATED_ON": "2024-01-26 12:42:18",
             "MODIFIED_ON": "2024-08-29 13:23:21",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
             "MODIFIED_BY_USER": "0x11eca7f5b092f284a7f5005056bea39f",
             "UID": "0x11eea9d6f67e1322a9d6025041000001",
             "OBJECT": "0x11eebdc39597022cbdc3025041000001",
-            "ACTION_PROTOTYPE": "exface\/Core\/Actions\/ShowDialog.php",
+            "ACTION_PROTOTYPE": "exface/Core/Actions/ShowDialog.php",
             "ALIAS": "WebserviceEditOpenAPIDialog",
             "NAME": "Edit OpenAPI definition",
             "SHORT_DESCRIPTION": "",
@@ -366,7 +374,7 @@
                 "input_rows_min": 1,
                 "input_rows_max": 1,
                 "input_object_alias": "axenox.ETL.webservice",
-                "icon": "<svg xmlns=\"http:\/\/www.w3.org\/2000\/svg\" viewBox=\"0 0 24 24\"><title>code-json<\/title><path d=\"M5,3H7V5H5V10A2,2 0 0,1 3,12A2,2 0 0,1 5,14V19H7V21H5C3.93,20.73 3,20.1 3,19V15A2,2 0 0,0 1,13H0V11H1A2,2 0 0,0 3,9V5A2,2 0 0,1 5,3M19,3A2,2 0 0,1 21,5V9A2,2 0 0,0 23,11H24V13H23A2,2 0 0,0 21,15V19A2,2 0 0,1 19,21H17V19H19V14A2,2 0 0,1 21,12A2,2 0 0,1 19,10V5H17V3H19M12,15A1,1 0 0,1 13,16A1,1 0 0,1 12,17A1,1 0 0,1 11,16A1,1 0 0,1 12,15M8,15A1,1 0 0,1 9,16A1,1 0 0,1 8,17A1,1 0 0,1 7,16A1,1 0 0,1 8,15M16,15A1,1 0 0,1 17,16A1,1 0 0,1 16,17A1,1 0 0,1 15,16A1,1 0 0,1 16,15Z\" \/><\/svg>",
+                "icon": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><title>code-json</title><path d=\"M5,3H7V5H5V10A2,2 0 0,1 3,12A2,2 0 0,1 5,14V19H7V21H5C3.93,20.73 3,20.1 3,19V15A2,2 0 0,0 1,13H0V11H1A2,2 0 0,0 3,9V5A2,2 0 0,1 5,3M19,3A2,2 0 0,1 21,5V9A2,2 0 0,0 23,11H24V13H23A2,2 0 0,0 21,15V19A2,2 0 0,1 19,21H17V19H19V14A2,2 0 0,1 21,12A2,2 0 0,1 19,10V5H17V3H19M12,15A1,1 0 0,1 13,16A1,1 0 0,1 12,17A1,1 0 0,1 11,16A1,1 0 0,1 12,15M8,15A1,1 0 0,1 9,16A1,1 0 0,1 8,17A1,1 0 0,1 7,16A1,1 0 0,1 8,15M16,15A1,1 0 0,1 17,16A1,1 0 0,1 16,17A1,1 0 0,1 15,16A1,1 0 0,1 16,15Z\" /></svg>",
                 "dialog": {
                     "widgets": [
                         {
@@ -392,16 +400,17 @@
             "DOCS": ""
         },
         {
+            "_EXPORT_SUMMARY": "Web service: On/Off",
             "CREATED_ON": "2024-06-07 08:26:11",
             "MODIFIED_ON": "2024-06-07 08:26:11",
             "CREATED_BY_USER": "0x11e8fe1c902c8ebea23ee4b318306b9a",
             "MODIFIED_BY_USER": "0x11e8fe1c902c8ebea23ee4b318306b9a",
             "UID": "0x11ef8a77d57e616c8a77025041000001",
             "OBJECT": "0x11eebdc39597022cbdc3025041000001",
-            "ACTION_PROTOTYPE": "exface\/core\/Actions\/UpdateData.php",
+            "ACTION_PROTOTYPE": "exface/core/Actions/UpdateData.php",
             "ALIAS": "EtlWebserviceOnOffToggle",
-            "NAME": "On\/Off",
-            "SHORT_DESCRIPTION": "Disable\/enable the webservice",
+            "NAME": "On/Off",
+            "SHORT_DESCRIPTION": "Disable/enable the webservice",
             "CONFIG_UXON": {
                 "icon": "toggle-off",
                 "input_rows_min": 1,

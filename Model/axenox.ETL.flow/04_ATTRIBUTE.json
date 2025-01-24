@@ -2,6 +2,11 @@
     "object_alias": "exface.Core.ATTRIBUTE",
     "columns": [
         {
+            "name": "_EXPORT_SUMMARY",
+            "hidden": true,
+            "attribute_alias": "LABEL"
+        },
+        {
             "name": "CREATED_ON",
             "attribute_alias": "CREATED_ON"
         },
@@ -172,6 +177,7 @@
     ],
     "rows": [
         {
+            "_EXPORT_SUMMARY": "Alias [alias]",
             "CREATED_ON": "2021-02-26 16:44:38",
             "MODIFIED_ON": "2024-08-06 16:46:00",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
@@ -218,6 +224,7 @@
             }
         },
         {
+            "_EXPORT_SUMMARY": "Description [description]",
             "CREATED_ON": "2021-02-26 16:44:38",
             "MODIFIED_ON": "2024-06-27 15:28:11",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
@@ -264,6 +271,7 @@
             }
         },
         {
+            "_EXPORT_SUMMARY": "Flow name [name]",
             "CREATED_ON": "2021-02-26 16:44:38",
             "MODIFIED_ON": "2024-08-06 08:54:10",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
@@ -310,6 +318,7 @@
             }
         },
         {
+            "_EXPORT_SUMMARY": "Is part of app [app]",
             "CREATED_ON": "2021-03-02 10:36:18",
             "MODIFIED_ON": "2024-06-27 15:28:11",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
@@ -356,6 +365,7 @@
             "CUSTOM_DATA_TYPE": null
         },
         {
+            "_EXPORT_SUMMARY": "Scheduler [scheduler]",
             "CREATED_ON": "2021-05-18 16:29:43",
             "MODIFIED_ON": "2024-06-27 15:28:11",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
@@ -402,6 +412,7 @@
             "CUSTOM_DATA_TYPE": null
         },
         {
+            "_EXPORT_SUMMARY": "Version [version]",
             "CREATED_ON": "2024-05-30 13:32:01",
             "MODIFIED_ON": "2024-08-06 16:46:05",
             "CREATED_BY_USER": "0x11e8fe1c902c8ebea23ee4b318306b9a",
@@ -419,7 +430,11 @@
             "COPY_WITH_RELATED_OBJECT": 0,
             "DELETE_WITH_RELATED_OBJECT": 0,
             "DEFAULT_DISPLAY_UXON": null,
-            "COMMENTS": "Shows version, release and sprint of the build of this webservice. \n",
+            "COMMENTS": [
+                "// Multiline text delimited by `\n`",
+                "Shows version, release and sprint of the build of this webservice. ",
+                ""
+            ],
             "NAME": "Version",
             "RELATION_CARDINALITY": "",
             "TYPE": "D",
@@ -446,6 +461,7 @@
             "CUSTOM_DATA_TYPE": null
         },
         {
+            "_EXPORT_SUMMARY": "Flow [LABEL]",
             "CREATED_ON": "2024-08-06 08:53:58",
             "MODIFIED_ON": "2024-08-29 14:59:44",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
@@ -470,7 +486,13 @@
             "COPYABLEFLAG": 0,
             "ALIAS": "LABEL",
             "DATATYPE": "0x30000000000000000000000000000000",
-            "DATA_ADDRESS": "(CASE \nWHEN [#version#] IS NOT NULL AND [#version#] != '' THEN CONCAT([#name#], ' [', [#version#], ']')\nELSE [#name#]\nEND)",
+            "DATA_ADDRESS": [
+                "// Multiline text delimited by `\n`",
+                "(CASE ",
+                "WHEN [#version#] IS NOT NULL AND [#version#] != '' THEN CONCAT([#name#], ' [', [#version#], ']')",
+                "ELSE [#name#]",
+                "END)"
+            ],
             "OBJECT": "0x11eb90858867906c9085025041000001",
             "FORMATTER": "",
             "DISPLAYORDER": null,
@@ -492,6 +514,7 @@
             }
         },
         {
+            "_EXPORT_SUMMARY": "Flow selector [alias_with_version]",
             "CREATED_ON": "2024-08-06 08:55:22",
             "MODIFIED_ON": "2024-10-07 17:00:35",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
@@ -516,7 +539,13 @@
             "COPYABLEFLAG": 0,
             "ALIAS": "alias_with_version",
             "DATATYPE": "0x30000000000000000000000000000000",
-            "DATA_ADDRESS": "(CASE \nWHEN [#version#] IS NOT NULL AND [#version#] != '' THEN CONCAT([#alias#], ':', [#version#])\nELSE [#alias#]\nEND)",
+            "DATA_ADDRESS": [
+                "// Multiline text delimited by `\n`",
+                "(CASE ",
+                "WHEN [#version#] IS NOT NULL AND [#version#] != '' THEN CONCAT([#alias#], ':', [#version#])",
+                "ELSE [#alias#]",
+                "END)"
+            ],
             "OBJECT": "0x11eb90858867906c9085025041000001",
             "FORMATTER": "",
             "DISPLAYORDER": null,

@@ -302,7 +302,7 @@
                                             },
                                             {
                                                 "attribute_alias": "duration_seconds:AVG",
-                                                "caption": "\u00d8 duration [s]",
+                                                "caption": "Ø duration [s]",
                                                 "position": "right"
                                             }
                                         ],
