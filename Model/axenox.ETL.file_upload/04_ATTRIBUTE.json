@@ -2,6 +2,11 @@
     "object_alias": "exface.Core.ATTRIBUTE",
     "columns": [
         {
+            "name": "_EXPORT_SUMMARY",
+            "hidden": true,
+            "attribute_alias": "LABEL"
+        },
+        {
             "name": "CREATED_ON",
             "attribute_alias": "CREATED_ON"
         },
@@ -172,6 +177,7 @@
     ],
     "rows": [
         {
+            "_EXPORT_SUMMARY": "File [file_name]",
             "CREATED_ON": "2024-09-09 09:23:10",
             "MODIFIED_ON": "2024-09-09 09:27:32",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
@@ -218,6 +224,7 @@
             }
         },
         {
+            "_EXPORT_SUMMARY": "Size [file_size_bytes]",
             "CREATED_ON": "2024-09-09 09:23:10",
             "MODIFIED_ON": "2024-09-09 09:28:02",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
@@ -262,6 +269,7 @@
             "CUSTOM_DATA_TYPE": null
         },
         {
+            "_EXPORT_SUMMARY": "Comment [comment]",
             "CREATED_ON": "2024-09-09 09:23:10",
             "MODIFIED_ON": "2024-10-22 14:41:30",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
@@ -308,6 +316,7 @@
             }
         },
         {
+            "_EXPORT_SUMMARY": "File upload flow [file_flow]",
             "CREATED_ON": "2024-09-09 09:23:10",
             "MODIFIED_ON": "2024-09-09 09:25:51",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
@@ -354,6 +363,7 @@
             "CUSTOM_DATA_TYPE": null
         },
         {
+            "_EXPORT_SUMMARY": "File type [file_mimetype]",
             "CREATED_ON": "2024-09-09 09:23:10",
             "MODIFIED_ON": "2024-09-09 09:27:01",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
@@ -400,6 +410,7 @@
             }
         },
         {
+            "_EXPORT_SUMMARY": "MD5 hash [file_md5]",
             "CREATED_ON": "2024-09-09 09:23:10",
             "MODIFIED_ON": "2024-09-09 09:26:17",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
@@ -446,6 +457,7 @@
             }
         },
         {
+            "_EXPORT_SUMMARY": "Flow run [flow_run]",
             "CREATED_ON": "2024-09-09 09:23:10",
             "MODIFIED_ON": "2024-09-09 09:28:24",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
@@ -492,6 +504,7 @@
             "CUSTOM_DATA_TYPE": null
         },
         {
+            "_EXPORT_SUMMARY": "File path [file_path]",
             "CREATED_ON": "2024-09-09 10:11:29",
             "MODIFIED_ON": "2024-09-11 09:55:47",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
@@ -516,7 +529,20 @@
             "COPYABLEFLAG": 0,
             "ALIAS": "file_path",
             "DATATYPE": "0x11ea01502d3497c5b7580205857feb80",
-            "DATA_ADDRESS": "CONCAT(\n  (CASE \n    WHEN [#file_flow__subfolder#] IS NOT NULL \n      AND [#file_flow__subfolder#] != '' \n      THEN CONCAT([#file_flow__subfolder#], '\/') \n    ELSE '' \n  END),\n  [#UID#], \n  '\/', \n  [#file_name#]\n)",
+            "DATA_ADDRESS": [
+                "// Multiline text delimited by `\n`",
+                "CONCAT(",
+                "  (CASE ",
+                "    WHEN [#file_flow__subfolder#] IS NOT NULL ",
+                "      AND [#file_flow__subfolder#] != '' ",
+                "      THEN CONCAT([#file_flow__subfolder#], '/') ",
+                "    ELSE '' ",
+                "  END),",
+                "  [#UID#], ",
+                "  '/', ",
+                "  [#file_name#]",
+                ")"
+            ],
             "OBJECT": "0x11ef97055df83b389705025041000001",
             "FORMATTER": "",
             "DISPLAYORDER": null,
@@ -536,6 +562,7 @@
             "CUSTOM_DATA_TYPE": null
         },
         {
+            "_EXPORT_SUMMARY": "Upload [LABEL]",
             "CREATED_ON": "2024-09-09 11:56:30",
             "MODIFIED_ON": "2024-09-10 09:56:20",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
@@ -591,8 +618,7 @@
                 "expression": "OBJECT__APP",
                 "comparator": "=",
                 "value": "0x11ebbc50679eacdabc50025041000001",
-                "object_alias": "exface.Core.ATTRIBUTE",
-                "apply_to_aggregates": true
+                "object_alias": "exface.Core.ATTRIBUTE"
             }
         ]
     },

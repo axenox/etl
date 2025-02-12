@@ -2,6 +2,11 @@
     "object_alias": "exface.Core.ATTRIBUTE",
     "columns": [
         {
+            "name": "_EXPORT_SUMMARY",
+            "hidden": true,
+            "attribute_alias": "LABEL"
+        },
+        {
             "name": "CREATED_ON",
             "attribute_alias": "CREATED_ON"
         },
@@ -172,6 +177,7 @@
     ],
     "rows": [
         {
+            "_EXPORT_SUMMARY": "Web service [route]",
             "CREATED_ON": "2023-10-18 16:06:51",
             "MODIFIED_ON": "2024-10-30 11:43:18",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
@@ -218,6 +224,7 @@
             "CUSTOM_DATA_TYPE": null
         },
         {
+            "_EXPORT_SUMMARY": "Flow run [flow_run]",
             "CREATED_ON": "2023-10-18 16:06:51",
             "MODIFIED_ON": "2024-10-30 11:43:18",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
@@ -264,6 +271,7 @@
             "CUSTOM_DATA_TYPE": null
         },
         {
+            "_EXPORT_SUMMARY": "URL [url]",
             "CREATED_ON": "2023-10-18 16:06:51",
             "MODIFIED_ON": "2024-10-30 11:43:18",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
@@ -310,6 +318,7 @@
             }
         },
         {
+            "_EXPORT_SUMMARY": "HTTP headers [http_headers]",
             "CREATED_ON": "2023-10-18 16:06:51",
             "MODIFIED_ON": "2024-10-30 11:43:18",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
@@ -356,6 +365,7 @@
             }
         },
         {
+            "_EXPORT_SUMMARY": "Error [error_message]",
             "CREATED_ON": "2023-10-18 16:06:51",
             "MODIFIED_ON": "2024-10-30 11:43:18",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
@@ -402,6 +412,7 @@
             }
         },
         {
+            "_EXPORT_SUMMARY": "Result [result_text]",
             "CREATED_ON": "2023-10-18 16:06:51",
             "MODIFIED_ON": "2024-10-30 11:43:18",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
@@ -448,6 +459,7 @@
             }
         },
         {
+            "_EXPORT_SUMMARY": "Request Status [status]",
             "CREATED_ON": "2023-10-18 16:06:51",
             "MODIFIED_ON": "2024-10-30 11:43:18",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
@@ -492,6 +504,7 @@
             "CUSTOM_DATA_TYPE": null
         },
         {
+            "_EXPORT_SUMMARY": "HTTP method [http_method]",
             "CREATED_ON": "2023-10-18 16:06:51",
             "MODIFIED_ON": "2024-10-30 11:43:18",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
@@ -538,6 +551,7 @@
             }
         },
         {
+            "_EXPORT_SUMMARY": "Error Log-ID [error_logid]",
             "CREATED_ON": "2023-10-18 16:06:51",
             "MODIFIED_ON": "2024-10-30 11:43:18",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
@@ -584,6 +598,7 @@
             }
         },
         {
+            "_EXPORT_SUMMARY": "HTTP body [http_body]",
             "CREATED_ON": "2023-10-18 16:06:51",
             "MODIFIED_ON": "2024-10-30 11:43:18",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
@@ -630,8 +645,58 @@
             }
         },
         {
+            "_EXPORT_SUMMARY": "HTTP code [http_response_code]",
             "CREATED_ON": "2023-10-18 16:06:51",
+<<<<<<< HEAD
             "MODIFIED_ON": "2024-10-30 11:43:18",
+=======
+            "MODIFIED_ON": "2023-10-18 17:56:21",
+            "CREATED_BY_USER": "0x31000000000000000000000000000000",
+            "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
+            "UID": "0x11eebbe795c2040ebbe7025041000001",
+            "SORTABLEFLAG": 1,
+            "FILTERABLEFLAG": 1,
+            "AGGREGATABLEFLAG": 1,
+            "DEFAULT_AGGREGATE_FUNCTION": null,
+            "VALUE_LIST_DELIMITER": ",",
+            "READABLEFLAG": 1,
+            "WRITABLEFLAG": 1,
+            "SYSTEMFLAG": 0,
+            "DEFAULT_EDITOR_UXON": null,
+            "COPY_WITH_RELATED_OBJECT": null,
+            "DELETE_WITH_RELATED_OBJECT": null,
+            "DEFAULT_DISPLAY_UXON": null,
+            "COMMENTS": null,
+            "NAME": "HTTP code",
+            "RELATION_CARDINALITY": "",
+            "TYPE": "D",
+            "COPYABLEFLAG": 1,
+            "ALIAS": "http_response_code",
+            "DATATYPE": "0x11e7b0277435425e98350205857feb80",
+            "DATA_ADDRESS": "http_response_code",
+            "OBJECT": "0x11eeae4695964d78ae46025041000001",
+            "FORMATTER": null,
+            "DISPLAYORDER": null,
+            "LABELFLAG": 0,
+            "UIDFLAG": 0,
+            "HIDDENFLAG": 0,
+            "EDITABLEFLAG": 1,
+            "REQUIREDFLAG": 0,
+            "RELATED_OBJ": null,
+            "SORTERPOS": null,
+            "SORTERDIR": null,
+            "RELATED_OBJ_ATTR": null,
+            "SHORT_DESCRIPTION": "",
+            "DATA_ADDRESS_PROPS": null,
+            "DEFAULT_VALUE": "",
+            "FIXED_VALUE": "",
+            "CUSTOM_DATA_TYPE": null
+        },
+        {
+            "_EXPORT_SUMMARY": "URL path [url_path]",
+            "CREATED_ON": "2023-10-18 16:06:51",
+            "MODIFIED_ON": "2023-10-18 17:56:21",
+>>>>>>> 607960483f7376eed6f98c7b5bbd6cc2cc98744e
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
             "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
             "UID": "0x11eebf5695c1c872bf56025041000001",
@@ -676,6 +741,7 @@
             }
         },
         {
+            "_EXPORT_SUMMARY": "Content type [http_content_type]",
             "CREATED_ON": "2023-10-18 16:32:11",
             "MODIFIED_ON": "2024-10-30 11:58:29",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
@@ -711,7 +777,11 @@
             "REQUIREDFLAG": 0,
             "RELATED_OBJ": null,
             "SORTERPOS": null,
+<<<<<<< HEAD
             "SORTERDIR": "",
+=======
+            "SORTERDIR": null,
+>>>>>>> 607960483f7376eed6f98c7b5bbd6cc2cc98744e
             "RELATED_OBJ_ATTR": null,
             "SHORT_DESCRIPTION": "",
             "DATA_ADDRESS_PROPS": null,
@@ -722,6 +792,7 @@
             }
         },
         {
+            "_EXPORT_SUMMARY": "Error [error_monitor]",
             "CREATED_ON": "2023-10-18 16:58:29",
             "MODIFIED_ON": "2024-10-30 11:43:18",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
@@ -768,6 +839,102 @@
             }
         },
         {
+<<<<<<< HEAD
+=======
+            "_EXPORT_SUMMARY": "Response header [response_header]",
+            "CREATED_ON": "2023-11-30 15:19:20",
+            "MODIFIED_ON": "2023-11-30 15:19:20",
+            "CREATED_BY_USER": "0x11e8fe1c902c8ebea23ee4b318306b9a",
+            "MODIFIED_BY_USER": "0x11e8fe1c902c8ebea23ee4b318306b9a",
+            "UID": "0x11ee9a9174c3d8849a91025041000001",
+            "SORTABLEFLAG": 1,
+            "FILTERABLEFLAG": 1,
+            "AGGREGATABLEFLAG": 1,
+            "DEFAULT_AGGREGATE_FUNCTION": null,
+            "VALUE_LIST_DELIMITER": ",",
+            "READABLEFLAG": 1,
+            "WRITABLEFLAG": 1,
+            "SYSTEMFLAG": 0,
+            "DEFAULT_EDITOR_UXON": null,
+            "COPY_WITH_RELATED_OBJECT": null,
+            "DELETE_WITH_RELATED_OBJECT": null,
+            "DEFAULT_DISPLAY_UXON": null,
+            "COMMENTS": null,
+            "NAME": "Response header",
+            "RELATION_CARDINALITY": "",
+            "TYPE": "D",
+            "COPYABLEFLAG": 1,
+            "ALIAS": "response_header",
+            "DATATYPE": "0x31310000000000000000000000000000",
+            "DATA_ADDRESS": "response_header",
+            "OBJECT": "0x11eeae4695964d78ae46025041000001",
+            "FORMATTER": null,
+            "DISPLAYORDER": null,
+            "LABELFLAG": 0,
+            "UIDFLAG": 0,
+            "HIDDENFLAG": 0,
+            "EDITABLEFLAG": 1,
+            "REQUIREDFLAG": 0,
+            "RELATED_OBJ": null,
+            "SORTERPOS": null,
+            "SORTERDIR": null,
+            "RELATED_OBJ_ATTR": null,
+            "SHORT_DESCRIPTION": "",
+            "DATA_ADDRESS_PROPS": null,
+            "DEFAULT_VALUE": null,
+            "FIXED_VALUE": null,
+            "CUSTOM_DATA_TYPE": {
+                "length_max": 65535
+            }
+        },
+        {
+            "_EXPORT_SUMMARY": "Response body [response_body]",
+            "CREATED_ON": "2023-11-30 15:19:20",
+            "MODIFIED_ON": "2024-01-29 14:03:10",
+            "CREATED_BY_USER": "0x11e8fe1c902c8ebea23ee4b318306b9a",
+            "MODIFIED_BY_USER": "0x11e8fe1c902c8ebea23ee4b318306b9a",
+            "UID": "0x11eea52674b4e82ea526025041000001",
+            "SORTABLEFLAG": 1,
+            "FILTERABLEFLAG": 1,
+            "AGGREGATABLEFLAG": 1,
+            "DEFAULT_AGGREGATE_FUNCTION": "",
+            "VALUE_LIST_DELIMITER": ",",
+            "READABLEFLAG": 1,
+            "WRITABLEFLAG": 1,
+            "SYSTEMFLAG": 0,
+            "DEFAULT_EDITOR_UXON": null,
+            "COPY_WITH_RELATED_OBJECT": 0,
+            "DELETE_WITH_RELATED_OBJECT": 0,
+            "DEFAULT_DISPLAY_UXON": null,
+            "COMMENTS": "",
+            "NAME": "Response body",
+            "RELATION_CARDINALITY": "",
+            "TYPE": "D",
+            "COPYABLEFLAG": 1,
+            "ALIAS": "response_body",
+            "DATATYPE": "0x31310000000000000000000000000000",
+            "DATA_ADDRESS": "response_body",
+            "OBJECT": "0x11eeae4695964d78ae46025041000001",
+            "FORMATTER": "",
+            "DISPLAYORDER": null,
+            "LABELFLAG": 0,
+            "UIDFLAG": 0,
+            "HIDDENFLAG": 0,
+            "EDITABLEFLAG": 1,
+            "REQUIREDFLAG": 0,
+            "RELATED_OBJ": null,
+            "SORTERPOS": null,
+            "SORTERDIR": "",
+            "RELATED_OBJ_ATTR": null,
+            "SHORT_DESCRIPTION": "",
+            "DATA_ADDRESS_PROPS": null,
+            "DEFAULT_VALUE": "",
+            "FIXED_VALUE": "",
+            "CUSTOM_DATA_TYPE": null
+        },
+        {
+            "_EXPORT_SUMMARY": "Date [date]",
+>>>>>>> 607960483f7376eed6f98c7b5bbd6cc2cc98744e
             "CREATED_ON": "2023-12-19 15:35:44",
             "MODIFIED_ON": "2024-10-30 11:43:18",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
@@ -792,7 +959,12 @@
             "COPYABLEFLAG": 0,
             "ALIAS": "date",
             "DATATYPE": "0x32000000000000000000000000000000",
-            "DATA_ADDRESS": "@MySQL: DATE([#CREATED_ON#])\n@T-SQL: CAST([#CREATED_ON#] AS Date)\n@OTHER: TO_DATE([#CREATED_ON#])",
+            "DATA_ADDRESS": [
+                "// Multiline text delimited by `\n`",
+                "@MySQL: DATE([#CREATED_ON#])",
+                "@T-SQL: CAST([#CREATED_ON#] AS Date)",
+                "@OTHER: TO_DATE([#CREATED_ON#])"
+            ],
             "OBJECT": "0x11eeae4695964d78ae46025041000001",
             "FORMATTER": "",
             "DISPLAYORDER": null,

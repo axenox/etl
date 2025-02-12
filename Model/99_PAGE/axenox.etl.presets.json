@@ -98,10 +98,10 @@
                         "widget_type": "DataTable",
                         "object_alias": "axenox.ETL.openapi_uxon_preset",
                         "row_grouper": {
-                            "\/*": "",
+                            "/*": "",
                             "group_by_attribute_alias": "PROTOTYPE__LABEL",
                             "hide_caption": true,
-                            "*\/": ""
+                            "*/": ""
                         },
                         "filters": [
                             {
@@ -111,9 +111,9 @@
                                 "attribute_alias": "APP"
                             },
                             {
-                                "\/*": "",
+                                "/*": "",
                                 "attribute_alias": "PROTOTYPE",
-                                "*\/": ""
+                                "*/": ""
                             },
                             {
                                 "attribute_alias": "WRAP_FLAG"
@@ -132,9 +132,9 @@
                                 "attribute_alias": "NAME"
                             },
                             {
-                                "\/*": "",
+                                "/*": "",
                                 "attribute_alias": "PROTOTYPE__LABEL",
-                                "*\/": ""
+                                "*/": ""
                             },
                             {
                                 "attribute_alias": "=Left(DESCRIPTION, 200)"
@@ -151,10 +151,10 @@
                         ],
                         "sorters": [
                             {
-                                "\/*": "",
+                                "/*": "",
                                 "attribute_alias": "PROTOTYPE",
                                 "direction": "desc",
-                                "*\/": ""
+                                "*/": ""
                             }
                         ],
                         "buttons": [

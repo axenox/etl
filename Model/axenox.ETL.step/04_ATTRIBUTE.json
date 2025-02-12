@@ -2,6 +2,11 @@
     "object_alias": "exface.Core.ATTRIBUTE",
     "columns": [
         {
+            "name": "_EXPORT_SUMMARY",
+            "hidden": true,
+            "attribute_alias": "LABEL"
+        },
+        {
             "name": "CREATED_ON",
             "attribute_alias": "CREATED_ON"
         },
@@ -172,6 +177,7 @@
     ],
     "rows": [
         {
+            "_EXPORT_SUMMARY": "To object [to_object]",
             "CREATED_ON": "2021-02-26 16:46:30",
             "MODIFIED_ON": "2024-12-17 09:18:29",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
@@ -218,6 +224,7 @@
             "CUSTOM_DATA_TYPE": null
         },
         {
+            "_EXPORT_SUMMARY": "Flow [flow]",
             "CREATED_ON": "2021-02-26 16:46:30",
             "MODIFIED_ON": "2024-01-11 12:55:51",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
@@ -264,6 +271,7 @@
             "CUSTOM_DATA_TYPE": null
         },
         {
+            "_EXPORT_SUMMARY": "From object [from_object]",
             "CREATED_ON": "2021-02-26 16:46:30",
             "MODIFIED_ON": "2021-03-23 12:10:09",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
@@ -310,6 +318,7 @@
             "CUSTOM_DATA_TYPE": null
         },
         {
+            "_EXPORT_SUMMARY": "Configuration [etl_config_uxon]",
             "CREATED_ON": "2021-02-26 16:46:30",
             "MODIFIED_ON": "2021-03-23 12:10:09",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
@@ -356,6 +365,7 @@
             }
         },
         {
+            "_EXPORT_SUMMARY": "Step name [name]",
             "CREATED_ON": "2021-02-26 16:46:30",
             "MODIFIED_ON": "2021-03-23 12:10:09",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
@@ -402,6 +412,7 @@
             }
         },
         {
+            "_EXPORT_SUMMARY": "Step prototype [etl_prototype]",
             "CREATED_ON": "2021-02-26 16:46:30",
             "MODIFIED_ON": "2024-08-29 13:46:56",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
@@ -448,6 +459,7 @@
             }
         },
         {
+            "_EXPORT_SUMMARY": "Description [description]",
             "CREATED_ON": "2021-02-26 16:46:30",
             "MODIFIED_ON": "2021-03-23 12:10:09",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
@@ -494,6 +506,7 @@
             }
         },
         {
+            "_EXPORT_SUMMARY": "Disabled [disabled]",
             "CREATED_ON": "2021-03-02 10:36:09",
             "MODIFIED_ON": "2021-03-29 16:41:23",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
@@ -538,6 +551,7 @@
             "CUSTOM_DATA_TYPE": null
         },
         {
+            "_EXPORT_SUMMARY": "Type [type]",
             "CREATED_ON": "2021-03-02 13:13:26",
             "MODIFIED_ON": "2022-04-12 17:19:59",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
@@ -582,6 +596,7 @@
             "CUSTOM_DATA_TYPE": null
         },
         {
+            "_EXPORT_SUMMARY": "Type level [level]",
             "CREATED_ON": "2021-03-02 21:05:12",
             "MODIFIED_ON": "2024-12-17 10:06:08",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
@@ -606,7 +621,15 @@
             "COPYABLEFLAG": 0,
             "ALIAS": "level",
             "DATATYPE": "0x11e7b0277435425e98350205857feb80",
-            "DATA_ADDRESS": "(CASE [#type#]\n\tWHEN 'E' THEN 1\n\tWHEN 'T' THEN 2\n\tWHEN 'L' THEN 3\n    ELSE 999999999\nEND)",
+            "DATA_ADDRESS": [
+                "// Multiline text delimited by `\n`",
+                "(CASE [#type#]",
+                "\tWHEN 'E' THEN 1",
+                "\tWHEN 'T' THEN 2",
+                "\tWHEN 'L' THEN 3",
+                "    ELSE 999999999",
+                "END)"
+            ],
             "OBJECT": "0x11ebae9fcb215da2ae9f025041000001",
             "FORMATTER": "",
             "DISPLAYORDER": null,
@@ -626,6 +649,7 @@
             "CUSTOM_DATA_TYPE": null
         },
         {
+            "_EXPORT_SUMMARY": "Stop on error [stop_flow_on_error]",
             "CREATED_ON": "2021-03-23 11:45:02",
             "MODIFIED_ON": "2024-12-17 09:14:48",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
@@ -670,6 +694,7 @@
             "CUSTOM_DATA_TYPE": null
         },
         {
+            "_EXPORT_SUMMARY": "Nr. [step_flow_sequence]",
             "CREATED_ON": "2024-03-08 14:54:53",
             "MODIFIED_ON": "2024-03-08 14:55:54",
             "CREATED_BY_USER": "0x11e8fe1c902c8ebea23ee4b318306b9a",
@@ -714,6 +739,7 @@
             "CUSTOM_DATA_TYPE": null
         },
         {
+            "_EXPORT_SUMMARY": "Parent [parent_step]",
             "CREATED_ON": "2024-12-17 08:55:29",
             "MODIFIED_ON": "2024-12-18 00:24:17",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
@@ -760,6 +786,7 @@
             "CUSTOM_DATA_TYPE": null
         },
         {
+            "_EXPORT_SUMMARY": "Group [group_flag]",
             "CREATED_ON": "2024-12-17 08:58:45",
             "MODIFIED_ON": "2024-12-17 08:58:45",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
@@ -784,7 +811,13 @@
             "COPYABLEFLAG": 0,
             "ALIAS": "group_flag",
             "DATATYPE": "0x37000000000000000000000000000000",
-            "DATA_ADDRESS": "(CASE\n  WHEN etl_prototype_path = 'axenox\/etl\/ETLPrototypes\/StepGroup.php' THEN 1\n  ELSE 0\nEND)",
+            "DATA_ADDRESS": [
+                "// Multiline text delimited by `\n`",
+                "(CASE",
+                "  WHEN etl_prototype_path = 'axenox/etl/ETLPrototypes/StepGroup.php' THEN 1",
+                "  ELSE 0",
+                "END)"
+            ],
             "OBJECT": "0x11ebae9fcb215da2ae9f025041000001",
             "FORMATTER": "",
             "DISPLAYORDER": null,
