@@ -10,8 +10,8 @@
     "replaces_page_selector": null,
     "created_by_user_selector": "0x31000000000000000000000000000000",
     "created_on": "2023-10-18 16:18:11",
-    "modified_by_user_selector": "0x11e8fe1c902c8ebea23ee4b318306b9a",
-    "modified_on": "2024-09-03 10:06:54",
+    "modified_by_user_selector": "0x31000000000000000000000000000000",
+    "modified_on": "2025-01-22 22:22:15",
     "contents": {
         "widget_type": "SplitVertical",
         "object_alias": "axenox.ETL.webservice",
@@ -36,7 +36,7 @@
                                 "attribute_alias": "app"
                             },
                             {
-                                "attribute_alias": "remote_connection"
+                                "attribute_alias": "enabled"
                             }
                         ],
                         "columns": [
@@ -133,7 +133,7 @@
                                         "filters": [
                                             {
                                                 "attribute_alias": "AUTHORIZATION_POLICY__TARGET_FACADE",
-                                                "value": "axenox\/etl\/Facades\/DataFlowFacade.php",
+                                                "value": "axenox/etl/Facades/DataFlowFacade.php",
                                                 "hidden": true
                                             }
                                         ],
@@ -181,7 +181,7 @@
                                         "filters": [
                                             {
                                                 "attribute_alias": "USER_POLICY__POLICY__TARGET_FACADE",
-                                                "value": "axenox\/etl\/Facades\/DataFlowFacade.php",
+                                                "value": "axenox/etl/Facades/DataFlowFacade.php",
                                                 "hidden": true
                                             }
                                         ],
@@ -241,7 +241,7 @@
                                             {
                                                 "attribute_alias": "TARGET_FACADE",
                                                 "hidden": true,
-                                                "value": "axenox\/etl\/Facades\/DataFlowFacade.php"
+                                                "value": "axenox/etl/Facades/DataFlowFacade.php"
                                             }
                                         ],
                                         "columns": [

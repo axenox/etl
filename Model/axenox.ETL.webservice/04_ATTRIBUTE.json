@@ -2,6 +2,11 @@
     "object_alias": "exface.Core.ATTRIBUTE",
     "columns": [
         {
+            "name": "_EXPORT_SUMMARY",
+            "hidden": true,
+            "attribute_alias": "LABEL"
+        },
+        {
             "name": "CREATED_ON",
             "attribute_alias": "CREATED_ON"
         },
@@ -172,6 +177,7 @@
     ],
     "rows": [
         {
+            "_EXPORT_SUMMARY": "Route alias [alias]",
             "CREATED_ON": "2023-10-18 16:06:51",
             "MODIFIED_ON": "2024-01-31 11:53:13",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
@@ -205,10 +211,10 @@
             "HIDDENFLAG": 0,
             "EDITABLEFLAG": 1,
             "REQUIREDFLAG": 1,
-            "RELATED_OBJ": "",
+            "RELATED_OBJ": null,
             "SORTERPOS": null,
             "SORTERDIR": "",
-            "RELATED_OBJ_ATTR": "",
+            "RELATED_OBJ_ATTR": null,
             "SHORT_DESCRIPTION": "",
             "DATA_ADDRESS_PROPS": null,
             "DEFAULT_VALUE": "",
@@ -218,6 +224,7 @@
             }
         },
         {
+            "_EXPORT_SUMMARY": "Is part of app [app]",
             "CREATED_ON": "2023-10-18 16:06:51",
             "MODIFIED_ON": "2023-10-23 11:25:16",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
@@ -254,7 +261,7 @@
             "RELATED_OBJ": "0x35370000000000000000000000000000",
             "SORTERPOS": null,
             "SORTERDIR": "",
-            "RELATED_OBJ_ATTR": "",
+            "RELATED_OBJ_ATTR": null,
             "SHORT_DESCRIPTION": "",
             "DATA_ADDRESS_PROPS": {
                 "SQL_DATA_TYPE": "binary"
@@ -264,6 +271,7 @@
             "CUSTOM_DATA_TYPE": null
         },
         {
+            "_EXPORT_SUMMARY": "Description [description]",
             "CREATED_ON": "2023-10-18 16:06:51",
             "MODIFIED_ON": "2023-10-18 16:06:51",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
@@ -297,10 +305,10 @@
             "HIDDENFLAG": 0,
             "EDITABLEFLAG": 1,
             "REQUIREDFLAG": 0,
-            "RELATED_OBJ": "",
+            "RELATED_OBJ": null,
             "SORTERPOS": null,
             "SORTERDIR": null,
-            "RELATED_OBJ_ATTR": "",
+            "RELATED_OBJ_ATTR": null,
             "SHORT_DESCRIPTION": "",
             "DATA_ADDRESS_PROPS": null,
             "DEFAULT_VALUE": null,
@@ -310,6 +318,7 @@
             }
         },
         {
+            "_EXPORT_SUMMARY": "Web service name [name]",
             "CREATED_ON": "2023-10-18 16:06:51",
             "MODIFIED_ON": "2024-08-06 08:58:01",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
@@ -343,10 +352,10 @@
             "HIDDENFLAG": 0,
             "EDITABLEFLAG": 1,
             "REQUIREDFLAG": 1,
-            "RELATED_OBJ": "",
+            "RELATED_OBJ": null,
             "SORTERPOS": null,
             "SORTERDIR": "",
-            "RELATED_OBJ_ATTR": "",
+            "RELATED_OBJ_ATTR": null,
             "SHORT_DESCRIPTION": "",
             "DATA_ADDRESS_PROPS": null,
             "DEFAULT_VALUE": "",
@@ -356,6 +365,7 @@
             }
         },
         {
+            "_EXPORT_SUMMARY": "Configuration [config_uxon]",
             "CREATED_ON": "2023-10-18 16:06:51",
             "MODIFIED_ON": "2024-01-23 13:23:03",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
@@ -392,10 +402,10 @@
             "HIDDENFLAG": 0,
             "EDITABLEFLAG": 1,
             "REQUIREDFLAG": 0,
-            "RELATED_OBJ": "",
+            "RELATED_OBJ": null,
             "SORTERPOS": null,
             "SORTERDIR": "",
-            "RELATED_OBJ_ATTR": "",
+            "RELATED_OBJ_ATTR": null,
             "SHORT_DESCRIPTION": "",
             "DATA_ADDRESS_PROPS": null,
             "DEFAULT_VALUE": "",
@@ -405,6 +415,7 @@
             }
         },
         {
+            "_EXPORT_SUMMARY": "OpenAPI.json [swagger_json]",
             "CREATED_ON": "2023-11-29 11:50:49",
             "MODIFIED_ON": "2023-12-18 08:37:59",
             "CREATED_BY_USER": "0x11e8fe1c902c8ebea23ee4b318306b9a",
@@ -438,10 +449,10 @@
             "HIDDENFLAG": 0,
             "EDITABLEFLAG": 1,
             "REQUIREDFLAG": 0,
-            "RELATED_OBJ": "",
+            "RELATED_OBJ": null,
             "SORTERPOS": null,
             "SORTERDIR": "",
-            "RELATED_OBJ_ATTR": "",
+            "RELATED_OBJ_ATTR": null,
             "SHORT_DESCRIPTION": "",
             "DATA_ADDRESS_PROPS": null,
             "DEFAULT_VALUE": "",
@@ -451,6 +462,7 @@
             }
         },
         {
+            "_EXPORT_SUMMARY": "Webservice type [type]",
             "CREATED_ON": "2023-12-11 11:07:05",
             "MODIFIED_ON": "2023-12-11 11:10:39",
             "CREATED_BY_USER": "0x11e8fe1c902c8ebea23ee4b318306b9a",
@@ -487,7 +499,7 @@
             "RELATED_OBJ": "0x11ee9c1ba539d1529c1b025041000001",
             "SORTERPOS": null,
             "SORTERDIR": "",
-            "RELATED_OBJ_ATTR": "",
+            "RELATED_OBJ_ATTR": null,
             "SHORT_DESCRIPTION": "",
             "DATA_ADDRESS_PROPS": {
                 "SQL_DATA_TYPE": "binary"
@@ -497,6 +509,7 @@
             "CUSTOM_DATA_TYPE": null
         },
         {
+            "_EXPORT_SUMMARY": "Remote connection [remote_connection]",
             "CREATED_ON": "2024-02-01 10:01:06",
             "MODIFIED_ON": "2024-02-01 10:25:11",
             "CREATED_BY_USER": "0x11e8fe1c902c8ebea23ee4b318306b9a",
@@ -533,7 +546,7 @@
             "RELATED_OBJ": "0x33380000000000000000000000000000",
             "SORTERPOS": null,
             "SORTERDIR": "",
-            "RELATED_OBJ_ATTR": "",
+            "RELATED_OBJ_ATTR": null,
             "SHORT_DESCRIPTION": "",
             "DATA_ADDRESS_PROPS": {
                 "SQL_DATA_TYPE": "binary"
@@ -543,6 +556,7 @@
             "CUSTOM_DATA_TYPE": null
         },
         {
+            "_EXPORT_SUMMARY": "URL path [local_url]",
             "CREATED_ON": "2024-02-01 10:01:06",
             "MODIFIED_ON": "2024-08-06 10:53:02",
             "CREATED_BY_USER": "0x11e8fe1c902c8ebea23ee4b318306b9a",
@@ -576,10 +590,10 @@
             "HIDDENFLAG": 0,
             "EDITABLEFLAG": 1,
             "REQUIREDFLAG": 1,
-            "RELATED_OBJ": "",
+            "RELATED_OBJ": null,
             "SORTERPOS": null,
             "SORTERDIR": "",
-            "RELATED_OBJ_ATTR": "",
+            "RELATED_OBJ_ATTR": null,
             "SHORT_DESCRIPTION": "",
             "DATA_ADDRESS_PROPS": null,
             "DEFAULT_VALUE": "",
@@ -589,6 +603,7 @@
             }
         },
         {
+            "_EXPORT_SUMMARY": "Flow direction [flow_direction]",
             "CREATED_ON": "2024-02-01 10:01:06",
             "MODIFIED_ON": "2024-02-02 08:38:44",
             "CREATED_BY_USER": "0x11e8fe1c902c8ebea23ee4b318306b9a",
@@ -622,10 +637,10 @@
             "HIDDENFLAG": 0,
             "EDITABLEFLAG": 1,
             "REQUIREDFLAG": 1,
-            "RELATED_OBJ": "",
+            "RELATED_OBJ": null,
             "SORTERPOS": null,
             "SORTERDIR": "",
-            "RELATED_OBJ_ATTR": "",
+            "RELATED_OBJ_ATTR": null,
             "SHORT_DESCRIPTION": "Shows the direction the data is going.",
             "DATA_ADDRESS_PROPS": null,
             "DEFAULT_VALUE": "'IN'",
@@ -639,6 +654,7 @@
             }
         },
         {
+            "_EXPORT_SUMMARY": "Version [version]",
             "CREATED_ON": "2024-05-30 11:17:19",
             "MODIFIED_ON": "2024-08-06 11:00:22",
             "CREATED_BY_USER": "0x11e8fe1c902c8ebea23ee4b318306b9a",
@@ -656,7 +672,11 @@
             "COPY_WITH_RELATED_OBJECT": 0,
             "DELETE_WITH_RELATED_OBJECT": 0,
             "DEFAULT_DISPLAY_UXON": null,
-            "COMMENTS": "Shows version, release and sprint of the build of this webservice. \nE.g. 1.24.3 would be version 1 from release 24 within sprint 3.",
+            "COMMENTS": [
+                "// Multiline text delimited by `\n`",
+                "Shows version, release and sprint of the build of this webservice. ",
+                "E.g. 1.24.3 would be version 1 from release 24 within sprint 3."
+            ],
             "NAME": "Version",
             "RELATION_CARDINALITY": "",
             "TYPE": "D",
@@ -672,10 +692,10 @@
             "HIDDENFLAG": 0,
             "EDITABLEFLAG": 1,
             "REQUIREDFLAG": 0,
-            "RELATED_OBJ": "",
+            "RELATED_OBJ": null,
             "SORTERPOS": null,
             "SORTERDIR": "",
-            "RELATED_OBJ_ATTR": "",
+            "RELATED_OBJ_ATTR": null,
             "SHORT_DESCRIPTION": "",
             "DATA_ADDRESS_PROPS": null,
             "DEFAULT_VALUE": "",
@@ -683,6 +703,7 @@
             "CUSTOM_DATA_TYPE": null
         },
         {
+            "_EXPORT_SUMMARY": "Full URL [full_url]",
             "CREATED_ON": "2024-05-30 11:22:42",
             "MODIFIED_ON": "2024-07-02 11:34:09",
             "CREATED_BY_USER": "0x11e8fe1c902c8ebea23ee4b318306b9a",
@@ -709,17 +730,17 @@
             "DATATYPE": "0x30000000000000000000000000000000",
             "DATA_ADDRESS": "",
             "OBJECT": "0x11eebdc39597022cbdc3025041000001",
-            "FORMATTER": "=Concatenate(WorkbenchUrl(), 'api\/dataflow\/', local_url, ISNULL(version) ? '' : Concatenate('\/', version))",
+            "FORMATTER": "=Concatenate(WorkbenchUrl(), 'api/dataflow/', local_url, ISNULL(version) ? '' : Concatenate('/', version))",
             "DISPLAYORDER": null,
             "LABELFLAG": 0,
             "UIDFLAG": 0,
             "HIDDENFLAG": 0,
             "EDITABLEFLAG": 0,
             "REQUIREDFLAG": 0,
-            "RELATED_OBJ": "",
+            "RELATED_OBJ": null,
             "SORTERPOS": null,
             "SORTERDIR": "",
-            "RELATED_OBJ_ATTR": "",
+            "RELATED_OBJ_ATTR": null,
             "SHORT_DESCRIPTION": "",
             "DATA_ADDRESS_PROPS": null,
             "DEFAULT_VALUE": "",
@@ -727,6 +748,7 @@
             "CUSTOM_DATA_TYPE": null
         },
         {
+            "_EXPORT_SUMMARY": "Enabled [enabled]",
             "CREATED_ON": "2024-06-07 08:17:33",
             "MODIFIED_ON": "2024-06-07 08:26:02",
             "CREATED_BY_USER": "0x11e8fe1c902c8ebea23ee4b318306b9a",
@@ -766,10 +788,10 @@
             "HIDDENFLAG": 0,
             "EDITABLEFLAG": 1,
             "REQUIREDFLAG": 0,
-            "RELATED_OBJ": "",
+            "RELATED_OBJ": null,
             "SORTERPOS": null,
             "SORTERDIR": "",
-            "RELATED_OBJ_ATTR": "",
+            "RELATED_OBJ_ATTR": null,
             "SHORT_DESCRIPTION": "",
             "DATA_ADDRESS_PROPS": null,
             "DEFAULT_VALUE": 0,
@@ -777,6 +799,7 @@
             "CUSTOM_DATA_TYPE": null
         },
         {
+            "_EXPORT_SUMMARY": "Web service [LABEL]",
             "CREATED_ON": "2024-08-06 08:57:21",
             "MODIFIED_ON": "2024-08-06 10:38:24",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
@@ -810,10 +833,10 @@
             "HIDDENFLAG": 0,
             "EDITABLEFLAG": 0,
             "REQUIREDFLAG": 1,
-            "RELATED_OBJ": "",
+            "RELATED_OBJ": null,
             "SORTERPOS": null,
             "SORTERDIR": "",
-            "RELATED_OBJ_ATTR": "",
+            "RELATED_OBJ_ATTR": null,
             "SHORT_DESCRIPTION": "",
             "DATA_ADDRESS_PROPS": null,
             "DEFAULT_VALUE": "",

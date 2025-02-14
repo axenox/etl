@@ -2,6 +2,11 @@
     "object_alias": "exface.Core.OBJECT_BEHAVIORS",
     "columns": [
         {
+            "name": "_EXPORT_SUMMARY",
+            "hidden": true,
+            "attribute_alias": "NAME"
+        },
+        {
             "name": "CREATED_ON",
             "attribute_alias": "CREATED_ON"
         },
@@ -56,12 +61,13 @@
     ],
     "rows": [
         {
+            "_EXPORT_SUMMARY": "Order step sequence",
             "CREATED_ON": "2024-03-11 07:48:30",
             "MODIFIED_ON": "2024-12-18 00:21:53",
             "CREATED_BY_USER": "0x11e8fe1c902c8ebea23ee4b318306b9a",
             "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
             "UID": "0x11ee81485f104e2c8148025041000001",
-            "BEHAVIOR": "exface\/core\/Behaviors\/OrderingBehavior.php",
+            "BEHAVIOR": "exface/core/Behaviors/OrderingBehavior.php",
             "CONFIG_UXON": {
                 "order_within_attributes": [
                     "flow"

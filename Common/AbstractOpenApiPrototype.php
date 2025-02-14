@@ -194,6 +194,11 @@ abstract class AbstractOpenApiPrototype extends AbstractETLPrototype
     protected function removeRelationColumns(DataSheetInterface $dataSheet): void
     {
         foreach ($dataSheet->getColumns() as $column) {
+            if ($column->getAttribute() === false) {
+                throw new InvalidArgumentException('Cannot find Attribute with alias \'' . $column->getName()
+                    . '\'  in object \'' . $dataSheet->getMetaObject()->getName() . '\'');
+            }
+
             if ($column->getAttribute()->getObject()->isExactly($dataSheet->getMetaObject()) == false) {
                 $dataSheet->getColumns()->remove($column);
             }
