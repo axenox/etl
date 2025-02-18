@@ -87,15 +87,15 @@
         {
             "_EXPORT_SUMMARY": "Web message [axenox.ETL.webservice_request]",
             "CREATED_ON": "2023-10-18 16:06:50",
-            "MODIFIED_ON": "2024-07-16 11:47:20",
+            "MODIFIED_ON": "2024-10-30 12:22:29",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
-            "MODIFIED_BY_USER": "0x11e8fe1c902c8ebea23ee4b318306b9a",
+            "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
             "UID": "0x11eeae4695964d78ae46025041000001",
             "READABLE_FLAG": 1,
             "WRITABLE_FLAG": 1,
             "COMMENTS": "",
             "DOCS": "",
-            "NAME": "Web message",
+            "NAME": "Web request",
             "INHERIT_DATA_SOURCE_BASE_OBJECT": 1,
             "DATA_SOURCE": "0x32000000000000000000000000000000",
             "APP": "0x11ebbc50679eacdabc50025041000001",
@@ -138,10 +138,10 @@
                                         "caption": "Response",
                                         "widgets": [
                                             {
-                                                "attribute_alias": "http_response_code"
+                                                "attribute_alias": "webservice_response__http_response_code"
                                             },
                                             {
-                                                "attribute_alias": "status"
+                                                "attribute_alias": "webservice_response__status"
                                             }
                                         ]
                                     },
@@ -197,7 +197,7 @@
                                         "heading_level": 3
                                     },
                                     {
-                                        "attribute_alias": "response_header",
+                                        "attribute_alias": "webservice_response__response_header",
                                         "width": "max",
                                         "height": "35%",
                                         "widget_type": "InputJson",
@@ -223,7 +223,7 @@
                                 "caption": "Response body",
                                 "widgets": [
                                     {
-                                        "attribute_alias": "response_body",
+                                        "attribute_alias": "webservice_response__response_body",
                                         "widget_type": "InputJson",
                                         "disabled": true,
                                         "height": "100%",

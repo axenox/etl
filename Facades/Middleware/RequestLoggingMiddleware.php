@@ -132,18 +132,28 @@ final class RequestLoggingMiddleware implements MiddlewareInterface
         if ($this->logData === null) {
             return;
         }
-
         $logData = $this->logData->extractSystemColumns();
+        // create new response
+        $logResponseData = DataSheetFactory::createFromObjectIdOrAlias(
+            $this->facade->getWorkbench(),
+            'axenox.ETL.webservice_response');
+        $logResponseData->addRow([
+            'webservice_request' => $logData->getCellValue('UID', 0),
+            'http_response_code' => $response->getStatusCode(),
+            'http_content_type' => implode(';', $response->getHeader('Content-Type')),
+            'status' => WebRequestStatusDataType::DONE,
+            'response_body' => $response->getBody()->__toString(),
+            'response_header' => json_encode($response->getHeaders())]);
+        if($e !== null) {
+            $logResponseData->setCellValue('error_message',0,$e->getMessage());
+            $logResponseData->setCellValue('error_code',0,$e->getCode());
+        }
+        $logResponseData->dataCreate(false);
+        // update request
         $logData->setCellValue('status', 0, WebRequestStatusDataType::ERROR);
         if ($e !== null) {
             $logData->setCellValue('error_message', 0, $e->getMessage());
             $logData->setCellValue('error_logid', 0, $e->getId());
-            $logData->setCellValue('http_response_code', 0, $e->getStatusCode());
-        }
-        if ($response !== null) {
-            $logData->setCellValue('http_response_code', 0, $response->getStatusCode());
-            $logData->setCellValue('response_header', 0, json_encode($response->getHeaders()));
-            $logData->setCellValue('response_body', 0, $response->getBody()->__toString());
         }
         $logData->dataUpdate(false);
         $this->logData->merge($logData);
@@ -162,11 +172,21 @@ final class RequestLoggingMiddleware implements MiddlewareInterface
         ResponseInterface $response): void
     {
         $logData = $this->logData->extractSystemColumns();
+        // create new response
+        $logResponseData = DataSheetFactory::createFromObjectIdOrAlias(
+            $this->facade->getWorkbench(),
+            'axenox.ETL.webservice_response');
+        $logResponseData->addRow([
+            'webservice_request' => $logData->getCellValue('UID', 0),
+            'http_response_code' => $response->getStatusCode(),
+            'http_content_type' => implode(';', $response->getHeader('Content-Type')),
+            'status' => WebRequestStatusDataType::DONE,
+            'result_text' => $output,
+            'response_body' => $response->getBody()->__toString(),
+            'response_header' => json_encode($response->getHeaders())]);
+        $logResponseData->dataCreate(false);
+        // update request
         $logData->setCellValue('status', 0, WebRequestStatusDataType::DONE);
-        $logData->setCellValue('result_text', 0, $output);
-        $logData->setCellValue('http_response_code', 0, $response->getStatusCode());
-        $logData->setCellValue('response_header', 0, json_encode($response->getHeaders()));
-        $logData->setCellValue('response_body', 0, $response->getBody()->__toString());
         $logData->dataUpdate(false);
         $this->logData->merge($logData);
         $this->finished = true;
